@@ -65,6 +65,10 @@
                     "help_text": "This parameter is *mandatory* if `--genome` is not specified. If you don't have a BWA index available this will be generated for you automatically. Combine with `--save_reference` to save BWA index for future runs.",
                     "fa_icon": "far fa-file-code"
                 },
+                "fai": {
+                    "type": "string",
+                    "description": "Path to FASTA genome index"
+                },
                 "igenomes_ignore": {
                     "type": "boolean",
                     "description": "Do not load the iGenomes reference config.",
@@ -216,7 +220,7 @@
                     "type": "string",
                     "fa_icon": "far fa-check-circle",
                     "description": "Base URL or local path to location of pipeline test dataset files",
-                    "default": "https://raw.githubusercontent.com/nf-core/test-datasets/",
+                    "default": "https://raw.githubusercontent.com/apsteinberg/test-datasets/",
                     "hidden": true
                 },
                 "trace_report_suffix": {
@@ -224,6 +228,68 @@
                     "fa_icon": "far calendar",
                     "description": "Suffix to add to the trace report filename. Default is the date and time in the format yyyy-MM-dd_HH-mm-ss.",
                     "hidden": true
+                }
+            }
+        },
+        "clair3_options": {
+            "title": "Clair3 options",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "clair3_model": {
+                    "type": "string",
+                    "default": "r1041_e82_400bps_sup_v500"
+                },
+                "clair3_platform": {
+                    "type": "string",
+                    "default": "ont"
+                }
+            }
+        },
+        "longphase_options": {
+            "title": "longphase options",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "longphase_platform": {
+                    "type": "string",
+                    "default": "--ont"
+                }
+            }
+        },
+        "severus_options": {
+            "title": "Severus options",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "vntr_bed": {
+                    "type": "string",
+                    "description": "bed file for tandem repeat regions in ref genome"
+                }
+            }
+        },
+        "wakhan_options": {
+            "title": "Wakhan options",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "binsize": {
+                    "type": "integer",
+                    "default": 10000,
+                    "description": "size of genome bins"
+                },
+                "contigs": {
+                    "type": "string",
+                    "default": "chr1-22,chrX,chrY",
+                    "description": "contigs to use in analysis"
+                },
+                "input_genes": {
+                    "type": "string",
+                    "description": "bed file of genes to be included in \"genes_copynumber_states\" bed file"
                 }
             }
         }
@@ -240,6 +306,18 @@
         },
         {
             "$ref": "#/$defs/generic_options"
+        },
+        {
+            "$ref": "#/$defs/clair3_options"
+        },
+        {
+            "$ref": "#/$defs/longphase_options"
+        },
+        {
+            "$ref": "#/$defs/severus_options"
+        },
+        {
+            "$ref": "#/$defs/wakhan_options"
         }
     ]
 }
