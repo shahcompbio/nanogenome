@@ -3,12 +3,7 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { CLAIR3                 } from '../modules/nf-core/clair3/main'
-include { LONGPHASE_PHASE        } from '../modules/nf-core/longphase/phase/main'
-include { WAKHAN_HAPCORRECT      } from '../modules/local/wakhan/hapcorrect/main'
-include { TABIX_TABIX            } from '../modules/nf-core/tabix/tabix/main'
-include { WHATSHAP_HAPLOTAG      } from '../modules/local/whatshap/haplotag/main'
-include { SAMTOOLS_INDEX         } from '../modules/nf-core/samtools/index/main'
+include { HAPLOTAG               } from '../subworkflows/local/haplotag/main'
 include { SEVERUS                } from '../modules/nf-core/severus/main'
 include { WAKHAN_CNA             } from '../modules/local/wakhan/cna/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
@@ -32,64 +27,12 @@ workflow NANOGENOME {
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
 
-    // split ch_samplesheet into a tumor and normal channel
-    ch_samplesheet
-        .branch { meta, bam, bai ->
-            tumor: meta.condition == 'tumor'
-            norm: meta.condition == 'normal'
-        }
-        .set { bam_ch }
-    // run clair3 for germline snps
-    clair_input_ch = bam_ch.norm.map { meta, bam, bai ->
-        tuple(meta, bam, bai, params.clair3_model, [], params.clair3_platform)
-    }
-    CLAIR3(clair_input_ch, [[id: "ref"], params.fasta], [[id: "ref"], params.fai])
-    ch_versions = ch_versions.mix(CLAIR3.out.versions)
-    // run longphase to phase SNPs
-    longphase_input_ch = bam_ch.norm
-        .join(CLAIR3.out.vcf, by: 0)
-        .map { meta, bam, bai, vcf ->
-            tuple(meta, bam, bai, vcf, [], [])
-        }
-    LONGPHASE_PHASE(longphase_input_ch, [[id: "ref"], params.fasta], [[id: "ref"], params.fai])
-    ch_versions = ch_versions.mix(LONGPHASE_PHASE.out.versions)
-    // phase correct tumor bam using phased SNPs
-    hapcorrect_input_ch = bam_ch.tumor
-        .map { meta, bam, bai -> tuple(meta.id, meta, bam) }
-        .join(LONGPHASE_PHASE.out.vcf.map { meta, vcf -> tuple(meta.id, meta, vcf) }, by: 0)
-        .map { id, tumor_meta, bam, norm_meta, vcf -> tuple(tumor_meta, bam, vcf) }
-    WAKHAN_HAPCORRECT([[id: "ref"], params.fasta], hapcorrect_input_ch)
-    ch_versions = ch_versions.mix(WAKHAN_HAPCORRECT.out.versions)
-    // tabix rephased vcf if it exists
-    rephased_vcf_ch = WAKHAN_HAPCORRECT.out.rephased_vcf
-        .concat(LONGPHASE_PHASE.out.vcf)
-        .first()
-    rephased_vcf_ch.view()
-    TABIX_TABIX(rephased_vcf_ch)
-    ch_versions = ch_versions.mix(TABIX_TABIX.out.versions)
-    // run whatshap haplotag to tag both tumor and normal bams
-    hap_input_ch = ch_samplesheet
-        .map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }
-        .combine(
-            rephased_vcf_ch.map { meta, vcf -> tuple(meta.id, meta, vcf) },
-            by: 0
-        )
-        .combine(
-            TABIX_TABIX.out.tbi.map { meta, tbi -> tuple(meta.id, meta, tbi) },
-            by: 0
-        )
-        .map { id, bam_meta, bam, bai, vcf_meta, vcf, tbi_meta, tbi ->
-            tuple(bam_meta, bam, bai, vcf, tbi)
-        }
-    WHATSHAP_HAPLOTAG(params.fasta, params.fai, hap_input_ch)
-    ch_versions = ch_versions.mix(WHATSHAP_HAPLOTAG.out.versions)
-    // index haplotagged bams
-    SAMTOOLS_INDEX(WHATSHAP_HAPLOTAG.out.bam)
-    ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions)
+    // run haplotag subworkflow to haplotag bams
+    HAPLOTAG(ch_samplesheet, params.clair3_model, params.clair3_platform, params.fasta, params.fai)
     // run severus to call somatic SVs
     // branch to tumor vs normal
-    hap_bam_ch = WHATSHAP_HAPLOTAG.out.bam
-        .join(SAMTOOLS_INDEX.out.bai, by: 0)
+    hap_bam_ch = HAPLOTAG.out.bam
+        .join(HAPLOTAG.out.bai, by: 0)
         .branch { meta, bam, bai ->
             tumor: meta.condition == 'tumor'
             norm: meta.condition == 'normal'
@@ -97,14 +40,14 @@ workflow NANOGENOME {
     severus_in_ch = hap_bam_ch.tumor
         .map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }
         .join(hap_bam_ch.norm.map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }, by: 0)
-        .join(rephased_vcf_ch.map { meta, vcf -> tuple(meta.id, meta, vcf) }, by: 0)
+        .join(HAPLOTAG.rephased_vcf.map { meta, vcf -> tuple(meta.id, meta, vcf) }, by: 0)
         .map { id, tumor_meta, tumor_bam, tumor_bai, norm_meta, norm_bam, norm_bai, meta3, vcf ->
             tuple([id: id], tumor_bam, tumor_bai, norm_bam, norm_bai, vcf)
         }
     SEVERUS(severus_in_ch, [[id: "ref"], params.vntr_bed])
     ch_versions = ch_versions.mix(SEVERUS.out.versions)
     // run wakhan cna
-    cna_input_ch = hap_input_ch
+    cna_input_ch = HAPLOTAG.out.bam_snps
         .branch { meta, bam, bai, vcf, tbi ->
             tumor: meta.condition == 'tumor'
         }
@@ -113,7 +56,7 @@ workflow NANOGENOME {
         }
         .join(SEVERUS.out.somatic_vcf, by: 0)
         .join(
-            WAKHAN_HAPCORRECT.out.wakhanHPOutput.map { meta, path ->
+            HAPLOTAG.out.wakhanHPOutput.map { meta, path ->
                 tuple([id: meta.id], path)
             },
             by: 0
