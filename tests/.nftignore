@@ -9,3 +9,9 @@ multiqc/multiqc_report.html
 pipeline_info/*.{html,json,txt,yml}
 **/*.html
 **/*.log
+**/*.bam
+**/*.bam.bai
+**/*.vcf
+**/*.vcf.gz
+**/*.vcf.gz.tbi
+**/*.vcf.gz.csi

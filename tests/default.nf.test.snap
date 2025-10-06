@@ -128,17 +128,9 @@
                 "whatshap/COLO829.tumor.haplotagged.bam"
             ],
             [
-                "COLO829merge_output.vcf.gz:md5,0be8358ff0cb01b21a31e4f7517c3698",
-                "COLO829merge_output.vcf.gz.tbi:md5,5d552c7ed6199230abccc62fb28cfc0b",
-                "COLO829.vcf.gz:md5,4b20839e87819b40f8501ba5c2ebb42f",
                 "multiqc_citations.txt:md5,4c806e63a283ec1b7e78cdae3a923d4f",
-                "COLO829.normal.haplotagged.bam.bai:md5,0e18c568bed2a3c94be495c4b98e0738",
-                "COLO829.tumor.haplotagged.bam.bai:md5,41f3cdf3fb4fc564dca7b1a4aa07c1f1",
-                "severus_all.vcf:md5,24438c8d496949bf3aeb8881de91732c",
                 "breakpoints_double.csv:md5,ef54c710fe4b5f94bec1056c76729394",
                 "read_qual.txt:md5,632b98d4b24bc2f357b6be55485b2f0d",
-                "severus_somatic.vcf:md5,23d9085e486e19944a6236fccbbda8f5",
-                "rephased.vcf.gz.tbi:md5,0000cb1db52a89c70bad332f4f2e97c3",
                 "COLO829_5.17_1.0_1.0_copynumbers_segments_HP_1.bed:md5,7c11ed68d84a762d1ca9ef1cc2a06581",
                 "COLO829_5.17_1.0_1.0_copynumbers_segments_HP_2.bed:md5,b33d2bfc1fbb366c55453cb98cd6eabd",
                 "COLO829_5.17_1.0_1.0_copynumbers_subclonal_segments_HP_1.bed:md5,6192fc302d9e6e008f6e27af6faaa2a7",
@@ -146,8 +138,6 @@
                 "genes_copynumber_states.bed:md5,65f3390e4394954d39a8d115f583f749",
                 "loh_regions.bed:md5,051d016d7f985f3fb0580ff0e1f1457b",
                 "loh_regions_subclonal.bed:md5,051d016d7f985f3fb0580ff0e1f1457b",
-                "COLO829_5.17_1.0_1.0_wakhan_cna_integers.vcf:md5,d8a22d96a0dc8c9ecd47404e9b2f25e3",
-                "COLO829_5.17_1.0_1.0_wakhan_cna_subclonals.vcf:md5,27278e6f809d593484f59b0b29c466ba",
                 "0_SNPs.csv:md5,533eff72e31bf559a5a89ff7882b6f45",
                 "1_SNPs.csv:md5,551fdfa6b9b1f493e4d922dbf72ebdf2",
                 "cancer_genes_coverage.csv:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -157,21 +147,15 @@
                 "pileup_SNPs.csv:md5,55a4bf41d63deb5fd60d2f4bd4220a3c",
                 "0.bed:md5,4e33ed4ea1607432b4e7fbac899be3ed",
                 "1.bed:md5,a4f7898d39aa2e7943f003249cb8128a",
-                "COLO829.vcf_het_phased_snps.vcf.gz:md5,82ecac2040ad9ca88b0f645436d178fa",
                 "COLO829.vcf_het_snps.csv:md5,6f6bf119c08382ca6a2c668aff642e7c",
-                "PAU59949.d052sup4305mCG_5hmCGvHg38.chr22_reduced.bam:md5,84bc0f161eddcd80f3bc7f748261bd2b",
                 "COLO829.vcf_het_snps.csv:md5,015a8b262bfb8a7065f753668431d6d5",
                 "COLO829.vcf_het_snps_freqs.csv:md5,593a00cd39838d150e245552a73fcbac",
                 "COLO829.vcf_phasesets.csv:md5,9275a9dd47ea2dea6b222de0492fa275",
                 "COLO829_phase_change_segments.csv:md5,5d29fe5f0cc55a7a30847659cfbc49fe",
                 "COLO829_phasesets.csv:md5,a24e11e6936cc7b209e7f2de7a0b2474",
                 "snps_frequencies.csv:md5,6e1907dae5172ef799b26e2a50f575bc",
-                "rephased.vcf.gz:md5,622b0bb54b56c3f5b657ccf10b50139a",
-                "rephased.vcf.gz.csi:md5,c4d0cd512d4c8966e383c3a1df7a967f",
                 "solutions_ranks.tsv:md5,21794fac29813861cca2b344c8f0010b",
-                "versions.yml:md5,43c0b9751153690bfedb3601de1d45ef",
-                "COLO829.normal.haplotagged.bam:md5,d5cf7a25870be1344ec53a0d43b84bb3",
-                "COLO829.tumor.haplotagged.bam:md5,0cbaf79f84ff38924d4eb7a13e430ff1"
+                "versions.yml:md5,43c0b9751153690bfedb3601de1d45ef"
             ],
             [
                 "PAU59949.d052sup4305mCG_5hmCGvHg38.chr22_reduced.bam",
@@ -193,6 +177,6 @@
             "nf-test": "0.9.2",
             "nextflow": "25.04.7"
         },
-        "timestamp": "2025-10-06T17:10:48.488855357"
+        "timestamp": "2025-10-06T17:31:58.890295141"
     }
 }
