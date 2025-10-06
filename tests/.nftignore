@@ -7,3 +7,11 @@ multiqc/multiqc_data/multiqc_software_versions.txt
 multiqc/multiqc_plots/{svg,pdf,png}/*.{svg,pdf,png}
 multiqc/multiqc_report.html
 pipeline_info/*.{html,json,txt,yml}
+**/*.html
+**/*.log
+**/*.bam
+**/*.bam.bai
+**/*.vcf
+**/*.vcf.gz
+**/*.vcf.gz.tbi
+**/*.vcf.gz.csi
