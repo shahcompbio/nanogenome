@@ -319,5 +319,12 @@
         {
             "$ref": "#/$defs/wakhan_options"
         }
-    ]
+    ],
+    "properties": {
+        "sv_callers": {
+            "type": "string",
+            "default": "severus,savana,nanomonsv",
+            "description": "specify structural variant callers to run"
+        }
+    }
 }

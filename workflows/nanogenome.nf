@@ -4,6 +4,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 include { HAPLOTAG               } from '../subworkflows/local/haplotag/main'
+include { SV_CALLING             } from '../subworkflows/local/sv_calling/main'
 include { SEVERUS                } from '../modules/nf-core/severus/main'
 include { WAKHAN_CNA             } from '../modules/local/wakhan/cna/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
@@ -30,23 +31,15 @@ workflow NANOGENOME {
     // run haplotag subworkflow to haplotag bams
     HAPLOTAG(ch_samplesheet, params.clair3_model, params.clair3_platform, params.fasta, params.fai)
     ch_versions = ch_versions.mix(HAPLOTAG.out.versions)
-    // run severus to call somatic SVs
-    // branch to tumor vs normal
-    hap_bam_ch = HAPLOTAG.out.bam
-        .join(HAPLOTAG.out.bai, by: 0)
-        .branch { meta, bam, bai ->
-            tumor: meta.condition == 'tumor'
-            norm: meta.condition == 'normal'
-        }
-    severus_in_ch = hap_bam_ch.tumor
-        .map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }
-        .join(hap_bam_ch.norm.map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }, by: 0)
-        .join(HAPLOTAG.out.rephased_vcf.map { meta, vcf -> tuple(meta.id, meta, vcf) }, by: 0)
-        .map { id, tumor_meta, tumor_bam, tumor_bai, norm_meta, norm_bam, norm_bai, meta3, vcf ->
-            tuple([id: id], tumor_bam, tumor_bai, norm_bam, norm_bai, vcf)
-        }
-    SEVERUS(severus_in_ch, [[id: "ref"], params.vntr_bed])
-    ch_versions = ch_versions.mix(SEVERUS.out.versions)
+    // call structural variants
+    SV_CALLING(
+        params.sv_callers,
+        HAPLOTAG.out.bam,
+        HAPLOTAG.out.bai,
+        HAPLOTAG.out.rephased_vcf,
+        params.vntr_bed,
+    )
+    ch_versions = ch_versions.mix(SV_CALLING.out.versions)
     // run wakhan cna
     cna_input_ch = HAPLOTAG.out.bam_snps
         .branch { meta, bam, bai, vcf, tbi ->
@@ -55,7 +48,7 @@ workflow NANOGENOME {
         .map { meta, bam, bai, vcf, tbi ->
             tuple([id: meta.id], bam, bai, vcf, tbi)
         }
-        .join(SEVERUS.out.somatic_vcf, by: 0)
+        .join(SV_CALLING.out.severus_vcf, by: 0)
         .join(
             HAPLOTAG.out.wakhanHPOutput.map { meta, path ->
                 tuple([id: meta.id], path)
