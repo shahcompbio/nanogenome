@@ -1,7 +1,7 @@
 #!/bin/bash
 ## specify params
 outdir=$HOME/Library/CloudStorage/OneDrive-MemorialSloanKetteringCancerCenter/SarcAtlas/nanogenome/test
-pipelinedir=$HOME/VSCodeProjects/nanogenome
+pipelinedir=$HOME/VSCodeProjects/shahcompbio-nanogenome
 mkdir -p ${outdir}
 cd ${outdir}
 

@@ -1,6 +1,7 @@
 // structural variant calling subworkflow
-include { SEVERUS   } from '../../../modules/nf-core/severus/main'
-include { SAVANA_SV } from '../../../modules/local/savana/sv/main'
+include { SEVERUS         } from '../../../modules/nf-core/severus/main'
+include { SAVANA_RUN      } from '../../../modules/local/savana/run/main'
+include { NANOMONSV_PARSE } from '../../../modules/nf-core/nanomonsv/parse/main'
 
 workflow SV_CALLING {
     take:
@@ -37,16 +38,20 @@ workflow SV_CALLING {
     }
     // run savana if specified
     if (sv_callers.split(',').contains('savana')) {
-        SAVANA_SV(
+        SAVANA_RUN(
             input_sv_ch.map { meta, tumor_bam, tumor_bai, norm_bam, norm_bai, vcf ->
                 tuple(meta, tumor_bam, tumor_bai, norm_bam, norm_bai)
             },
             ref_fasta,
         )
     }
+    // run nanomonsv if specified
+    // if (sv_callers.split(',').contains('nanomonsv')) {
+    //     NANOMONSV_PARSE(hap_bam_ch)
+    // }
+    print("blegh")
 
     emit:
     severus_vcf = SEVERUS.out.somatic_vcf // channel: [ val(meta), [ somatic_vcf ] ]
-    savana_vcf  = SAVANA_SV.out.somatic_vcf // channel: [ val(meta), [ somatic_vcf ] ]
     versions    = ch_versions // channel: [ versions.yml ]
 }

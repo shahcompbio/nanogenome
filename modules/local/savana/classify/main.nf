@@ -1,5 +1,5 @@
-// savana for somatic sv calling
-process SAVANA_SV {
+// classify putative structural variants as somatic or germline
+process SAVANA_CLASSIFY {
     tag "${meta.id}"
     label 'process_high'
     publishDir "${params.outdir}/savana", mode: 'copy', overwrite: true, saveAs: { filename -> "${meta.id}.${filename}" }
