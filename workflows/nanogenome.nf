@@ -29,6 +29,7 @@ workflow NANOGENOME {
 
     // run haplotag subworkflow to haplotag bams
     HAPLOTAG(ch_samplesheet, params.clair3_model, params.clair3_platform, params.fasta, params.fai)
+    ch_versions = ch_versions.mix(HAPLOTAG.out.versions)
     // run severus to call somatic SVs
     // branch to tumor vs normal
     hap_bam_ch = HAPLOTAG.out.bam
@@ -40,7 +41,7 @@ workflow NANOGENOME {
     severus_in_ch = hap_bam_ch.tumor
         .map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }
         .join(hap_bam_ch.norm.map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }, by: 0)
-        .join(HAPLOTAG.rephased_vcf.map { meta, vcf -> tuple(meta.id, meta, vcf) }, by: 0)
+        .join(HAPLOTAG.out.rephased_vcf.map { meta, vcf -> tuple(meta.id, meta, vcf) }, by: 0)
         .map { id, tumor_meta, tumor_bam, tumor_bai, norm_meta, norm_bam, norm_bai, meta3, vcf ->
             tuple([id: id], tumor_bam, tumor_bai, norm_bam, norm_bai, vcf)
         }
