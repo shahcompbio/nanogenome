@@ -2,7 +2,7 @@
 include { SEVERUS         } from '../../../modules/nf-core/severus/main'
 include { SAVANA_CLASSIFY } from '../../../modules/local/savana/classify/main'
 include { NANOMONSV_PARSE } from '../../../modules/nf-core/nanomonsv/parse/main'
-
+include { NANOMONSV_GET   } from '../../../modules/nf-core/nanomonsv/get/main'
 workflow SV_CALLING {
     take:
     sv_callers   // val: list of sv callers to use
@@ -51,6 +51,16 @@ workflow SV_CALLING {
     if (sv_callers.split(',').contains('nanomonsv')) {
         NANOMONSV_PARSE(hap_bam_ch.tumor.mix(hap_bam_ch.norm))
         ch_versions = ch_versions.mix(NANOMONSV_PARSE.out.versions)
+        // Combine all outputs into a single channel
+        nanomonsv_all = NANOMONSV_PARSE.out.insertions
+            .join(NANOMONSV_PARSE.out.insertions_index)
+            .join(NANOMONSV_PARSE.out.deletions)
+            .join(NANOMONSV_PARSE.out.deletions_index)
+            .join(NANOMONSV_PARSE.out.rearrangements)
+            .join(NANOMONSV_PARSE.out.rearrangements_index)
+            .join(NANOMONSV_PARSE.out.bp_info)
+            .join(NANOMONSV_PARSE.out.bp_info_index)
+        nanomonsv_all.view()
     }
 
     emit:
