@@ -2,7 +2,6 @@
 process SAVANA_CLASSIFY {
     tag "${meta.id}"
     label 'process_high'
-    publishDir "${params.outdir}/savana", mode: 'copy', overwrite: true, saveAs: { filename -> "${meta.id}.${filename}" }
 
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
@@ -11,12 +10,13 @@ process SAVANA_CLASSIFY {
     input:
     tuple val(meta), path(tumor_bam), path(tumor_bai), path(norm_bam), path(norm_bai)
     path ref_fasta
+    path ref_fai
 
     output:
     // TODO nf-core: Named file extensions MUST be emitted for ALL output channels
-    tuple val(meta), path("**/classified.somatic.vcf"), emit: somatic_vcf
-    tuple val(meta), path("**/read_support.tsv"), emit: read_support
-    tuple val(meta), path("**/inserted_sequences.fa"), emit: inserted_seqs
+    tuple val(meta), path("**/*.classified.somatic.vcf"), emit: somatic_vcf
+    tuple val(meta), path("**/*.sv_breakpoints_read_support.tsv"), emit: read_support
+    tuple val(meta), path("**/*.inserted_sequences.fa"), emit: inserted_seqs
     // TODO nf-core: List additional required output channels/values here
     path "versions.yml", emit: versions
 
@@ -29,13 +29,13 @@ process SAVANA_CLASSIFY {
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     savana \\
-        ${args} \\
-        ${model_args} \\
-        --tumor ${tumor_bam} \\
-        --normal ${norm_bam} \\
-        --reference ${ref_fasta} \\
+        -t ${tumor_bam} \\
+        -n ${norm_bam} \\
+        --ref ${ref_fasta} \\
         --outdir ${prefix} \\
-        --threads ${task.cpus}
+        --threads ${task.cpus} \\
+        ${args} \\
+        ${model_args}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

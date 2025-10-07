@@ -1,6 +1,6 @@
 // structural variant calling subworkflow
 include { SEVERUS         } from '../../../modules/nf-core/severus/main'
-include { SAVANA_RUN      } from '../../../modules/local/savana/run/main'
+include { SAVANA_CLASSIFY      } from '../../../modules/local/savana/classify/main'
 include { NANOMONSV_PARSE } from '../../../modules/nf-core/nanomonsv/parse/main'
 
 workflow SV_CALLING {
@@ -11,6 +11,7 @@ workflow SV_CALLING {
     rephased_vcf // channel: [ val(meta), [ rephased_vcf ] ]
     vntr_bed     // val: bed file of known VNTRs for severus
     ref_fasta    // val: reference fasta file
+    ref_fai      // val: reference fasta index file
 
     main:
 
@@ -38,11 +39,12 @@ workflow SV_CALLING {
     }
     // run savana if specified
     if (sv_callers.split(',').contains('savana')) {
-        SAVANA_RUN(
+        SAVANA_CLASSIFY(
             input_sv_ch.map { meta, tumor_bam, tumor_bai, norm_bam, norm_bai, vcf ->
                 tuple(meta, tumor_bam, tumor_bai, norm_bam, norm_bai)
             },
             ref_fasta,
+            ref_fai
         )
     }
     // run nanomonsv if specified

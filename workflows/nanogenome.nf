@@ -39,6 +39,7 @@ workflow NANOGENOME {
         HAPLOTAG.out.rephased_vcf,
         params.vntr_bed,
         params.fasta,
+        params.fai
     )
     ch_versions = ch_versions.mix(SV_CALLING.out.versions)
     // run wakhan cna
