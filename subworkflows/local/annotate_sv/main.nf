@@ -24,10 +24,12 @@ workflow ANNOTATE_SV {
     if (!annotsv_annotations) {
         ANNOTSV_INSTALLANNOTATIONS()
         ch_versions = ch_versions.mix(ANNOTSV_INSTALLANNOTATIONS.out.versions.first())
-        annotation_ch = ANNOTSV_INSTALLANNOTATIONS.out.annotations
+        annotation_ch = ANNOTSV_INSTALLANNOTATIONS.out.annotations.map {
+            v -> tuple([id: "ref"], v)
+        }
     }
     else {
-        annotation_ch = Channel.value(annotsv_annotations)
+        annotation_ch = Channel.value(tuple([id:"ref"], annotsv_annotations))
     }
 
 
@@ -36,9 +38,9 @@ workflow ANNOTATE_SV {
             tuple(meta, vcf, tbi, [])
         },
         annotation_ch,
-        [],
-        [],
-        [],
+        [[], []],
+        [[], []],
+        [[], []],
     )
     ch_versions = ch_versions.mix(ANNOTSV_ANNOTSV.out.versions.first())
 
