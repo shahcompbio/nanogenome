@@ -191,7 +191,6 @@
                 "COLO829.tumor.nanomonsv.result.txt:md5,3fdee28af0d5eaaaae5958647e6f0f09",
                 "COLO829.tumor.nanomonsv.sbnd.result.txt:md5,1ed0a60fe6df23f9b8e0da253d45d4de",
                 "versions.yml:md5,80c71a07a01659756d2a33d0915d4d6c",
-                "COLO829.tumor.haplotagged.sv_breakpoints_read_support.tsv:md5,d3ac91825dfa343abea048a72362fdc8",
                 "breakpoints_double.csv:md5,ef54c710fe4b5f94bec1056c76729394",
                 "read_qual.txt:md5,632b98d4b24bc2f357b6be55485b2f0d",
                 "COLO829_5.17_1.0_1.0_copynumbers_segments_HP_1.bed:md5,7c11ed68d84a762d1ca9ef1cc2a06581",
@@ -242,6 +241,6 @@
             "nf-test": "0.9.2",
             "nextflow": "25.04.7"
         },
-        "timestamp": "2025-10-07T23:01:55.413397216"
+        "timestamp": "2025-10-07T23:15:17.259420759"
     }
 }
