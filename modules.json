@@ -5,6 +5,16 @@
         "https://github.com/nf-core/modules.git": {
             "modules": {
                 "nf-core": {
+                    "annotsv/annotsv": {
+                        "branch": "master",
+                        "git_sha": "3a1c1c3f76d37d8ae6712962ff0eecc4d850ec21",
+                        "installed_by": ["modules"]
+                    },
+                    "annotsv/installannotations": {
+                        "branch": "master",
+                        "git_sha": "298d07f7fdb0d09bbb9fdbf3143f063e0ecc081c",
+                        "installed_by": ["modules"]
+                    },
                     "clair3": {
                         "branch": "master",
                         "git_sha": "ce30f336d78afcc8a90ade385eda62848d8c15f3",

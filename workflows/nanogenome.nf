@@ -5,7 +5,7 @@
 */
 include { HAPLOTAG               } from '../subworkflows/local/haplotag/main'
 include { SV_CALLING             } from '../subworkflows/local/sv_calling/main'
-include { MINDA                  } from '../modules/local/minda/main'
+include { ANNOTATE_SV            } from '../subworkflows/local/annotate_sv/main'
 include { WAKHAN_CNA             } from '../modules/local/wakhan/cna/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
@@ -42,12 +42,13 @@ workflow NANOGENOME {
         params.fai,
     )
     ch_versions = ch_versions.mix(SV_CALLING.out.versions)
-    // merge SVs in different callers and generate both union and consensus VCFs
+    // merge and annotate SVs in different callers and generate both union and consensus VCFs
     support_ch = Channel.from(1, params.min_callers)
     sv_ch = SV_CALLING.out.savana_vcf
         .join(SV_CALLING.out.severus_vcf, by: 0)
         .join(SV_CALLING.out.nanomonsv_vcf, by: 0)
         .combine(support_ch)
+    ANNOTATE_SV(sv_ch, params.tolerance, params.min_size)
     // run minda to combine SV
     MINDA(sv_ch, params.tolerance, params.min_size)
     // run wakhan cna

@@ -41,7 +41,7 @@ process MINDA {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        minda: \$(minda --version)
+        minda: v250408
     END_VERSIONS
     """
 
