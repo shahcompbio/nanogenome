@@ -182,8 +182,6 @@
                 "COLO829.normal.deletion.sorted.bed.gz.tbi:md5,a97a9b7f3d3d6079a64aca6f0915947e",
                 "COLO829.normal.insertion.sorted.bed.gz:md5,d424f16f1cb9670781f21f1b4214c6f4",
                 "COLO829.normal.insertion.sorted.bed.gz.tbi:md5,8918dd5dbd98708c879facb094234004",
-                "COLO829.normal.rearrangement.sorted.bedpe.gz:md5,45b5917895618e72da83cf81071bc537",
-                "COLO829.normal.rearrangement.sorted.bedpe.gz.tbi:md5,4ff9a8c4b2337c26f9e225125278549a",
                 "COLO829.tumor.bp_info.sorted.bed.gz:md5,bc1912a1d6f968b4d34fdfa99afe207d",
                 "COLO829.tumor.bp_info.sorted.bed.gz.tbi:md5,1a48e978d0238ba0c66da5043a1f2d0c",
                 "COLO829.tumor.deletion.sorted.bed.gz:md5,fa006fad34fd9040a6f6bdc91696f4b0",
@@ -192,12 +190,8 @@
                 "COLO829.tumor.insertion.sorted.bed.gz.tbi:md5,7b7aca8272aa37837abf16108a425cc9",
                 "COLO829.tumor.nanomonsv.result.txt:md5,3fdee28af0d5eaaaae5958647e6f0f09",
                 "COLO829.tumor.nanomonsv.sbnd.result.txt:md5,1ed0a60fe6df23f9b8e0da253d45d4de",
-                "COLO829.tumor.nanomonsv.supporting_read.txt:md5,acdb84ae7bb3e8032b38f817a5653681",
-                "COLO829.tumor.rearrangement.sorted.bedpe.gz:md5,608cc47007f0835898122e822e684006",
-                "COLO829.tumor.rearrangement.sorted.bedpe.gz.tbi:md5,131b771e01e94a5de15c6f48c1ef6467",
                 "versions.yml:md5,80c71a07a01659756d2a33d0915d4d6c",
-                "COLO829.tumor.haplotagged.inserted_sequences.fa:md5,f03f6e470d01d50b0b490a8003b5a66c",
-                "COLO829.tumor.haplotagged.sv_breakpoints_read_support.tsv:md5,17740f351856e0d24093f78dcb73d68e",
+                "COLO829.tumor.haplotagged.sv_breakpoints_read_support.tsv:md5,d3ac91825dfa343abea048a72362fdc8",
                 "breakpoints_double.csv:md5,ef54c710fe4b5f94bec1056c76729394",
                 "read_qual.txt:md5,632b98d4b24bc2f357b6be55485b2f0d",
                 "COLO829_5.17_1.0_1.0_copynumbers_segments_HP_1.bed:md5,7c11ed68d84a762d1ca9ef1cc2a06581",
@@ -248,6 +242,6 @@
             "nf-test": "0.9.2",
             "nextflow": "25.04.7"
         },
-        "timestamp": "2025-10-07T22:47:27.569750169"
+        "timestamp": "2025-10-07T23:01:55.413397216"
     }
 }

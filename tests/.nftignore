@@ -15,3 +15,6 @@ pipeline_info/*.{html,json,txt,yml}
 **/*.vcf.gz
 **/*.vcf.gz.tbi
 **/*.vcf.gz.csi
+**/*.nanomonsv.supporting_read.txt
+**/*.inserted_sequences.fa
+**/*.bedpe.*
