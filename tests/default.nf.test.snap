@@ -1,7 +1,7 @@
 {
     "-profile test": {
         "content": [
-            9,
+            15,
             {
                 "CLAIR3": {
                     "clair3": "1.2.0"
@@ -9,11 +9,25 @@
                 "LONGPHASE_PHASE": {
                     "longphase": 2.0
                 },
+                "NANOMONSV_PARSE": {
+                    "nanomonsv": "0.8.0",
+                    "mafft": 7.526,
+                    "racon": "1.5.0",
+                    "tabix": 1.21,
+                    "bgzip": 1.21,
+                    "python": "3.12.9"
+                },
                 "SAMTOOLS_INDEX": {
                     "samtools": "1.22.1"
                 },
+                "SEVERUS": {
+                    "severus": 1.5
+                },
                 "TABIX_TABIX": {
                     "tabix": 1.21
+                },
+                "WAKHAN_CNA": {
+                    "wakhan": "0.2.0"
                 },
                 "WAKHAN_HAPCORRECT": {
                     "wakhan": "0.2.0"
@@ -31,11 +45,47 @@
                 "clair3/COLO829merge_output.vcf.gz.tbi",
                 "longphase",
                 "longphase/COLO829.vcf.gz",
+                "multiqc",
+                "multiqc/multiqc_data",
+                "multiqc/multiqc_data/multiqc.log",
+                "multiqc/multiqc_data/multiqc_citations.txt",
+                "multiqc/multiqc_data/multiqc_data.json",
+                "multiqc/multiqc_data/multiqc_software_versions.txt",
+                "multiqc/multiqc_data/multiqc_sources.txt",
+                "multiqc/multiqc_report.html",
+                "nanomonsv",
+                "nanomonsv/COLO829",
+                "nanomonsv/COLO829/COLO829.normal.bp_info.sorted.bed.gz",
+                "nanomonsv/COLO829/COLO829.normal.bp_info.sorted.bed.gz.tbi",
+                "nanomonsv/COLO829/COLO829.normal.deletion.sorted.bed.gz",
+                "nanomonsv/COLO829/COLO829.normal.deletion.sorted.bed.gz.tbi",
+                "nanomonsv/COLO829/COLO829.normal.insertion.sorted.bed.gz",
+                "nanomonsv/COLO829/COLO829.normal.insertion.sorted.bed.gz.tbi",
+                "nanomonsv/COLO829/COLO829.normal.rearrangement.sorted.bedpe.gz",
+                "nanomonsv/COLO829/COLO829.normal.rearrangement.sorted.bedpe.gz.tbi",
+                "nanomonsv/COLO829/COLO829.tumor.bp_info.sorted.bed.gz",
+                "nanomonsv/COLO829/COLO829.tumor.bp_info.sorted.bed.gz.tbi",
+                "nanomonsv/COLO829/COLO829.tumor.deletion.sorted.bed.gz",
+                "nanomonsv/COLO829/COLO829.tumor.deletion.sorted.bed.gz.tbi",
+                "nanomonsv/COLO829/COLO829.tumor.insertion.sorted.bed.gz",
+                "nanomonsv/COLO829/COLO829.tumor.insertion.sorted.bed.gz.tbi",
+                "nanomonsv/COLO829/COLO829.tumor.nanomonsv.result.txt",
+                "nanomonsv/COLO829/COLO829.tumor.nanomonsv.result.vcf",
+                "nanomonsv/COLO829/COLO829.tumor.nanomonsv.sbnd.result.txt",
+                "nanomonsv/COLO829/COLO829.tumor.nanomonsv.supporting_read.txt",
+                "nanomonsv/COLO829/COLO829.tumor.rearrangement.sorted.bedpe.gz",
+                "nanomonsv/COLO829/COLO829.tumor.rearrangement.sorted.bedpe.gz.tbi",
+                "nanomonsv/COLO829/versions.yml",
                 "pipeline_info",
                 "pipeline_info/nanogenome_software_mqc_versions.yml",
                 "samtools",
                 "samtools/COLO829.normal.haplotagged.bam.bai",
                 "samtools/COLO829.tumor.haplotagged.bam.bai",
+                "savana",
+                "savana/COLO829",
+                "savana/COLO829/COLO829.tumor.haplotagged.classified.somatic.vcf",
+                "savana/COLO829/COLO829.tumor.haplotagged.inserted_sequences.fa",
+                "savana/COLO829/COLO829.tumor.haplotagged.sv_breakpoints_read_support.tsv",
                 "severus",
                 "severus/COLO829",
                 "severus/COLO829/all_SVs",
@@ -49,6 +99,31 @@
                 "tabix/rephased.vcf.gz.tbi",
                 "wakhan",
                 "wakhan/COLO829",
+                "wakhan/COLO829/COLO829_heatmap_ploidy_purity.html",
+                "wakhan/COLO829/COLO829_optimized_peak.html",
+                "wakhan/COLO829/cna_solutions",
+                "wakhan/COLO829/cna_solutions/solution_1",
+                "wakhan/COLO829/cna_solutions/solution_1/COLO829_5.17_1.0_1.0_genes_genome.html",
+                "wakhan/COLO829/cna_solutions/solution_1/COLO829_5.17_1.0_1.0_genome_copynumbers_breakpoints.html",
+                "wakhan/COLO829/cna_solutions/solution_1/COLO829_5.17_1.0_1.0_genome_copynumbers_breakpoints_subclonal.html",
+                "wakhan/COLO829/cna_solutions/solution_1/COLO829_5.17_1.0_1.0_genome_copynumbers_details.html",
+                "wakhan/COLO829/cna_solutions/solution_1/bed_output",
+                "wakhan/COLO829/cna_solutions/solution_1/bed_output/COLO829_5.17_1.0_1.0_copynumbers_segments_HP_1.bed",
+                "wakhan/COLO829/cna_solutions/solution_1/bed_output/COLO829_5.17_1.0_1.0_copynumbers_segments_HP_2.bed",
+                "wakhan/COLO829/cna_solutions/solution_1/bed_output/COLO829_5.17_1.0_1.0_copynumbers_subclonal_segments_HP_1.bed",
+                "wakhan/COLO829/cna_solutions/solution_1/bed_output/COLO829_5.17_1.0_1.0_copynumbers_subclonal_segments_HP_2.bed",
+                "wakhan/COLO829/cna_solutions/solution_1/bed_output/genes_copynumber_states.bed",
+                "wakhan/COLO829/cna_solutions/solution_1/bed_output/loh_regions.bed",
+                "wakhan/COLO829/cna_solutions/solution_1/bed_output/loh_regions_subclonal.bed",
+                "wakhan/COLO829/cna_solutions/solution_1/variation_plots",
+                "wakhan/COLO829/cna_solutions/solution_1/variation_plots/CN_VARIATION_INDEX.html",
+                "wakhan/COLO829/cna_solutions/solution_1/variation_plots/chr22_cn.html",
+                "wakhan/COLO829/cna_solutions/solution_1/vcf_output",
+                "wakhan/COLO829/cna_solutions/solution_1/vcf_output/COLO829_5.17_1.0_1.0_wakhan_cna_integers.vcf",
+                "wakhan/COLO829/cna_solutions/solution_1/vcf_output/COLO829_5.17_1.0_1.0_wakhan_cna_subclonals.vcf",
+                "wakhan/COLO829/coverage_plots",
+                "wakhan/COLO829/coverage_plots/COVERAGE_INDEX.html",
+                "wakhan/COLO829/coverage_plots/chr22_cov.html",
                 "wakhan/COLO829/hapcorrect_out",
                 "wakhan/COLO829/hapcorrect_out/coverage_data",
                 "wakhan/COLO829/hapcorrect_out/coverage_data/0_SNPs.csv",
@@ -82,14 +157,45 @@
                 "wakhan/COLO829/hapcorrect_out/phasing_output/rephased.vcf.gz",
                 "wakhan/COLO829/hapcorrect_out/phasing_output/rephased.vcf.gz.csi",
                 "wakhan/COLO829/hapcorrect_out/wakhan.log",
+                "wakhan/COLO829/solutions_ranks.tsv",
                 "wakhan/COLO829/versions.yml",
                 "whatshap",
                 "whatshap/COLO829.normal.haplotagged.bam",
                 "whatshap/COLO829.tumor.haplotagged.bam"
             ],
             [
+                "multiqc_citations.txt:md5,4c806e63a283ec1b7e78cdae3a923d4f",
+                "COLO829.normal.bp_info.sorted.bed.gz:md5,b26f7a415fefec9917d591ca9ab46f3f",
+                "COLO829.normal.bp_info.sorted.bed.gz.tbi:md5,1ffb1927d4e58d6c53ebf6e64f5d4daa",
+                "COLO829.normal.deletion.sorted.bed.gz:md5,71dc1e3f5dc80679afd0c4172697e562",
+                "COLO829.normal.deletion.sorted.bed.gz.tbi:md5,a97a9b7f3d3d6079a64aca6f0915947e",
+                "COLO829.normal.insertion.sorted.bed.gz:md5,d424f16f1cb9670781f21f1b4214c6f4",
+                "COLO829.normal.insertion.sorted.bed.gz.tbi:md5,8918dd5dbd98708c879facb094234004",
+                "COLO829.normal.rearrangement.sorted.bedpe.gz:md5,45b5917895618e72da83cf81071bc537",
+                "COLO829.normal.rearrangement.sorted.bedpe.gz.tbi:md5,4ff9a8c4b2337c26f9e225125278549a",
+                "COLO829.tumor.bp_info.sorted.bed.gz:md5,bc1912a1d6f968b4d34fdfa99afe207d",
+                "COLO829.tumor.bp_info.sorted.bed.gz.tbi:md5,1a48e978d0238ba0c66da5043a1f2d0c",
+                "COLO829.tumor.deletion.sorted.bed.gz:md5,fa006fad34fd9040a6f6bdc91696f4b0",
+                "COLO829.tumor.deletion.sorted.bed.gz.tbi:md5,556d95237f4f57df20a02f7636c77ae6",
+                "COLO829.tumor.insertion.sorted.bed.gz:md5,3e25077c72c321293351e4a1f8e7a615",
+                "COLO829.tumor.insertion.sorted.bed.gz.tbi:md5,7b7aca8272aa37837abf16108a425cc9",
+                "COLO829.tumor.nanomonsv.result.txt:md5,3fdee28af0d5eaaaae5958647e6f0f09",
+                "COLO829.tumor.nanomonsv.sbnd.result.txt:md5,1ed0a60fe6df23f9b8e0da253d45d4de",
+                "COLO829.tumor.nanomonsv.supporting_read.txt:md5,83d3c60b23d5b96d25740f3e5a0b669b",
+                "COLO829.tumor.rearrangement.sorted.bedpe.gz:md5,608cc47007f0835898122e822e684006",
+                "COLO829.tumor.rearrangement.sorted.bedpe.gz.tbi:md5,131b771e01e94a5de15c6f48c1ef6467",
+                "versions.yml:md5,80c71a07a01659756d2a33d0915d4d6c",
+                "COLO829.tumor.haplotagged.inserted_sequences.fa:md5,ab07f3c757e7240c5a84ff1247994e9a",
+                "COLO829.tumor.haplotagged.sv_breakpoints_read_support.tsv:md5,17740f351856e0d24093f78dcb73d68e",
                 "breakpoints_double.csv:md5,ef54c710fe4b5f94bec1056c76729394",
                 "read_qual.txt:md5,632b98d4b24bc2f357b6be55485b2f0d",
+                "COLO829_5.17_1.0_1.0_copynumbers_segments_HP_1.bed:md5,7c11ed68d84a762d1ca9ef1cc2a06581",
+                "COLO829_5.17_1.0_1.0_copynumbers_segments_HP_2.bed:md5,b33d2bfc1fbb366c55453cb98cd6eabd",
+                "COLO829_5.17_1.0_1.0_copynumbers_subclonal_segments_HP_1.bed:md5,6192fc302d9e6e008f6e27af6faaa2a7",
+                "COLO829_5.17_1.0_1.0_copynumbers_subclonal_segments_HP_2.bed:md5,a47b1142a74d920753ffc5e17a90deb1",
+                "genes_copynumber_states.bed:md5,65f3390e4394954d39a8d115f583f749",
+                "loh_regions.bed:md5,051d016d7f985f3fb0580ff0e1f1457b",
+                "loh_regions_subclonal.bed:md5,051d016d7f985f3fb0580ff0e1f1457b",
                 "0_SNPs.csv:md5,533eff72e31bf559a5a89ff7882b6f45",
                 "1_SNPs.csv:md5,551fdfa6b9b1f493e4d922dbf72ebdf2",
                 "cancer_genes_coverage.csv:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -106,7 +212,8 @@
                 "COLO829_phase_change_segments.csv:md5,5d29fe5f0cc55a7a30847659cfbc49fe",
                 "COLO829_phasesets.csv:md5,a24e11e6936cc7b209e7f2de7a0b2474",
                 "snps_frequencies.csv:md5,6e1907dae5172ef799b26e2a50f575bc",
-                "versions.yml:md5,69f286649fd8dd323613c7697543524d"
+                "solutions_ranks.tsv:md5,21794fac29813861cca2b344c8f0010b",
+                "versions.yml:md5,43c0b9751153690bfedb3601de1d45ef"
             ],
             [
                 "PAU59949.d052sup4305mCG_5hmCGvHg38.chr22_reduced.bam",
@@ -116,8 +223,12 @@
             [
                 "COLO829merge_output.vcf.gz",
                 "COLO829.vcf.gz",
+                "COLO829.tumor.nanomonsv.result.vcf",
+                "COLO829.tumor.haplotagged.classified.somatic.vcf",
                 "severus_all.vcf",
                 "severus_somatic.vcf",
+                "COLO829_5.17_1.0_1.0_wakhan_cna_integers.vcf",
+                "COLO829_5.17_1.0_1.0_wakhan_cna_subclonals.vcf",
                 "COLO829.vcf_het_phased_snps.vcf.gz",
                 "rephased.vcf.gz"
             ]
@@ -126,6 +237,6 @@
             "nf-test": "0.9.2",
             "nextflow": "25.04.7"
         },
-        "timestamp": "2025-10-07T14:14:37.82493263"
+        "timestamp": "2025-10-07T21:49:34.791907136"
     }
 }
