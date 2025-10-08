@@ -52,18 +52,21 @@ workflow SV_CALLING {
         NANOMONSV_PARSE(hap_bam_ch.tumor.mix(hap_bam_ch.norm))
         ch_versions = ch_versions.mix(NANOMONSV_PARSE.out.versions)
         // Combine all outputs into a single channel
-         parse_out_ch = NANOMONSV_PARSE.out.parse_out.map { meta, parse_out ->
-                    tuple(meta.id, parse_out) }
-                    .groupTuple(by: 0)
+        parse_out_ch = NANOMONSV_PARSE.out.parse_out
+            .map { meta, parse_out ->
+                tuple(meta.id, parse_out)
+            }
+            .groupTuple(by: 0)
         // now hand off to nanomonsv get
-       input_get_ch = input_sv_ch.map { meta, tumor_bam, tumor_bai, norm_bam, norm_bai, vcf ->
-                tuple(meta.id, meta, tumor_bam, tumor_bai, norm_bam, norm_bai) }
-                .join(parse_out_ch, by: 0)
-                .map { id, meta, tumor_bam, tumor_bai, norm_bam, norm_bai, parse_out ->
-                    tuple(meta, tumor_bam, tumor_bai, norm_bam, norm_bai, parse_out.flatten())
-                }
+        input_get_ch = input_sv_ch
+            .map { meta, tumor_bam, tumor_bai, norm_bam, norm_bai, vcf ->
+                tuple(meta.id, meta, tumor_bam, tumor_bai, norm_bam, norm_bai)
+            }
+            .join(parse_out_ch, by: 0)
+            .map { id, meta, tumor_bam, tumor_bai, norm_bam, norm_bai, parse_out ->
+                tuple(meta, tumor_bam, tumor_bai, norm_bam, norm_bai, parse_out.flatten())
+            }
         NANOMONSV_GET(input_get_ch, ref_fasta, ref_fai)
-
     }
 
     emit:
