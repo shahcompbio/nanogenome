@@ -57,7 +57,7 @@ workflow NANOGENOME {
             },
             by: 0
         )
-    cna_input_ch.view()
+    // cna_input_ch.view()
     WAKHAN_CNA(cna_input_ch, params.fasta)
     ch_versions = ch_versions.mix(WAKHAN_CNA.out.versions)
 

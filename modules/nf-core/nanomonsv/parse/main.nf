@@ -11,15 +11,16 @@ process NANOMONSV_PARSE {
     tuple val(meta), path(bam), path(bai)
 
     output:
-    tuple val(meta), path("${prefix}.insertion.sorted.bed.gz")          , emit: insertions
-    tuple val(meta), path("${prefix}.insertion.sorted.bed.gz.tbi")      , emit: insertions_index
-    tuple val(meta), path("${prefix}.deletion.sorted.bed.gz")           , emit: deletions
-    tuple val(meta), path("${prefix}.deletion.sorted.bed.gz.tbi")       , emit: deletions_index
-    tuple val(meta), path("${prefix}.rearrangement.sorted.bedpe.gz")    , emit: rearrangements
-    tuple val(meta), path("${prefix}.rearrangement.sorted.bedpe.gz.tbi"), emit: rearrangements_index
-    tuple val(meta), path("${prefix}.bp_info.sorted.bed.gz")            , emit: bp_info
-    tuple val(meta), path("${prefix}.bp_info.sorted.bed.gz.tbi")        , emit: bp_info_index
-    path "versions.yml"                                                 , emit: versions
+    tuple val(meta), path("**/${prefix}.insertion.sorted.bed.gz")          , emit: insertions
+    tuple val(meta), path("**/${prefix}.insertion.sorted.bed.gz.tbi")      , emit: insertions_index
+    tuple val(meta), path("**/${prefix}.deletion.sorted.bed.gz")           , emit: deletions
+    tuple val(meta), path("**/${prefix}.deletion.sorted.bed.gz.tbi")       , emit: deletions_index
+    tuple val(meta), path("**/${prefix}.rearrangement.sorted.bedpe.gz")    , emit: rearrangements
+    tuple val(meta), path("**/${prefix}.rearrangement.sorted.bedpe.gz.tbi"), emit: rearrangements_index
+    tuple val(meta), path("**/${prefix}.bp_info.sorted.bed.gz")            , emit: bp_info
+    tuple val(meta), path("**/${prefix}.bp_info.sorted.bed.gz.tbi")        , emit: bp_info_index
+    tuple val(meta), path("${meta.id}/*", arity: '3..*')                   , emit: parse_out
+    path "versions.yml"                                                    , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -28,7 +29,8 @@ process NANOMONSV_PARSE {
     prefix   = task.ext.prefix ?: "${meta.id}"
     def args = task.ext.args   ?: ''
     """
-    nanomonsv parse ${args} ${bam} ${prefix}
+    mkdir -p ${meta.id}
+    nanomonsv parse ${args} ${bam} ${meta.id}/${prefix}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

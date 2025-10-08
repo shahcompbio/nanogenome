@@ -2,6 +2,7 @@
 process NANOMONSV_GET {
     tag "${meta.id}"
     label 'process_high'
+    publishDir "${params.outdir}/nanomonsv/${meta.id}", mode: 'copy', overwrite: true
 
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
@@ -16,7 +17,10 @@ process NANOMONSV_GET {
 
     output:
     // TODO nf-core: Named file extensions MUST be emitted for ALL output channels
-    tuple val(meta), path("*.bam"), emit: bam
+    tuple val(meta), path("*.nanomonsv.result.txt"), emit: result_table
+    tuple val(meta), path("*.nanomonsv.result.vcf"), emit: somatic_vcf
+    tuple val(meta), path("*.sbnd.result.txt"), emit: sbnd_table
+    tuple val(meta), path("*supporting_read.txt"), emit: read_support
     // TODO nf-core: List additional required output channels/values here
     path "versions.yml", emit: versions
 
@@ -28,7 +32,7 @@ process NANOMONSV_GET {
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     nanomonsv get \\
-        ${meta.id}.${meta.condition} \\
+        ${meta.id}.tumor \\
         ${tumor_bam} \\
         ${ref_fasta} \\
         --control_prefix ${meta.id}.normal \\
