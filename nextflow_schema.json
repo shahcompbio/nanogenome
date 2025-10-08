@@ -391,6 +391,10 @@
             "type": "string",
             "default": "severus,savana,nanomonsv",
             "description": "specify structural variant callers to run"
+        },
+        "annotsv_annotations": {
+            "type": "string",
+            "description": "path to annotsv annotations directory if pre-installed"
         }
     }
 }

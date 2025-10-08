@@ -6,9 +6,10 @@ include { ANNOTSV_ANNOTSV            } from '../../../modules/nf-core/annotsv/an
 
 workflow ANNOTATE_SV {
     take:
-    sv_ch     // channel: [ val(meta), path(vcf1), path(vcf2), path(vcf3), val(min_callers) ]
-    tolerance // between breakpoints to consider two SVs the same
-    min_size  // minimum size of SV to consider
+    sv_ch               // channel: [ val(meta), path(vcf1), path(vcf2), path(vcf3), val(min_callers) ]
+    tolerance           // between breakpoints to consider two SVs the same
+    min_size            // minimum size of SV to consider
+    annotsv_annotations // path to annotsv annotations if already installed
 
     main:
 
@@ -20,13 +21,21 @@ workflow ANNOTATE_SV {
     TABIX_BGZIPTABIX(MINDA.out.ensemble_vcf)
     ch_versions = ch_versions.mix(TABIX_BGZIPTABIX.out.versions.first())
     // run annotsv
-    ANNOTSV_INSTALLANNOTATIONS()
-    ch_versions = ch_versions.mix(ANNOTSV_INSTALLANNOTATIONS.out.versions.first())
+    if (!annotsv_annotations) {
+        ANNOTSV_INSTALLANNOTATIONS()
+        ch_versions = ch_versions.mix(ANNOTSV_INSTALLANNOTATIONS.out.versions.first())
+        annotation_ch = ANNOTSV_INSTALLANNOTATIONS.out.annotations
+    }
+    else {
+        annotation_ch = Channel.value(annotsv_annotations)
+    }
+
+
     ANNOTSV_ANNOTSV(
         TABIX_BGZIPTABIX.out.gz_tbi.map { meta, vcf, tbi ->
             tuple(meta, vcf, tbi, [])
         },
-        ANNOTSV_INSTALLANNOTATIONS.out.annotations,
+        annotation_ch,
         [],
         [],
         [],
