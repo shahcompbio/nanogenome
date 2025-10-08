@@ -49,8 +49,7 @@ workflow NANOGENOME {
         .join(SV_CALLING.out.nanomonsv_vcf, by: 0)
         .combine(support_ch)
     ANNOTATE_SV(sv_ch, params.tolerance, params.min_size)
-    // run minda to combine SV
-    MINDA(sv_ch, params.tolerance, params.min_size)
+    ch_versions = ch_versions.mix(ANNOTATE_SV.out.versions)
     // run wakhan cna
     cna_input_ch = HAPLOTAG.out.bam_snps
         .branch { meta, bam, bai, vcf, tbi ->
