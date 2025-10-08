@@ -292,6 +292,23 @@
                     "description": "bed file of genes to be included in \"genes_copynumber_states\" bed file"
                 }
             }
+        },
+        "savana_options": {
+            "title": "savana options",
+            "type": "object",
+            "description": "options for SAVANA structural variant caller",
+            "default": "",
+            "properties": {
+                "contigs_list": {
+                    "type": "string",
+                    "description": "list of contigs to analyze for savana"
+                },
+                "savana_model": {
+                    "type": "string",
+                    "default": "--ont",
+                    "description": "specify savana model; can be a path"
+                }
+            }
         }
     },
     "allOf": [
@@ -318,6 +335,9 @@
         },
         {
             "$ref": "#/$defs/wakhan_options"
+        },
+        {
+            "$ref": "#/$defs/savana_options"
         }
     ],
     "properties": {
@@ -326,12 +346,10 @@
             "default": "severus,savana,nanomonsv",
             "description": "specify structural variant callers to run"
         },
-        "contigs_list": {
-            "type": "string"
-        },
-        "savana_model": {
-            "type": "string",
-            "default": "--ont"
+        "min_callers": {
+            "type": "integer",
+            "default": 2,
+            "description": "min number of callers for consensus SV calls"
         }
     }
 }

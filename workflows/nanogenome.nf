@@ -39,9 +39,16 @@ workflow NANOGENOME {
         HAPLOTAG.out.rephased_vcf,
         params.vntr_bed,
         params.fasta,
-        params.fai
+        params.fai,
     )
     ch_versions = ch_versions.mix(SV_CALLING.out.versions)
+    // merge SVs in different callers and generate both union and consensus VCFs
+    support_ch = Channel.from(1, params.min_callers)
+    sv_ch = SV_CALLING.out.savana_vcf
+        .join(SV_CALLING.out.severus_vcf, by: 0)
+        .join(SV_CALLING.out.nanomonsv_vcf, by: 0)
+        .commbine(support_ch)
+    sv_ch.view()
     // run wakhan cna
     cna_input_ch = HAPLOTAG.out.bam_snps
         .branch { meta, bam, bai, vcf, tbi ->
