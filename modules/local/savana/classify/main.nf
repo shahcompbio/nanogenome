@@ -39,7 +39,7 @@ process SAVANA_CLASSIFY {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        savana: \$(savana --version)
+        savana: \$(savana --version 2>&1 | tail -n 1 | sed 's/SAVANA //')
     END_VERSIONS
     """
 
