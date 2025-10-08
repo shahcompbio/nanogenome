@@ -1,7 +1,7 @@
 // structural variant calling subworkflow
 include { SEVERUS         } from '../../../modules/nf-core/severus/main'
 include { SAVANA_CLASSIFY } from '../../../modules/local/savana/classify/main'
-include { NANOMONSV_PARSE } from '../../../modules/nf-core/nanomonsv/parse/main'
+include { NANOMONSV_PARSE } from '../../../modules/local/nanomonsv/parse/main'
 include { NANOMONSV_GET   } from '../../../modules/local/nanomonsv/get/main'
 workflow SV_CALLING {
     take:
@@ -46,6 +46,7 @@ workflow SV_CALLING {
             ref_fasta,
             ref_fai,
         )
+        ch_versions = ch_versions.mix(SAVANA_CLASSIFY.out.versions)
     }
     // run nanomonsv if specified
     if (sv_callers.split(',').contains('nanomonsv')) {
@@ -67,9 +68,12 @@ workflow SV_CALLING {
                 tuple(meta, tumor_bam, tumor_bai, norm_bam, norm_bai, parse_out.flatten())
             }
         NANOMONSV_GET(input_get_ch, ref_fasta, ref_fai)
+        ch_versions = ch_versions.mix(NANOMONSV_GET.out.versions)
     }
 
     emit:
-    severus_vcf = SEVERUS.out.somatic_vcf // channel: [ val(meta), [ somatic_vcf ] ]
-    versions    = ch_versions // channel: [ versions.yml ]
+    severus_vcf   = SEVERUS.out.somatic_vcf // channel: [ val(meta), [ somatic_vcf ] ]
+    savana_vcf    = SAVANA_CLASSIFY.out.somatic_vcf // channel: [ val(meta), [ somatic_vcf ] ]
+    nanomonsv_vcf = NANOMONSV_GET.out.somatic_vcf // channel: [ val(meta), [ somatic_vcf ] ]
+    versions      = ch_versions // channel: [ versions.yml ]
 }
