@@ -1,6 +1,6 @@
 // merge and annotate structural variants from different callers
 include { MINDA                      } from '../../../modules/local/minda/main'
-include { TABIX_TABIX                } from '../../../modules/nf-core/tabix/tabix/main.nf'
+include { TABIX_BGZIPTABIX           } from '../../../modules/nf-core/tabix/bgziptabix/main'
 include { ANNOTSV_INSTALLANNOTATIONS } from '../../../modules/nf-core/annotsv/installannotations/main'
 include { ANNOTSV_ANNOTSV            } from '../../../modules/nf-core/annotsv/annotsv/main'
 
@@ -17,23 +17,21 @@ workflow ANNOTATE_SV {
     MINDA(sv_ch, params.tolerance, params.min_size)
     ch_versions = ch_versions.mix(MINDA.out.versions.first())
     // index vcfs
-    TABIX_TABIX(MINDA.out.ensemble_vcf)
-    ch_versions = ch_versions.mix(TABIX_TABIX.out.versions.first())
-    // make a vcf/index channel for annotsv
-    vcf_index_ch = MINDA.out.ensemble_vcf
-        .join(TABIX_TABIX.out.tbi, by: 0)
-        .map { meta, vcf, tbi -> tuple(meta, vcf, tbi, []) }
+    TABIX_BGZIPTABIX(MINDA.out.ensemble_vcf)
+    ch_versions = ch_versions.mix(TABIX_BGZIPTABIX.out.versions.first())
     // run annotsv
     ANNOTSV_INSTALLANNOTATIONS()
+    ch_versions = ch_versions.mix(ANNOTSV_INSTALLANNOTATIONS.out.versions.first())
     ANNOTSV_ANNOTSV(
-        vcf_index_ch,
+        TABIX_BGZIPTABIX.out.gz_tbi.map { meta, vcf, tbi ->
+            tuple(meta, vcf, tbi, [])
+        },
         ANNOTSV_INSTALLANNOTATIONS.out.annotations,
         [],
         [],
         [],
     )
-
-    ch_versions = ch_versions.mix(ANNOTSV_INSTALLANNOTATIONS.out.versions.first())
+    ch_versions = ch_versions.mix(ANNOTSV_ANNOTSV.out.versions.first())
 
     emit:
     minda_vcf     = MINDA.out.ensemble_vcf // channel: [ val(meta), [ vcf ] ]
