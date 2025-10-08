@@ -309,6 +309,33 @@
                     "description": "specify savana model; can be a path"
                 }
             }
+        },
+        "minda_options": {
+            "title": "minda options",
+            "type": "object",
+            "description": "Options related to merging structural variants with minda",
+            "default": "",
+            "properties": {
+                "min_callers": {
+                    "type": "integer",
+                    "default": 2,
+                    "description": "min number of callers for consensus SV calls"
+                },
+                "min_size": {
+                    "type": "integer",
+                    "default": 50,
+                    "description": "filter records by SVLEN in INFO column"
+                },
+                "tolerance": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "maximum allowable bp distance between base and caller breakpoint; default=500"
+                },
+                "filter_bed": {
+                    "type": "string",
+                    "description": "path to bed file for filtering records with BedTool intersect"
+                }
+            }
         }
     },
     "allOf": [
@@ -338,6 +365,9 @@
         },
         {
             "$ref": "#/$defs/savana_options"
+        },
+        {
+            "$ref": "#/$defs/minda_options"
         }
     ],
     "properties": {
@@ -345,11 +375,6 @@
             "type": "string",
             "default": "severus,savana,nanomonsv",
             "description": "specify structural variant callers to run"
-        },
-        "min_callers": {
-            "type": "integer",
-            "default": 2,
-            "description": "min number of callers for consensus SV calls"
         }
     }
 }

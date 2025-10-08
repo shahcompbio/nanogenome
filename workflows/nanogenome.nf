@@ -5,7 +5,7 @@
 */
 include { HAPLOTAG               } from '../subworkflows/local/haplotag/main'
 include { SV_CALLING             } from '../subworkflows/local/sv_calling/main'
-include { SEVERUS                } from '../modules/nf-core/severus/main'
+include { MINDA                  } from '../modules/local/minda/main'
 include { WAKHAN_CNA             } from '../modules/local/wakhan/cna/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
@@ -47,8 +47,9 @@ workflow NANOGENOME {
     sv_ch = SV_CALLING.out.savana_vcf
         .join(SV_CALLING.out.severus_vcf, by: 0)
         .join(SV_CALLING.out.nanomonsv_vcf, by: 0)
-        .commbine(support_ch)
-    sv_ch.view()
+        .combine(support_ch)
+    // run minda to combine SV
+    MINDA(sv_ch, params.tolerance, params.min_size)
     // run wakhan cna
     cna_input_ch = HAPLOTAG.out.bam_snps
         .branch { meta, bam, bai, vcf, tbi ->

@@ -2,15 +2,6 @@
 process MINDA {
     tag "${meta.id}"
     label 'process_low'
-    // rename vcf for union vs consensus
-    publishDir "minda", mode: 'copy', overwrite: true, saveAs: { filename ->
-        if (filename.endsWith("_minda_ensemble.vcf")) {
-            min_support == 1 ? "${meta.id}_union.vcf" : "${meta.id}_consensus.vcf"
-        }
-        else {
-            filename
-        }
-    }
 
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
@@ -20,7 +11,6 @@ process MINDA {
     tuple val(meta), path(savana_vcf), path(severus_vcf), path(nanomonsv_vcf), val(min_support)
     val tolerance
     val min_size
-    path filter_bed
 
     output:
     // TODO nf-core: Named file extensions MUST be emitted for ALL output channels
@@ -39,6 +29,7 @@ process MINDA {
     /minda/minda.py \\
         ensemble \\
         ${args} \\
+        --vcfs \\
         ${savana_vcf} \\
         ${severus_vcf} \\
         ${nanomonsv_vcf} \\
@@ -46,7 +37,6 @@ process MINDA {
         --min_support ${min_support} \\
         --tolerance ${tolerance} \\
         --min_size ${min_size} \\
-        --bed ${filter_bed}
         --out_dir ${prefix}_min_callers_${min_support}
 
     cat <<-END_VERSIONS > versions.yml
