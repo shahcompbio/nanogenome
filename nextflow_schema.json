@@ -336,19 +336,6 @@
                     "description": "path to bed file for filtering records with BedTool intersect"
                 }
             }
-        },
-        "annotsv_options": {
-            "title": "AnnotSV options",
-            "type": "object",
-            "description": "Options for AnnotSV",
-            "default": "",
-            "properties": {
-                "genomeBuild": {
-                    "type": "string",
-                    "default": "GRCh38",
-                    "description": "genome build for AnnotSV; options: GRCh38 (default) or GRCh37 or CHM13 or mm9 or mm10"
-                }
-            }
         }
     },
     "allOf": [
@@ -381,9 +368,6 @@
         },
         {
             "$ref": "#/$defs/minda_options"
-        },
-        {
-            "$ref": "#/$defs/annotsv_options"
         }
     ],
     "properties": {
@@ -391,10 +375,6 @@
             "type": "string",
             "default": "severus,savana,nanomonsv",
             "description": "specify structural variant callers to run"
-        },
-        "annotsv_annotations": {
-            "type": "string",
-            "description": "path to annotsv annotations directory if pre-installed"
         }
     }
 }
