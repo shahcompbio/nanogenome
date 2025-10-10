@@ -10,16 +10,6 @@
                         "git_sha": "ce30f336d78afcc8a90ade385eda62848d8c15f3",
                         "installed_by": ["modules"]
                     },
-                    "ensemblvep/download": {
-                        "branch": "master",
-                        "git_sha": "0567eee9276d4a358e5f9f01c810a149fbd241f8",
-                        "installed_by": ["modules"]
-                    },
-                    "ensemblvep/vep": {
-                        "branch": "master",
-                        "git_sha": "0567eee9276d4a358e5f9f01c810a149fbd241f8",
-                        "installed_by": ["modules"]
-                    },
                     "longphase/phase": {
                         "branch": "master",
                         "git_sha": "c83276742fdcd6d0abac0d8f32048a98ea97971c",

@@ -1,33 +1,20 @@
-// merge SV calls from different callers
-process MINDA {
+// convert minda vcf to tsv
+process VCF2TSV {
     tag "${meta.id}"
     label 'process_low'
-    // rename output file based on whether union or consensus
-    publishDir "${params.outdir}/minda", mode: 'copy', overwrite: true, saveAs: { filename ->
-        if (file("*_callers_1/*.vcf").exists()) {
-            "${meta.id}.minda_union.vcf"
-        }
-        else if (file("*_callers_2/*.vcf").exists()) {
-            "${meta.id}.minda_consensus.vcf"
-        }
-        else {
-            filename
-        }
-    }
+
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
-    container "preskaa/minda:v250408"
+    container "preskaa/annotate_genes:v240817"
 
     input:
-    tuple val(meta), path(savana_vcf), path(severus_vcf), path(nanomonsv_vcf), val(min_support)
-    val tolerance
-    val min_size
+    // TODO nf-core: Update the information obtained from bio.tools and make sure that it is correct
+
+    tuple val(meta), path(vcf)
 
     output:
-    // TODO nf-core: Named file extensions MUST be emitted for ALL output channels
-    tuple val(meta), path("**/*minda_ensemble.vcf"), emit: ensemble_vcf
-    tuple val(meta), path("${meta.id}_min_callers_${min_support}"), emit: minda_out
-    // TODO nf-core: List additional required output channels/values here
+    // TODO nf-core: Update the information obtained from bio.tools and make sure that it is correct
+    tuple val(meta), path("*.{tsv}"), emit: sv_table
     path "versions.yml", emit: versions
 
     when:
@@ -37,22 +24,16 @@ process MINDA {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    /minda/minda.py \\
-        ensemble \\
-        ${args} \\
-        --vcfs \\
-        ${savana_vcf} \\
-        ${severus_vcf} \\
-        ${nanomonsv_vcf} \\
-        --sample_name ${meta.id} \\
-        --min_support ${min_support} \\
-        --tolerance ${tolerance} \\
-        --min_size ${min_size} \\
-        --out_dir ${prefix}_min_callers_${min_support}
+    vcf2tsv.py \\
+        ${vcf} \\
+        ${prefix}.tsv \\
+        ${args}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        minda: v250408
+        python: \$(python --version | sed 's/Python //g')
+        pandas: \$(python -c "import pandas; print(pandas.__version__)")
+        numpy: \$(python -c "import numpy; print(numpy.__version__)")
     END_VERSIONS
     """
 
@@ -69,11 +50,11 @@ process MINDA {
     """
     echo ${args}
 
-    touch ${prefix}.bam
+    touch ${prefix}.vcf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        minda: \$(minda --version)
+        vcf2tsv: \$(vcf2tsv --version)
     END_VERSIONS
     """
 }

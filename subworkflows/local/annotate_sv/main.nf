@@ -1,9 +1,7 @@
 // merge and annotate structural variants from different callers
-include { MINDA               } from '../../../modules/local/minda/main'
-include { TABIX_BGZIPTABIX    } from '../../../modules/nf-core/tabix/bgziptabix/main'
-include { ENSEMBLVEP_DOWNLOAD } from '../../../modules/nf-core/ensemblvep/download/main'
-include { ENSEMBLVEP_VEP      } from '../../../modules/nf-core/ensemblvep/vep/main'
-
+include { MINDA            } from '../../../modules/local/minda/main'
+include { TABIX_BGZIPTABIX } from '../../../modules/nf-core/tabix/bgziptabix/main'
+include { VCF2TSV          } from '../../../modules/local/vcf2tsv/main'
 workflow ANNOTATE_SV {
     take:
     sv_ch     // channel: [ val(meta), path(vcf1), path(vcf2), path(vcf3), val(min_callers) ]
@@ -19,25 +17,12 @@ workflow ANNOTATE_SV {
     // index vcfs
     TABIX_BGZIPTABIX(MINDA.out.ensemble_vcf)
     ch_versions = ch_versions.mix(TABIX_BGZIPTABIX.out.versions.first())
-    // download ensembl vep cache if needed
-    ENSEMBLVEP_DOWNLOAD(
-        [
-            [id: "vep"],
-            "GRCh38",
-            "homo sapiens",
-            115,
-        ]
-    )
-    // annotate SVs
-    ENSEMBLVEP_VEP(MINDA.out.ensemble_vcf.map{ meta, vcf -> tuple(meta, vcf, [])},
-    "GRCh38",
-    "homo_sapiens",
-    115,
-    ENSEMBLVEP_DOWNLOAD.out.cache.map {meta, cache -> cache},
-    [[],[]],
-    [])
+    // convert to tsv
+    VCF2TSV(MINDA.out.ensemble_vcf)
+    ch_versions = ch_versions.mix(VCF2TSV.out.versions.first())
 
     emit:
     minda_vcf = MINDA.out.ensemble_vcf // channel: [ val(meta), [ vcf ] ]
+    sv_table  = VCF2TSV.out.sv_table // channel: [ val(meta), path(sv_table) ]
     versions  = ch_versions // channel: [ versions.yml ]
 }
