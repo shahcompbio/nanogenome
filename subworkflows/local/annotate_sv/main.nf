@@ -2,6 +2,7 @@
 include { MINDA               } from '../../../modules/local/minda/main'
 include { TABIX_BGZIPTABIX    } from '../../../modules/nf-core/tabix/bgziptabix/main'
 include { ENSEMBLVEP_DOWNLOAD } from '../../../modules/nf-core/ensemblvep/download/main'
+include { ENSEMBLVEP_VEP      } from '../../../modules/nf-core/ensemblvep/vep/main'
 
 workflow ANNOTATE_SV {
     take:
@@ -23,10 +24,18 @@ workflow ANNOTATE_SV {
         [
             [id: "vep"],
             "GRCh38",
-            "human",
+            "homo sapiens",
             115,
         ]
     )
+    // annotate SVs
+    ENSEMBLVEP_VEP(MINDA.out.ensemble_vcf.map{ meta, vcf -> tuple(meta, vcf, [])},
+    "GRCh38",
+    "homo_sapiens",
+    115,
+    ENSEMBLVEP_DOWNLOAD.out.cache.map {meta, cache -> cache},
+    [[],[]],
+    [])
 
     emit:
     minda_vcf = MINDA.out.ensemble_vcf // channel: [ val(meta), [ vcf ] ]

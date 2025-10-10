@@ -375,6 +375,10 @@
             "type": "string",
             "default": "severus,savana,nanomonsv",
             "description": "specify structural variant callers to run"
+        },
+        "outdir_cache": {
+            "type": "string",
+            "description": "specify cache directory for VEP annotation"
         }
     }
 }
