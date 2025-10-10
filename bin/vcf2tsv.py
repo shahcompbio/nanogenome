@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 import re
 import pandas as pd
@@ -146,16 +147,17 @@ class MAF:
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("vcf")
-    p.add_argument("tsv")
     p.add_argument("--ref", default="hg38")
     args = p.parse_args()
     # make maf object
     mafobj = MAF('SAMPLE', survivor=False)
     vcf = args.vcf
-    tsv = args.tsv
     reference = args.ref
     mafobj.proc_vcf(vcf, survivor=False)
     maf = mafobj.to_df()
     if reference == "hg19":
         maf = convert_hg19(maf)
+    prefix = os.path.splitext(os.path.basename(vcf))[0]
+    tsv = f"{prefix}.tsv"
+    print(f'writing {tsv}')
     maf.to_csv(tsv, sep='\t', index=False)

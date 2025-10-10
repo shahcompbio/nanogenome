@@ -2,18 +2,6 @@
 process MINDA {
     tag "${meta.id}"
     label 'process_low'
-    // rename output file based on whether union or consensus
-    publishDir "${params.outdir}/minda", mode: 'copy', overwrite: true, saveAs: { filename ->
-        if (file("*_callers_1/*.vcf").exists()) {
-            "${meta.id}.minda_union.vcf"
-        }
-        else if (file("*_callers_2/*.vcf").exists()) {
-            "${meta.id}.minda_consensus.vcf"
-        }
-        else {
-            filename
-        }
-    }
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
     container "preskaa/minda:v250408"
@@ -25,7 +13,7 @@ process MINDA {
 
     output:
     // TODO nf-core: Named file extensions MUST be emitted for ALL output channels
-    tuple val(meta), path("**/*minda_ensemble.vcf"), emit: ensemble_vcf
+    tuple val(meta), path("*.minda_*.vcf"), emit: ensemble_vcf
     tuple val(meta), path("${meta.id}_min_callers_${min_support}"), emit: minda_out
     // TODO nf-core: List additional required output channels/values here
     path "versions.yml", emit: versions
@@ -36,6 +24,7 @@ process MINDA {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def set = min_support == 1 ? "union" : "consensus"
     """
     /minda/minda.py \\
         ensemble \\
@@ -49,6 +38,9 @@ process MINDA {
         --tolerance ${tolerance} \\
         --min_size ${min_size} \\
         --out_dir ${prefix}_min_callers_${min_support}
+    # rename file
+    cp ${prefix}_min_callers_${min_support}/${prefix}_minda_ensemble.vcf ${prefix}.minda_${set}.vcf
+
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -59,21 +51,15 @@ process MINDA {
     stub:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    // TODO nf-core: A stub section should mimic the execution of the original module as best as possible
-    //               Have a look at the following examples:
-    //               Simple example: https://github.com/nf-core/modules/blob/818474a292b4860ae8ff88e149fbcda68814114d/modules/nf-core/bcftools/annotate/main.nf#L47-L63
-    //               Complex example: https://github.com/nf-core/modules/blob/818474a292b4860ae8ff88e149fbcda68814114d/modules/nf-core/bedtools/split/main.nf#L38-L54
-    // TODO nf-core: If the module doesn't use arguments ($args), you SHOULD remove:
-    //               - The definition of args `def args = task.ext.args ?: ''` above.
-    //               - The use of the variable in the script `echo $args ` below.
+    def set = min_support == 1 ? "union" : "consensus"
     """
-    echo ${args}
-
-    touch ${prefix}.bam
+    touch ${prefix}.minda_${set}.vcf
+    mkdir -p ${prefix}_min_callers_${min_support}
+    touch ${prefix}_min_callers_${min_support}/${prefix}_minda_ensemble.vcf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        minda: \$(minda --version)
+        minda: v250408
     END_VERSIONS
     """
 }

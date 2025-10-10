@@ -14,7 +14,7 @@ process VCF2TSV {
 
     output:
     // TODO nf-core: Update the information obtained from bio.tools and make sure that it is correct
-    tuple val(meta), path("*.{tsv}"), emit: sv_table
+    tuple val(meta), path("*.tsv"), emit: sv_table
     path "versions.yml", emit: versions
 
     when:
@@ -26,7 +26,6 @@ process VCF2TSV {
     """
     vcf2tsv.py \\
         ${vcf} \\
-        ${prefix}.tsv \\
         ${args}
 
     cat <<-END_VERSIONS > versions.yml
