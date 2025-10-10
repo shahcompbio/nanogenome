@@ -7,14 +7,14 @@ process MINDA {
     container "preskaa/minda:v250408"
 
     input:
-    tuple val(meta), path(savana_vcf), path(severus_vcf), path(nanomonsv_vcf), val(min_support)
+    tuple val(meta), path(savana_vcf), path(severus_vcf), path(nanomonsv_vcf)
     val tolerance
     val min_size
 
     output:
     // TODO nf-core: Named file extensions MUST be emitted for ALL output channels
     tuple val(meta), path("*.minda_*.vcf"), emit: ensemble_vcf
-    tuple val(meta), path("${meta.id}_min_callers_${min_support}"), emit: minda_out
+    tuple val(meta), path("${meta.id}_min_callers_${meta.min_callers}"), emit: minda_out
     // TODO nf-core: List additional required output channels/values here
     path "versions.yml", emit: versions
 
@@ -24,7 +24,8 @@ process MINDA {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def set = min_support == 1 ? "union" : "consensus"
+    def set = meta.min_callers == 1 ? "union" : "consensus"
+    def min_support = meta.min_callers
     """
     /minda/minda.py \\
         ensemble \\

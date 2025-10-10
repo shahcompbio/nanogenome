@@ -48,11 +48,17 @@ workflow NANOGENOME {
         .join(SV_CALLING.out.severus_vcf, by: 0)
         .join(SV_CALLING.out.nanomonsv_vcf, by: 0)
         .combine(support_ch)
+        .map { meta, vcf1, vcf2, vcf3, min_callers ->
+            [meta + [ min_callers: min_callers], vcf1, vcf2, vcf3]
+        }
+    sv_ch.view()
     // run merge + annotate SV subworkflow
     ANNOTATE_SV(
         sv_ch,
         params.tolerance,
         params.min_size,
+        params.gene_annotations,
+        params.oncokb
     )
     ch_versions = ch_versions.mix(ANNOTATE_SV.out.versions)
     // run wakhan cna

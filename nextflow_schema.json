@@ -376,9 +376,13 @@
             "default": "severus,savana,nanomonsv",
             "description": "specify structural variant callers to run"
         },
-        "outdir_cache": {
+        "gene_annotations": {
             "type": "string",
-            "description": "specify cache directory for VEP annotation"
+            "description": "path to gene annotation table if already built"
+        },
+        "oncokb": {
+            "type": "string",
+            "description": "path to oncokb table for annotating which SVs affect TSG/oncogenes"
         }
     }
 }

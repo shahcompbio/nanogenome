@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import re
+import numpy as np
 import pandas as pd
 import argparse
 
@@ -157,7 +158,15 @@ if __name__ == "__main__":
     maf = mafobj.to_df()
     if reference == "hg19":
         maf = convert_hg19(maf)
-    prefix = os.path.splitext(os.path.basename(vcf))[0]
-    tsv = f"{prefix}.tsv"
-    print(f'writing {tsv}')
-    maf.to_csv(tsv, sep='\t', index=False)
+    # chunking for gene annotation
+    print(f'chunking table for gene annotation')
+    # make each chunk 20 rows or less
+    chunk_size = 20
+    num_splits = int(np.ceil(len(maf) / chunk_size))
+    # Split the DataFrame
+    split_dfs = np.array_split(maf, num_splits)
+    # Convert split arrays back into DataFrames
+    split_dfs = [pd.DataFrame(split) for split in split_dfs]
+    for i in np.arange(0, len(split_dfs)):
+        split_df = split_dfs[i]
+        split_df.to_csv(f"chunk_{i}.tsv", sep='\t', index=False)

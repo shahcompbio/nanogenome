@@ -1,7 +1,7 @@
-// convert minda vcf to tsv
-process VCF2TSV {
-    tag "${meta.id}"
-    label 'process_low'
+// annotate structural variant genes
+process ANNOTATEGENES {
+    tag "$meta.id"
+    label 'process_single'
     publishDir "${params.outdir}", enabled: false
 
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
@@ -9,14 +9,15 @@ process VCF2TSV {
     container "preskaa/annotate_genes:v240817"
 
     input:
-    // TODO nf-core: Update the information obtained from bio.tools and make sure that it is correct
+    tuple val(meta), path(tsv)
+    path gene_annotations
+    path oncokb
 
-    tuple val(meta), path(vcf)
 
     output:
     // TODO nf-core: Update the information obtained from bio.tools and make sure that it is correct
-    tuple val(meta), path("*.tsv", arity: "1..*"), emit: sv_table
-    path "versions.yml", emit: versions
+    tuple val(meta), path("*.tsv"), emit: annotated_sv
+    path "versions.yml"           , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -25,9 +26,10 @@ process VCF2TSV {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    vcf2tsv.py \\
-        ${vcf} \\
-        ${args}
+    annotate_genes.py \\
+        ${gene_annotations} \\
+        ${oncokb} \\
+        $args
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -48,13 +50,14 @@ process VCF2TSV {
     //               - The definition of args `def args = task.ext.args ?: ''` above.
     //               - The use of the variable in the script `echo $args ` below.
     """
-    echo ${args}
+    echo $args
 
-    touch ${prefix}.vcf
+    touch ${prefix}.bed
+    touch ${prefix}.textual
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        vcf2tsv: \$(vcf2tsv --version)
+        annotategenes: \$(annotategenes --version)
     END_VERSIONS
     """
 }
