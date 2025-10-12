@@ -2,7 +2,6 @@
 process VCF2TSV {
     tag "${meta.id}"
     label 'process_low'
-    publishDir "${params.outdir}", enabled: false
 
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
