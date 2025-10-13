@@ -5,7 +5,7 @@
 */
 include { HAPLOTAG               } from '../subworkflows/local/haplotag/main'
 include { SV_CALLING             } from '../subworkflows/local/sv_calling/main'
-include { SEVERUS                } from '../modules/nf-core/severus/main'
+include { ANNOTATE_SV            } from '../subworkflows/local/annotate_sv/main'
 include { WAKHAN_CNA             } from '../modules/local/wakhan/cna/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
@@ -31,6 +31,8 @@ workflow NANOGENOME {
     // run haplotag subworkflow to haplotag bams
     HAPLOTAG(ch_samplesheet, params.clair3_model, params.clair3_platform, params.fasta, params.fai)
     ch_versions = ch_versions.mix(HAPLOTAG.out.versions)
+    // add phasing stats to multiqc
+    ch_multiqc_files = ch_multiqc_files.mix(HAPLOTAG.out.whatshap_stats.collect { it[1] })
     // call structural variants
     SV_CALLING(
         params.sv_callers,
@@ -39,9 +41,28 @@ workflow NANOGENOME {
         HAPLOTAG.out.rephased_vcf,
         params.vntr_bed,
         params.fasta,
-        params.fai
+        params.fai,
     )
     ch_versions = ch_versions.mix(SV_CALLING.out.versions)
+    // merge and annotate SVs in different callers and generate both union and consensus VCFs
+    support_ch = Channel.from(1, params.min_callers)
+    sv_ch = SV_CALLING.out.savana_vcf
+        .join(SV_CALLING.out.severus_vcf, by: 0)
+        .join(SV_CALLING.out.nanomonsv_vcf, by: 0)
+        .combine(support_ch)
+        .map { meta, vcf1, vcf2, vcf3, min_callers ->
+            [meta + [min_callers: min_callers], vcf1, vcf2, vcf3]
+        }
+    // run merge + annotate SV subworkflow
+    ANNOTATE_SV(
+        sv_ch,
+        params.tolerance,
+        params.min_size,
+        params.gene_annotations,
+        params.oncokb,
+        params.oncokb_url,
+    )
+    ch_versions = ch_versions.mix(ANNOTATE_SV.out.versions)
     // run wakhan cna
     cna_input_ch = HAPLOTAG.out.bam_snps
         .branch { meta, bam, bai, vcf, tbi ->

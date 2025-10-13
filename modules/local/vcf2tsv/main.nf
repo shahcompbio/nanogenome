@@ -1,23 +1,22 @@
-// whatshap to haplotag reads
-process WHATSHAP_HAPLOTAG {
+// convert minda vcf to tsv
+process VCF2TSV {
     tag "${meta.id}"
-    label 'process_high'
+    label 'process_low'
+    publishDir "${params.outdir}/vcf2tsv", mode: 'copy', overwrite: true, pattern: "${meta.id}*.tsv"
 
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
-    container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
-        ? 'https://depot.galaxyproject.org/singularity/whatshap:2.8--py39h2de1943_0'
-        : 'biocontainers/whatshap:2.8--py39h2de1943_0'}"
+    container "preskaa/annotate_genes:v240817"
 
     input:
-    path ref_fasta
-    path ref_fai
-    tuple val(meta), path(bam), path(bai), path(vcf), path(vcf_tbi)
+    // TODO nf-core: Update the information obtained from bio.tools and make sure that it is correct
+
+    tuple val(meta), path(vcf)
 
     output:
-    // TODO nf-core: Named file extensions MUST be emitted for ALL output channels
-    tuple val(meta), path("*.haplotagged.bam"), emit: bam
-    // TODO nf-core: List additional required output channels/values here
+    // TODO nf-core: Update the information obtained from bio.tools and make sure that it is correct
+    tuple val(meta), path("${meta.id}*.tsv"), emit: sv_table
+    tuple val(meta), path("chunk*.tsv", arity: "1..*"), emit: chunks
     path "versions.yml", emit: versions
 
     when:
@@ -25,21 +24,17 @@ process WHATSHAP_HAPLOTAG {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}.${meta.condition}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    whatshap haplotag \\
-        ${args} \\
-        --reference ${ref_fasta} \\
+    vcf2tsv.py \\
         ${vcf} \\
-        ${bam} \\
-        -o ${prefix}.haplotagged.bam \\
-        --ignore-read-groups \\
-        --tag-supplementary \\
-        --skip-missing-contigs \\
-        --output-threads ${task.cpus}
+        ${args}
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        whatshap: \$(whatshap --version)
+        python: \$(python --version | sed 's/Python //g')
+        pandas: \$(python -c "import pandas; print(pandas.__version__)")
+        numpy: \$(python -c "import numpy; print(numpy.__version__)")
     END_VERSIONS
     """
 
@@ -56,11 +51,11 @@ process WHATSHAP_HAPLOTAG {
     """
     echo ${args}
 
-    touch ${prefix}.bam
+    touch ${prefix}.vcf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        whatshap: \$(whatshap --version)
+        vcf2tsv: \$(vcf2tsv --version)
     END_VERSIONS
     """
 }

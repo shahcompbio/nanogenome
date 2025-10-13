@@ -1,22 +1,14 @@
-// whatshap to haplotag reads
-process WHATSHAP_HAPLOTAG {
-    tag "${meta.id}"
-    label 'process_high'
+// retrieve gene annotations from biomart
+process BIOMART {
+    label 'process_single'
 
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
-    container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
-        ? 'https://depot.galaxyproject.org/singularity/whatshap:2.8--py39h2de1943_0'
-        : 'biocontainers/whatshap:2.8--py39h2de1943_0'}"
-
-    input:
-    path ref_fasta
-    path ref_fai
-    tuple val(meta), path(bam), path(bai), path(vcf), path(vcf_tbi)
+    container "biocontainers/bioconductor-biomart:2.62.0--r44hdfd78af_0"
 
     output:
     // TODO nf-core: Named file extensions MUST be emitted for ALL output channels
-    tuple val(meta), path("*.haplotagged.bam"), emit: bam
+    path ("*-genes.txt"), emit: gene_annotation
     // TODO nf-core: List additional required output channels/values here
     path "versions.yml", emit: versions
 
@@ -24,22 +16,15 @@ process WHATSHAP_HAPLOTAG {
     task.ext.when == null || task.ext.when
 
     script:
-    def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}.${meta.condition}"
+    // default genome build is hg38
+    def args = task.ext.args ?: 'hg38'
     """
-    whatshap haplotag \\
-        ${args} \\
-        --reference ${ref_fasta} \\
-        ${vcf} \\
-        ${bam} \\
-        -o ${prefix}.haplotagged.bam \\
-        --ignore-read-groups \\
-        --tag-supplementary \\
-        --skip-missing-contigs \\
-        --output-threads ${task.cpus}
+    biomart.R ${args}
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        whatshap: \$(whatshap --version)
+        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
+        biomaRt: \$(Rscript -e "library(biomaRt); cat(as.character(packageVersion('biomaRt')))")
     END_VERSIONS
     """
 
@@ -60,7 +45,7 @@ process WHATSHAP_HAPLOTAG {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        whatshap: \$(whatshap --version)
+        biomart: \$(biomart --version)
     END_VERSIONS
     """
 }

@@ -1,45 +1,42 @@
-// whatshap to haplotag reads
-process WHATSHAP_HAPLOTAG {
-    tag "${meta.id}"
-    label 'process_high'
+// annotate structural variant genes
+process ANNOTATEGENES {
+    tag "$meta.id"
+    label 'process_single'
+    publishDir "${params.outdir}", enabled: false
 
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
-    container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
-        ? 'https://depot.galaxyproject.org/singularity/whatshap:2.8--py39h2de1943_0'
-        : 'biocontainers/whatshap:2.8--py39h2de1943_0'}"
+    container "preskaa/annotate_genes:v240817"
 
     input:
-    path ref_fasta
-    path ref_fai
-    tuple val(meta), path(bam), path(bai), path(vcf), path(vcf_tbi)
+    tuple val(meta), path(tsv)
+    path gene_annotations
+    path oncokb
+
 
     output:
-    // TODO nf-core: Named file extensions MUST be emitted for ALL output channels
-    tuple val(meta), path("*.haplotagged.bam"), emit: bam
-    // TODO nf-core: List additional required output channels/values here
-    path "versions.yml", emit: versions
+    // TODO nf-core: Update the information obtained from bio.tools and make sure that it is correct
+    tuple val(meta), path("*.tsv"), emit: annotated_sv
+    path "versions.yml"           , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}.${meta.condition}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    whatshap haplotag \\
-        ${args} \\
-        --reference ${ref_fasta} \\
-        ${vcf} \\
-        ${bam} \\
-        -o ${prefix}.haplotagged.bam \\
-        --ignore-read-groups \\
-        --tag-supplementary \\
-        --skip-missing-contigs \\
-        --output-threads ${task.cpus}
+    annotate_genes.py \\
+        ${gene_annotations} \\
+        ${tsv} \\
+        ${oncokb} \\
+        $args
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        whatshap: \$(whatshap --version)
+        python: \$(python --version | sed 's/Python //g')
+        pandas: \$(python -c "import pandas; print(pandas.__version__)")
+        numpy: \$(python -c "import numpy; print(numpy.__version__)")
     END_VERSIONS
     """
 
@@ -54,13 +51,14 @@ process WHATSHAP_HAPLOTAG {
     //               - The definition of args `def args = task.ext.args ?: ''` above.
     //               - The use of the variable in the script `echo $args ` below.
     """
-    echo ${args}
+    echo $args
 
-    touch ${prefix}.bam
+    touch ${prefix}.bed
+    touch ${prefix}.textual
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        whatshap: \$(whatshap --version)
+        annotategenes: \$(annotategenes --version)
     END_VERSIONS
     """
 }

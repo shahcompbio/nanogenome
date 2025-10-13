@@ -1,7 +1,7 @@
-// whatshap to haplotag reads
-process WHATSHAP_HAPLOTAG {
-    tag "${meta.id}"
-    label 'process_high'
+// get phasing statistics
+process WHATSHAP_STATS {
+    tag "$meta.id"
+    label 'process_medium'
 
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
@@ -10,33 +10,26 @@ process WHATSHAP_HAPLOTAG {
         : 'biocontainers/whatshap:2.8--py39h2de1943_0'}"
 
     input:
-    path ref_fasta
-    path ref_fai
-    tuple val(meta), path(bam), path(bai), path(vcf), path(vcf_tbi)
+    tuple val(meta), path(vcf)
 
     output:
     // TODO nf-core: Named file extensions MUST be emitted for ALL output channels
-    tuple val(meta), path("*.haplotagged.bam"), emit: bam
+    tuple val(meta), path("*.tsv"), emit: tsv
     // TODO nf-core: List additional required output channels/values here
-    path "versions.yml", emit: versions
+    path "versions.yml"           , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}.${meta.condition}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    whatshap haplotag \\
-        ${args} \\
-        --reference ${ref_fasta} \\
+    whatshap stats \\
         ${vcf} \\
-        ${bam} \\
-        -o ${prefix}.haplotagged.bam \\
-        --ignore-read-groups \\
-        --tag-supplementary \\
-        --skip-missing-contigs \\
-        --output-threads ${task.cpus}
+        --tsv=${prefix}.tsv \\
+        $args
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         whatshap: \$(whatshap --version)
@@ -54,7 +47,7 @@ process WHATSHAP_HAPLOTAG {
     //               - The definition of args `def args = task.ext.args ?: ''` above.
     //               - The use of the variable in the script `echo $args ` below.
     """
-    echo ${args}
+    echo $args
 
     touch ${prefix}.bam
 

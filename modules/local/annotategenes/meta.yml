@@ -1,0 +1,80 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+# # TODO nf-core: Add a description of the module and list keywords
+name: "annotategenes"
+description: write your description here
+keywords:
+  - sort
+  - example
+  - genomics
+tools:
+  ## TODO nf-core: Add a description and other details for the software below
+  - "annotategenes":
+      description: ""
+      homepage: ""
+      documentation: ""
+      tool_dev_url: ""
+      doi: ""
+      licence: null
+      identifier: biotools:annotategenes
+
+input:
+  # TODO nf-core: Update the information obtained from bio.tools and make sure that it is correct
+  - - meta:
+        type: map
+        description: Groovy Map containing sample information. e.g. `[ id:'sample1'
+          ]`
+    - annotation_track:
+        type: file
+        description: annotation_track file
+        pattern: "*.{bed}"
+        ontologies:
+          - edam: http://edamontology.org/data_3002 # Annotation track
+          - edam: http://edamontology.org/format_3003 # BED
+  - - meta2:
+        type: map
+        description: Groovy Map containing sample information. e.g. `[ id:'sample1'
+          ]`
+    - data:
+        type: file
+        description: data file
+        pattern: "*.{textual}"
+        ontologies:
+          - edam: http://edamontology.org/data_0006 # Data
+          - edam: http://edamontology.org/format_2330 # Textual format
+output:
+  # TODO nf-core: Update the information obtained from bio.tools and make sure that it is correct
+  image:
+    - - meta:
+          type: map
+          description: Groovy Map containing sample information. e.g. `[ id:'sample1'
+            ]`
+      - "*.{image}":
+          type: file
+          description: image file
+          pattern: "*.{image}"
+          ontologies:
+            - edam: http://edamontology.org/data_2968 # Image
+            - edam: http://edamontology.org/format_3547 # Image format
+  data:
+    - - meta:
+          type: map
+          description: Groovy Map containing sample information. e.g. `[ id:'sample1'
+            ]`
+      - "*.{tsv}":
+          type: file
+          description: data file
+          pattern: "*.{tsv}"
+          ontologies:
+            - edam: http://edamontology.org/data_0006 # Data
+            - edam: http://edamontology.org/format_3475 # TSV
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions
+        pattern: versions.yml
+        ontologies:
+          - edam: http://edamontology.org/format_3750 # YAML
+authors:
+  - "@apsteinberg"
+maintainers:
+  - "@apsteinberg"
