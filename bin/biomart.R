@@ -1,6 +1,5 @@
 #!/usr/bin/env Rscript
 library(biomaRt)
-library(optparse)
 # create gene annotation table for structural variant annotation
 args <- commandArgs(trailingOnly = TRUE)
 genome <- args[1]
@@ -12,6 +11,11 @@ if (genome == 'hg38') {
 } else {
     stop("Only hg19 and hg38 are supported")
 }
+# Disable biomaRt cache
+options(timeout = 600)
+Sys.setenv("BIOMART_CACHE" = "/tmp/biomart_cache")
+dir.create("/tmp/biomart_cache", showWarnings = FALSE, recursive = TRUE)
+# get annotations
 ensembl <- useMart(host=host, biomart='ENSEMBL_MART_ENSEMBL',dataset = 'hsapiens_gene_ensembl')
 ensemblAnnotation <- getBM(attributes=c('ensembl_gene_id',
                                     'hgnc_symbol',
@@ -22,4 +26,4 @@ ensemblAnnotation <- getBM(attributes=c('ensembl_gene_id',
                                     'strand'),
                                     mart = ensembl)
 # create gene annotation table
-write.table(ensemblAnnotation,file=paste(opt$genome,'-genes.txt',sep=''),col.names=T,row.names=F,sep='\t',quote=F)
+write.table(ensemblAnnotation,file=paste(genome,'-genes.txt',sep=''),col.names=T,row.names=F,sep='\t',quote=F)
