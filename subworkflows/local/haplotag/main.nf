@@ -5,6 +5,7 @@ include { WAKHAN_HAPCORRECT } from '../../../modules/local/wakhan/hapcorrect/mai
 include { TABIX_TABIX       } from '../../../modules/nf-core/tabix/tabix/main'
 include { WHATSHAP_HAPLOTAG } from '../../../modules/local/whatshap/haplotag/main'
 include { SAMTOOLS_INDEX    } from '../../../modules/nf-core/samtools/index/main'
+include { WHATSHAP_STATS } from '../../../modules/local/whatshap/stats/main'
 /*
  * haplotag bam files
  */
@@ -54,6 +55,9 @@ workflow HAPLOTAG {
     rephased_vcf_ch.view()
     TABIX_TABIX(rephased_vcf_ch)
     ch_versions = ch_versions.mix(TABIX_TABIX.out.versions)
+    // compute phasing statistics
+    WHATSHAP_STATS(rephased_vcf_ch)
+    ch_versions = ch_versions.mix(WHATSHAP_STATS.out.versions)
     // run whatshap haplotag to tag both tumor and normal bams
     hap_input_ch = ch_samplesheet
         .map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }
@@ -80,5 +84,6 @@ workflow HAPLOTAG {
     rephased_vcf   = rephased_vcf_ch // channel: [ val(meta), [ vcf ] ]
     bam_snps       = hap_input_ch // channel: [ val(meta), bam, bai, vcf, tbi ] ]
     wakhanHPOutput = WAKHAN_HAPCORRECT.out.wakhanHPOutput // channel: [ val(meta), [ path ] ]
+    whatshap_stats = WHATSHAP_STATS.out.tsv // channel: [ val(meta), [path]]
     versions       = ch_versions // channel: [ versions.yml ]
 }

@@ -31,6 +31,8 @@ workflow NANOGENOME {
     // run haplotag subworkflow to haplotag bams
     HAPLOTAG(ch_samplesheet, params.clair3_model, params.clair3_platform, params.fasta, params.fai)
     ch_versions = ch_versions.mix(HAPLOTAG.out.versions)
+    // add phasing stats to multiqc
+    ch_multiqc_files = ch_multiqc_files.mix(HAPLOTAG.out.whatshap_stats.collect { it[1] })
     // call structural variants
     SV_CALLING(
         params.sv_callers,
