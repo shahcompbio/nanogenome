@@ -28,6 +28,7 @@ process ANNOTATEGENES {
     """
     annotate_genes.py \\
         ${gene_annotations} \\
+        ${tsv} \\
         ${oncokb} \\
         $args
 

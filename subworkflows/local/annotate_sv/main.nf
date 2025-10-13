@@ -2,8 +2,8 @@
 include { MINDA            } from '../../../modules/local/minda/main'
 include { TABIX_BGZIPTABIX } from '../../../modules/nf-core/tabix/bgziptabix/main'
 include { VCF2TSV          } from '../../../modules/local/vcf2tsv/main'
-include { CSVTK_SPLIT      } from '../../../modules/nf-core/csvtk/split/main'
 include { ANNOTATEGENES    } from '../../../modules/local/annotategenes/main'
+include { CSVTK_CONCAT     } from '../../../modules/nf-core/csvtk/concat/main'
 workflow ANNOTATE_SV {
     take:
     sv_ch            // channel: [ val(meta), path(vcf1), path(vcf2), path(vcf3) ]; meta [id: sample id, min_callers: min number of callers]
@@ -32,10 +32,14 @@ workflow ANNOTATE_SV {
         .set { tsv_chunks }
     tsv_chunks.view()
     ANNOTATEGENES(tsv_chunks, gene_annotations, oncokb)
-    print("annotating svs")
+    ch_versions = ch_versions.mix(ANNOTATEGENES.out.versions.first())
+    // combine the annotated chunks back into single file per sample
+    CSVTK_CONCAT(ANNOTATEGENES.out.annotated_sv.groupTuple(), "tsv", "tsv")
+    ch_versions = ch_versions.mix(CSVTK_CONCAT.out.versions.first())
 
     emit:
     minda_vcf = MINDA.out.ensemble_vcf // channel: [ val(meta), [ vcf ] ]
     sv_table  = VCF2TSV.out.sv_table // channel: [ val(meta), path(sv_table) ]
+    annotated_sv = CSVTK_CONCAT.out.csv // channel: [ val(meta), path(annotated_sv) ]
     versions  = ch_versions // channel: [ versions.yml ]
 }
