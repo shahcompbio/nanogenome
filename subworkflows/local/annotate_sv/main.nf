@@ -24,11 +24,14 @@ workflow ANNOTATE_SV {
     // convert to tsv and chunk for gene annotation
     VCF2TSV(MINDA.out.ensemble_vcf)
     ch_versions = ch_versions.mix(VCF2TSV.out.versions.first())
-    // split into multiple chunks for annotation
-    CSVTK_SPLIT(VCF2TSV.out.sv_table, "tsv", "tsv")
-    ch_versions = ch_versions.mix(CSVTK_SPLIT.out.versions.first())
+    // split chunks into
     // annotate chunked tsv files
-    // ANNOTATEGENES(VCF2TSV.out.sv_table, gene_annotations, oncokb)
+    // Spread chunks into individual channel items
+    VCF2TSV.out.chunks
+        .flatMap { meta, chunks -> chunks.collect { chunk -> [meta, chunk] } }
+        .set { tsv_chunks }
+    tsv_chunks.view()
+    ANNOTATEGENES(tsv_chunks, gene_annotations, oncokb)
     print("annotating svs")
 
     emit:

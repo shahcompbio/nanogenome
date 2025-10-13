@@ -2,6 +2,7 @@
 process VCF2TSV {
     tag "${meta.id}"
     label 'process_low'
+    publishDir "${params.outdir}/vcf2tsv", mode: 'copy', overwrite: true, pattern: "${meta.id}*.tsv"
 
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
@@ -14,7 +15,8 @@ process VCF2TSV {
 
     output:
     // TODO nf-core: Update the information obtained from bio.tools and make sure that it is correct
-    tuple val(meta), path("*.tsv", arity: "1..*"), emit: sv_table
+    tuple val(meta), path("${meta.id}*.tsv"), emit: sv_table
+    tuple val(meta), path("chunk*.tsv", arity: "1..*"), emit: chunks
     path "versions.yml", emit: versions
 
     when:
