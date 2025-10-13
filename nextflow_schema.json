@@ -336,6 +336,32 @@
                     "description": "path to bed file for filtering records with BedTool intersect"
                 }
             }
+        },
+        "gene_annotation": {
+            "title": "Gene annotation",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "gene_annotations": {
+                    "type": "string",
+                    "description": "path to gene annotation table if already built"
+                },
+                "oncokb": {
+                    "type": "string",
+                    "description": "path to oncokb table for annotating which SVs affect TSG/oncogenes"
+                },
+                "oncokb_url": {
+                    "type": "string",
+                    "default": "https://www.oncokb.org/api/v1/utils/cancerGeneList.txt",
+                    "description": "url for oncokb gene table"
+                },
+                "genome_build": {
+                    "type": "string",
+                    "default": "hg38",
+                    "description": "genome build for biomaRt; options are hg38 or hg19"
+                }
+            }
         }
     },
     "allOf": [
@@ -368,6 +394,9 @@
         },
         {
             "$ref": "#/$defs/minda_options"
+        },
+        {
+            "$ref": "#/$defs/gene_annotation"
         }
     ],
     "properties": {
@@ -375,14 +404,6 @@
             "type": "string",
             "default": "severus,savana,nanomonsv",
             "description": "specify structural variant callers to run"
-        },
-        "gene_annotations": {
-            "type": "string",
-            "description": "path to gene annotation table if already built"
-        },
-        "oncokb": {
-            "type": "string",
-            "description": "path to oncokb table for annotating which SVs affect TSG/oncogenes"
         }
     }
 }

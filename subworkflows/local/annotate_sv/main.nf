@@ -4,6 +4,8 @@ include { TABIX_BGZIPTABIX } from '../../../modules/nf-core/tabix/bgziptabix/mai
 include { VCF2TSV          } from '../../../modules/local/vcf2tsv/main'
 include { ANNOTATEGENES    } from '../../../modules/local/annotategenes/main'
 include { CSVTK_CONCAT     } from '../../../modules/nf-core/csvtk/concat/main'
+include { WGET             } from '../../../modules/nf-core/wget/main'
+include { BIOMART          } from '../../../modules/local/biomart/main'
 workflow ANNOTATE_SV {
     take:
     sv_ch            // channel: [ val(meta), path(vcf1), path(vcf2), path(vcf3) ]; meta [id: sample id, min_callers: min number of callers]
@@ -11,6 +13,7 @@ workflow ANNOTATE_SV {
     min_size         // minimum size of SV to consider
     gene_annotations // gene annotation file
     oncokb           // oncokb annotation file
+    oncokb_url       // oncokb url to download if oncokb not provided
 
     main:
 
@@ -31,6 +34,19 @@ workflow ANNOTATE_SV {
         .flatMap { meta, chunks -> chunks.collect { chunk -> [meta, chunk] } }
         .set { tsv_chunks }
     tsv_chunks.view()
+    // download oncokb if not provided
+    if (!oncokb) {
+        WGET([[id: 'oncokb'], oncokb_url])
+        oncokb = WGET.out.outfile.map { meta, path -> path }
+        ch_versions = ch_versions.mix(WGET.out.versions.first())
+    }
+    // build gene annotation table if not provided
+    if (!gene_annotations) {
+        BIOMART()
+        gene_annotations = BIOMART.out.gene_annotation
+        ch_versions = ch_versions.mix(BIOMART.out.versions.first())
+    }
+    // annotate genes
     ANNOTATEGENES(tsv_chunks, gene_annotations, oncokb)
     ch_versions = ch_versions.mix(ANNOTATEGENES.out.versions.first())
     // combine the annotated chunks back into single file per sample
@@ -38,8 +54,8 @@ workflow ANNOTATE_SV {
     ch_versions = ch_versions.mix(CSVTK_CONCAT.out.versions.first())
 
     emit:
-    minda_vcf = MINDA.out.ensemble_vcf // channel: [ val(meta), [ vcf ] ]
-    sv_table  = VCF2TSV.out.sv_table // channel: [ val(meta), path(sv_table) ]
+    minda_vcf    = MINDA.out.ensemble_vcf // channel: [ val(meta), [ vcf ] ]
+    sv_table     = VCF2TSV.out.sv_table // channel: [ val(meta), path(sv_table) ]
     annotated_sv = CSVTK_CONCAT.out.csv // channel: [ val(meta), path(annotated_sv) ]
-    versions  = ch_versions // channel: [ versions.yml ]
+    versions     = ch_versions // channel: [ versions.yml ]
 }
