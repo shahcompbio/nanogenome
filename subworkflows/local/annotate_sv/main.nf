@@ -6,6 +6,7 @@ include { ANNOTATEGENES    } from '../../../modules/local/annotategenes/main'
 include { CSVTK_CONCAT     } from '../../../modules/nf-core/csvtk/concat/main'
 include { WGET             } from '../../../modules/nf-core/wget/main'
 include { BIOMART          } from '../../../modules/local/biomart/main'
+include { BCFTOOLS_QUERY   } from '../../../modules/nf-core/bcftools/query/main'
 workflow ANNOTATE_SV {
     take:
     sv_ch            // channel: [ val(meta), path(vcf1), path(vcf2), path(vcf3) ]; meta [id: sample id, min_callers: min number of callers]
@@ -52,6 +53,17 @@ workflow ANNOTATE_SV {
     // combine the annotated chunks back into single file per sample
     CSVTK_CONCAT(ANNOTATEGENES.out.annotated_sv.groupTuple(), "tsv", "tsv")
     ch_versions = ch_versions.mix(CSVTK_CONCAT.out.versions.first())
+    // annotate sv types
+    // collect raw calls for strand information
+    sv_ch
+        .flatMap { meta, vcf1, vcf2, vcf3 ->
+            [vcf1, vcf2, vcf3]
+            .collect { vcf -> [meta, vcf, []] }}
+            .set { caller_ch }
+    // take raw calls and make into tsv files
+    BCFTOOLS_QUERY(caller_ch, [], [], [])
+    BCFTOOLS_QUERY.out.versions.first().view()
+    ch_versions = ch_versions.mix(BCFTOOLS_QUERY.out.versions.first())
 
     emit:
     minda_vcf    = MINDA.out.ensemble_vcf // channel: [ val(meta), [ vcf ] ]

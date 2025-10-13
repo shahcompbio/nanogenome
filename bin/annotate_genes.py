@@ -9,19 +9,13 @@ from tqdm import tqdm
 def check_oncokb(gsvs, oncokb):
     gene1 = list(gsvs["gene_name_1"])
     gene2 = list(gsvs["gene_name_2"])
+    # load oncokb
     oncodat = pd.read_csv(oncokb, sep="\t")
-    oncogenes = list(oncodat["Hugo Symbol"])
-    gene1_oncogenes = [False] * len(gene1)
-    gene2_oncogenes = gene1_oncogenes
-    for i in np.arange(0, len(gene1)):
-        g1 = gene1[i]
-        g2 = gene2[i]
-        if g1 in oncogenes:
-            gene1_oncogenes[i] = True
-        if g2 in oncogenes:
-            gene2_oncogenes[i] = True
-    gsvs["oncogene_gene1"] = gene1_oncogenes
-    gsvs["oncogene_gene2"] = gene2_oncogenes
+    # match on hugo symbol
+    gsv_gene1 = pd.merge(gsvs, oncodat, left_on="gene_name_1", right_on="Hugo Symbol", how="left", suffixes=('', ''))
+    gsv_gene2 = pd.merge(gsvs, oncodat, left_on="gene_name_2", right_on="Hugo Symbol", how="left", suffixes=('', ''))
+    gsvs["oncokb_gene1"] = gsv_gene1["Gene Type"]
+    gsvs["oncokb_gene2"] = gsv_gene2["Gene Type"]
     return gsvs
 
 
@@ -123,7 +117,7 @@ if __name__ == "__main__":
                 alt_gene_names[i].append(alt_gene_name)
     for ix in [1, 2]:
         svs[f'gene_name_{ix}'] = gene_names[ix]
-        svs[f'alt_gene_name_{ix}'] = alt_gene_names[ix]
+        svs[f'alt_gene_name_{ix}'] = ",".join(alt_gene_names[ix])
 
 
     print("check oncokb ....")
