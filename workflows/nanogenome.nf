@@ -7,6 +7,7 @@ include { HAPLOTAG               } from '../subworkflows/local/haplotag/main'
 include { SV_CALLING             } from '../subworkflows/local/sv_calling/main'
 include { ANNOTATE_SV            } from '../subworkflows/local/annotate_sv/main'
 include { WAKHAN_CNA             } from '../modules/local/wakhan/cna/main'
+include { PLOTCIRCOS             } from '../modules/local/plotcircos/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -80,8 +81,13 @@ workflow NANOGENOME {
         )
     // cna_input_ch.view()
     WAKHAN_CNA(cna_input_ch, params.fasta)
-    ch_versions = ch_versions.mix(WAKHAN_CNA.out.versions)
-
+    ch_versions = ch_versions.mix(WAKHAN_CNA.out.versions.first())
+    // plot results
+    circos_ch = ANNOTATE_SV.out.annotated_sv
+        .join(WAKHAN_CNA.HP1_bed)
+        .join(WAKHAN_CNA.HP2_bed)
+    PLOTCIRCOS(circos_ch)
+    ch_versions = ch_versions.mix(PLOTCIRCOS.out.versions.first())
     //
     // Collate and save software versions
     //
