@@ -1,7 +1,7 @@
 {
     "-profile test": {
         "content": [
-            36,
+            38,
             {
                 "ANNOTATEGENES": {
                     "python": "3.9.18",
@@ -197,6 +197,9 @@
                 "oncokb/versions.yml",
                 "pipeline_info",
                 "pipeline_info/nanogenome_software_mqc_versions.yml",
+                "plotcircos",
+                "plotcircos/COLO829.consensus.circos.svg",
+                "plotcircos/COLO829.union.circos.svg",
                 "samtools",
                 "samtools/COLO829.normal.haplotagged.bam.bai",
                 "samtools/COLO829.tumor.haplotagged.bam.bai",
@@ -349,6 +352,8 @@
                 "versions.yml:md5,80c71a07a01659756d2a33d0915d4d6c",
                 "oncokb.txt:md5,6be8764bd91efcc7185b6e894985674a",
                 "versions.yml:md5,bde566221644fe151266052518b15b52",
+                "COLO829.consensus.circos.svg:md5,ccbb10a32656237d1255e099b9e1eb41",
+                "COLO829.union.circos.svg:md5,9f5c47129b8febe3d77d3984522fd9bb",
                 "breakpoints_double.csv:md5,ef54c710fe4b5f94bec1056c76729394",
                 "read_qual.txt:md5,632b98d4b24bc2f357b6be55485b2f0d",
                 "COLO829.minda_consensus.tsv:md5,ffd0d93aaf7aeefc74e1ca1ea490968b",
@@ -360,13 +365,13 @@
                 "genes_copynumber_states.bed:md5,65f3390e4394954d39a8d115f583f749",
                 "loh_regions.bed:md5,051d016d7f985f3fb0580ff0e1f1457b",
                 "loh_regions_subclonal.bed:md5,051d016d7f985f3fb0580ff0e1f1457b",
-                "0_SNPs.csv:md5,533eff72e31bf559a5a89ff7882b6f45",
+                "0_SNPs.csv:md5,f8571be1d7260b24272c7dd0074e0421",
                 "1_SNPs.csv:md5,551fdfa6b9b1f493e4d922dbf72ebdf2",
                 "cancer_genes_coverage.csv:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "coverage.csv:md5,3efb3125cc7ea789df91f3adc760b9bc",
                 "coverage_ps.csv:md5,8c5371bcfdffb80103fe5d9d17565f70",
                 "phase_corrected_coverage.csv:md5,9c30f72989f481c68b8a683e41c6609f",
-                "pileup_SNPs.csv:md5,55a4bf41d63deb5fd60d2f4bd4220a3c",
+                "pileup_SNPs.csv:md5,bd860a23d8bd96398a923c4e1d2b44e8",
                 "0.bed:md5,4e33ed4ea1607432b4e7fbac899be3ed",
                 "1.bed:md5,a4f7898d39aa2e7943f003249cb8128a",
                 "COLO829.vcf_het_snps.csv:md5,6f6bf119c08382ca6a2c668aff642e7c",
@@ -407,6 +412,6 @@
             "nf-test": "0.9.2",
             "nextflow": "25.04.7"
         },
-        "timestamp": "2025-10-13T18:57:17.552651498"
+        "timestamp": "2025-10-14T17:28:31.003832185"
     }
 }

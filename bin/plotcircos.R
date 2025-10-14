@@ -48,9 +48,9 @@ sv.gene.data <- sv.gene.data %>%
   filter(!(sv.gene.data$Gene == "")) %>%
   distinct(Gene, .keep_all = TRUE)
 # load in haplotype-resolved CNA data from wakhan
-hp1.bed <- read.table(hp1.bed.path, sep="\t", skip=7, header=TRUE,
+hp1.bed <- read.table(hp1.bed.path, sep="\t", skip=8, header=TRUE,
                       comment.char="", stringsAsFactors=FALSE)
-hp2.bed <- read.table(hp2.bed.path, sep="\t", skip=7, header=TRUE,
+hp2.bed <- read.table(hp2.bed.path, sep="\t", skip=8, header=TRUE,
                       comment.char="", stringsAsFactors=FALSE)
 # restrict to columns of interest
 cols <- c("X.chr", "start", "end", "copynumber_state")

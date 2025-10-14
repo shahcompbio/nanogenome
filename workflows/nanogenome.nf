@@ -84,10 +84,14 @@ workflow NANOGENOME {
     ch_versions = ch_versions.mix(WAKHAN_CNA.out.versions.first())
     // plot results
     circos_ch = ANNOTATE_SV.out.annotated_sv
-        .join(WAKHAN_CNA.HP1_bed)
-        .join(WAKHAN_CNA.HP2_bed)
+        .map { meta, sv -> tuple([id: meta.id], meta, sv)}
+        .combine(WAKHAN_CNA.out.HP1_bed, by: 0)
+        .combine(WAKHAN_CNA.out.HP2_bed, by: 0)
+        .map { meta, meta1, sv, hp1, hp2 ->
+               tuple(meta1, sv, hp1, hp2) }
+    // circos_ch.view()
     PLOTCIRCOS(circos_ch)
-    ch_versions = ch_versions.mix(PLOTCIRCOS.out.versions.first())
+    // ch_versions = ch_versions.mix(PLOTCIRCOS.out.versions.first())
     //
     // Collate and save software versions
     //

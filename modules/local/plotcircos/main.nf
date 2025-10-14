@@ -21,7 +21,7 @@ process PLOTCIRCOS {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: sv_table.split(".annotated_sv.tsv")[0]
+    def prefix = task.ext.prefix ?: getFilePrefix("${sv_table}")
     """
     plotcircos.R \\
         ${sv_table} \\
@@ -58,4 +58,9 @@ process PLOTCIRCOS {
         plotcircos: \$(plotcircos --version)
     END_VERSIONS
     """
+}
+// get prefix for output circos
+def getFilePrefix(filename) {
+    def prefix = filename.split(/\.annotated_sv\.tsv/)[0]
+    return prefix
 }
