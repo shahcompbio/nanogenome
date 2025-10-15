@@ -5,8 +5,6 @@
 */
 include { HAPLOTAG               } from '../subworkflows/local/haplotag/main'
 include { SV_CALLING_SOMATIC     } from '../subworkflows/local/sv_calling_somatic/main'
-include { WGET                   } from '../modules/nf-core/wget/main'
-include { BIOMART                } from '../modules/local/biomart/main'
 include { ANNOTATE_SV            } from '../subworkflows/local/annotate_sv/main'
 include { WAKHAN_CNA             } from '../modules/local/wakhan/cna/main'
 include { SV_CALLING_GERMLINE    } from '../subworkflows/local/sv_calling_germline/main'
