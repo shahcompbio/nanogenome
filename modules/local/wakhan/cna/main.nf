@@ -20,6 +20,8 @@ process WAKHAN_CNA {
     tuple val(meta), path("coverage_plots"), emit: coverage_plots
     tuple val(meta), path("*_ploidy_purity.html"), emit: ploidy_purity_html
     tuple val(meta), path("*_optimized_peak.html"), emit: optimized_peak_html
+    tuple val(meta), path("solution_1/**/*_subclonal_segments_HP_1.bed"), emit: HP1_bed
+    tuple val(meta), path("solution_1/**/*_subclonal_segments_HP_2.bed"), emit: HP2_bed
 
     // TODO nf-core: List additional required output channels/values here
     path "versions.yml", emit: versions

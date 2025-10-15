@@ -5,7 +5,7 @@ args <- commandArgs(trailingOnly = TRUE)
 genome <- args[1]
 # fetch gene table from biomart
 if (genome == 'hg38') {
-    host = 'https://www.ensembl.org'
+    host = 'https://useast.ensembl.org'
 } else if (genome == 'hg19') {
     host = 'https://grch37.ensembl.org'
 } else {
