@@ -11,7 +11,6 @@ workflow SV_CALLING_GERMLINE {
     rephased_vcf   // channel: [ val(meta), [ rephased_vcf ] ]
     vntr_bed       // val: bed file of known VNTRs for severus
     ref_fasta      // val: reference fasta file
-    ref_fai        // val: reference fasta index file
     ch_samplesheet // channel: [ val(meta), bam]
 
     main:
@@ -60,7 +59,7 @@ workflow SV_CALLING_GERMLINE {
             },
             [[id: "ref"], ref_fasta],
             [[], []],
-            [],
+            true,
             [],
         )
         ch_versions = ch_versions.mix(SNIFFLES.out.versions.first())
@@ -74,7 +73,9 @@ workflow SV_CALLING_GERMLINE {
                 norm: meta.condition == 'normal'
             }
             .set { bam_ch }
-        LONGCALLD(bam_ch.tumor, [[id: "ref"], ref_fasta])
+        LONGCALLD(bam_ch.norm.map { meta, bam, bai ->
+        tuple([id: "${meta.id}.germline"], bam, bai)},
+        [[id: "ref"], ref_fasta])
         ch_versions = ch_versions.mix(LONGCALLD.out.versions.first())
     }
 

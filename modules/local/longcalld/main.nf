@@ -5,10 +5,10 @@ process LONGCALLD {
 
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
-    container "biocontainers/0.0.5--h7d57edc_0"
+    container "biocontainers/longcalld:0.0.5--h7d57edc_0"
 
     input:
-    tuple val(meta), path(bam)
+    tuple val(meta), path(bam), path(bai)
     tuple val(meta1), path(fasta)
 
     output:
@@ -22,12 +22,14 @@ process LONGCALLD {
 
     script:
     def args = task.ext.args ?: ''
+    def contig_args = task.ext.contig_args ?: '--autosome-XY'
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     longcallD \\
         call -t16 \\
         ${fasta} \\
         ${bam} \\
+        ${contig_args} \\
         ${args} \\
         > ${prefix}.vcf
 
