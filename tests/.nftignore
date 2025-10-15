@@ -19,3 +19,5 @@ pipeline_info/*.{html,json,txt,yml}
 **/*.sv_breakpoints_read_support.tsv
 **/*.inserted_sequences.fa
 **/*.bedpe.*
+**/*.svg
+**/*_SNPs.csv
