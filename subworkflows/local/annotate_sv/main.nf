@@ -58,9 +58,9 @@ workflow ANNOTATE_SV {
     // annotate sv types
     // collect raw calls for strand information
     sv_ch
-        .flatMap { meta, vcf1, vcf2, vcf3 ->
-            [vcf1, vcf2, vcf3].collect { vcf -> [meta, vcf, []] }
-        }
+        .flatMap { meta, vcfs ->
+            vcfs.collect { vcf ->
+            tuple(meta, vcf, [])}}
         .set { caller_ch }
     // take raw calls and make into tsv files
     BCFTOOLS_QUERY(caller_ch, [], [], [])

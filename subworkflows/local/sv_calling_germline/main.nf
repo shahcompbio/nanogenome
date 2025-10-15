@@ -2,6 +2,7 @@ include { SEVERUS   } from '../../../modules/nf-core/severus/main'
 include { CUTESV    } from '../../../modules/nf-core/cutesv/main'
 include { SNIFFLES  } from '../../../modules/nf-core/sniffles/main'
 include { LONGCALLD } from '../../../modules/local/longcalld/main'
+include { PIGZ_UNCOMPRESS } from '../../../modules/nf-core/pigz/uncompress/main'
 
 workflow SV_CALLING_GERMLINE {
     take:
@@ -63,6 +64,9 @@ workflow SV_CALLING_GERMLINE {
             [],
         )
         ch_versions = ch_versions.mix(SNIFFLES.out.versions.first())
+        // uncompress sniffles vcf for minda
+        PIGZ_UNCOMPRESS(SNIFFLES.out.vcf)
+        ch_versions = ch_versions.mix(PIGZ_UNCOMPRESS.out.versions.first())
     }
     // run longcallD
     if (sv_callers.split(',').contains('longcallD')) {
@@ -82,7 +86,7 @@ workflow SV_CALLING_GERMLINE {
     emit:
     severus_vcf   = SEVERUS.out.all_vcf // channel: [ val(meta), [ germline_vcf ] ]
     cutesv_vcf    = CUTESV.out.vcf // channel: [ val(meta), [ germline_vcf ] ]
-    sniffles_vcf  = SNIFFLES.out.vcf // channel: [ val(meta), [ germline_vcf ] ]
+    sniffles_vcf  = PIGZ_UNCOMPRESS.out.file // channel: [ val(meta), [ germline_vcf ] ]
     longcalld_vcf = LONGCALLD.out.vcf // channel: [ val(meta), [ germline_vcf ] ]
     versions      = ch_versions // channel: [ versions.yml ]
 }

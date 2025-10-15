@@ -7,7 +7,7 @@ process MINDA {
     container "preskaa/minda:v250408"
 
     input:
-    tuple val(meta), path(savana_vcf), path(severus_vcf), path(nanomonsv_vcf)
+    tuple val(meta), path(vcfs, arity: "2..*", stageAs: "?/*")
     val tolerance
     val min_size
 
@@ -31,9 +31,7 @@ process MINDA {
         ensemble \\
         ${args} \\
         --vcfs \\
-        ${savana_vcf} \\
-        ${severus_vcf} \\
-        ${nanomonsv_vcf} \\
+        ${vcfs} \\
         --sample_name ${meta.id} \\
         --min_support ${min_support} \\
         --tolerance ${tolerance} \\
