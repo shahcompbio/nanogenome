@@ -21,3 +21,7 @@ pipeline_info/*.{html,json,txt,yml}
 **/*.bedpe.*
 **/*.svg
 **/*_SNPs.csv
+**/*.annotated_sv.tsv
+**/*_SAVANAv1.3.6_tp.tsv
+**/*_support.tsv
+**/*minda_*.tsv
