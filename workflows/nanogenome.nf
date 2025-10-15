@@ -5,6 +5,8 @@
 */
 include { HAPLOTAG               } from '../subworkflows/local/haplotag/main'
 include { SV_CALLING_SOMATIC     } from '../subworkflows/local/sv_calling_somatic/main'
+include { WGET                   } from '../modules/nf-core/wget/main'
+include { BIOMART                } from '../modules/local/biomart/main'
 include { ANNOTATE_SV            } from '../subworkflows/local/annotate_sv/main'
 include { WAKHAN_CNA             } from '../modules/local/wakhan/cna/main'
 include { SV_CALLING_GERMLINE    } from '../subworkflows/local/sv_calling_germline/main'
@@ -46,6 +48,20 @@ workflow NANOGENOME {
         params.fai,
     )
     ch_versions = ch_versions.mix(SV_CALLING_SOMATIC.out.versions)
+    // run germline workflow
+    // call germline structural variants
+    if (params.germline == true) {
+        SV_CALLING_GERMLINE(
+            params.germline_callers,
+            HAPLOTAG.out.bam,
+            HAPLOTAG.out.bai,
+            HAPLOTAG.out.rephased_vcf,
+            params.vntr_bed,
+            params.fasta,
+            ch_samplesheet,
+        )
+        ch_versions = ch_versions.mix(SV_CALLING_GERMLINE.out.versions)
+    }
     // merge and annotate SVs in different callers and generate both union and consensus VCFs
     support_ch = Channel.from(1, params.min_callers)
     sv_ch = SV_CALLING_SOMATIC.out.savana_vcf
@@ -55,6 +71,7 @@ workflow NANOGENOME {
         .map { meta, vcf1, vcf2, vcf3, min_callers ->
             [meta + [min_callers: min_callers], vcf1, vcf2, vcf3]
         }
+    sv_ch.view()
     // run merge + annotate SV subworkflow
     ANNOTATE_SV(
         sv_ch,
@@ -94,17 +111,6 @@ workflow NANOGENOME {
     // circos_ch.view()
     PLOTCIRCOS(circos_ch)
     ch_versions = ch_versions.mix(PLOTCIRCOS.out.versions.first())
-    // call germline structural variants
-    SV_CALLING_GERMLINE(
-        params.germline_callers,
-        HAPLOTAG.out.bam,
-        HAPLOTAG.out.bai,
-        HAPLOTAG.out.rephased_vcf,
-        params.vntr_bed,
-        params.fasta,
-        ch_samplesheet,
-    )
-    ch_versions = ch_versions.mix(SV_CALLING_GERMLINE.out.versions)
     //
     // Collate and save software versions
     //
