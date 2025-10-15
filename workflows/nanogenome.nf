@@ -4,9 +4,10 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 include { HAPLOTAG               } from '../subworkflows/local/haplotag/main'
-include { SV_CALLING             } from '../subworkflows/local/sv_calling/main'
+include { SV_CALLING_SOMATIC     } from '../subworkflows/local/sv_calling_somatic/main'
 include { ANNOTATE_SV            } from '../subworkflows/local/annotate_sv/main'
 include { WAKHAN_CNA             } from '../modules/local/wakhan/cna/main'
+include { SV_CALLING_GERMLINE    } from '../subworkflows/local/sv_calling_germline/main'
 include { PLOTCIRCOS             } from '../modules/local/plotcircos/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
@@ -34,9 +35,9 @@ workflow NANOGENOME {
     ch_versions = ch_versions.mix(HAPLOTAG.out.versions)
     // add phasing stats to multiqc
     ch_multiqc_files = ch_multiqc_files.mix(HAPLOTAG.out.whatshap_stats.collect { it[1] })
-    // call structural variants
-    SV_CALLING(
-        params.sv_callers,
+    // call somatic structural variants
+    SV_CALLING_SOMATIC(
+        params.somatic_callers,
         HAPLOTAG.out.bam,
         HAPLOTAG.out.bai,
         HAPLOTAG.out.rephased_vcf,
@@ -44,12 +45,12 @@ workflow NANOGENOME {
         params.fasta,
         params.fai,
     )
-    ch_versions = ch_versions.mix(SV_CALLING.out.versions)
+    ch_versions = ch_versions.mix(SV_CALLING_SOMATIC.out.versions)
     // merge and annotate SVs in different callers and generate both union and consensus VCFs
     support_ch = Channel.from(1, params.min_callers)
-    sv_ch = SV_CALLING.out.savana_vcf
-        .join(SV_CALLING.out.severus_vcf, by: 0)
-        .join(SV_CALLING.out.nanomonsv_vcf, by: 0)
+    sv_ch = SV_CALLING_SOMATIC.out.savana_vcf
+        .join(SV_CALLING_SOMATIC.out.severus_vcf, by: 0)
+        .join(SV_CALLING_SOMATIC.out.nanomonsv_vcf, by: 0)
         .combine(support_ch)
         .map { meta, vcf1, vcf2, vcf3, min_callers ->
             [meta + [min_callers: min_callers], vcf1, vcf2, vcf3]
@@ -72,7 +73,7 @@ workflow NANOGENOME {
         .map { meta, bam, bai, vcf, tbi ->
             tuple([id: meta.id], bam, bai, vcf, tbi)
         }
-        .join(SV_CALLING.out.severus_vcf, by: 0)
+        .join(SV_CALLING_SOMATIC.out.severus_vcf, by: 0)
         .join(
             HAPLOTAG.out.wakhanHPOutput.map { meta, path ->
                 tuple([id: meta.id], path)
@@ -84,14 +85,26 @@ workflow NANOGENOME {
     ch_versions = ch_versions.mix(WAKHAN_CNA.out.versions.first())
     // plot results
     circos_ch = ANNOTATE_SV.out.annotated_sv
-        .map { meta, sv -> tuple([id: meta.id], meta, sv)}
+        .map { meta, sv -> tuple([id: meta.id], meta, sv) }
         .combine(WAKHAN_CNA.out.HP1_bed, by: 0)
         .combine(WAKHAN_CNA.out.HP2_bed, by: 0)
         .map { meta, meta1, sv, hp1, hp2 ->
-               tuple(meta1, sv, hp1, hp2) }
+            tuple(meta1, sv, hp1, hp2)
+        }
     // circos_ch.view()
     PLOTCIRCOS(circos_ch)
-    // ch_versions = ch_versions.mix(PLOTCIRCOS.out.versions.first())
+    ch_versions = ch_versions.mix(PLOTCIRCOS.out.versions.first())
+    // call germline structural variants
+    SV_CALLING_GERMLINE(
+        params.germline_callers,
+        HAPLOTAG.out.bam,
+        HAPLOTAG.out.bai,
+        HAPLOTAG.out.rephased_vcf,
+        params.vntr_bed,
+        params.fasta,
+        ch_samplesheet,
+    )
+    ch_versions = ch_versions.mix(SV_CALLING_GERMLINE.out.versions)
     //
     // Collate and save software versions
     //
