@@ -423,7 +423,11 @@
     "properties": {
         "germline": {
             "type": "boolean",
-            "description": "Enable germline variant workflow"
+            "description": "Enable germline structural variant workflow"
+        },
+        "skip_somatic": {
+            "type": "boolean",
+            "description": "Skip default somatic structural variant calling workflow"
         },
         "longcalld_platform": {
             "type": "string",

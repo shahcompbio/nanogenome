@@ -33,57 +33,62 @@ workflow NANOGENOME {
     // run haplotag subworkflow to haplotag bams
     HAPLOTAG(ch_samplesheet, params.clair3_model, params.clair3_platform, params.fasta, params.fai)
     ch_versions = ch_versions.mix(HAPLOTAG.out.versions)
-    // add phasing stats to multiqc
-    ch_multiqc_files = ch_multiqc_files.mix(HAPLOTAG.out.whatshap_stats.collect { it[1] })
-    // call somatic structural variants
-    SV_CALLING_SOMATIC(
-        params.somatic_callers,
-        HAPLOTAG.out.bam,
-        HAPLOTAG.out.bai,
-        HAPLOTAG.out.rephased_vcf,
-        params.vntr_bed,
-        params.fasta,
-        params.fai,
-    )
-    ch_versions = ch_versions.mix(SV_CALLING_SOMATIC.out.versions)
-    // construct sv channel for annotation subworkflow
-    support_ch = Channel.from(1, params.min_callers)
-    sv_ch = SV_CALLING_SOMATIC.out.savana_vcf
-        .join(SV_CALLING_SOMATIC.out.severus_vcf, by: 0)
-        .join(SV_CALLING_SOMATIC.out.nanomonsv_vcf, by: 0)
-        .combine(support_ch)
-        .map { meta, vcf1, vcf2, vcf3, min_callers ->
-            [
-                [id: meta.id,
-                condition: "somatic",
-                min_callers: min_callers],
-                [vcf1, vcf2, vcf3],
-            ]
-        }
     // branch haplotag results into tumor + normal
     // for somatic and germline workflows
-    wakhan_hp_ch = HAPLOTAG.out.wakhanHPOutput
-        .branch { meta, HPout ->
-                tumor: meta.condition == 'tumor'
-                norm: meta.condition == 'normal'
-                }
-    hap_bam_snps = HAPLOTAG.out.bam_snps
-            .branch { meta, bam, bai, vcf, tbi ->
-                    tumor: meta.condition == 'tumor'
-                    norm: meta.condition == 'normal'
-                    }
-    // hap_bam_snps.tumor.view { v -> "hap_bam_snps: $v "}
-    // SV_CALLING_SOMATIC.out.severus_vcf.view{ v -> "severus: $v"}
-    // wakhan_hp_ch.tumor.view { v -> "wakhan_hp: $v"}
-    // construct cna input channel
-    cna_input_ch = hap_bam_snps.tumor
-    .join(SV_CALLING_SOMATIC.out.severus_vcf.map {
-        meta, vcf -> [meta+[condition: "tumor"], vcf]
-    }, by: 0)
-    .join(wakhan_hp_ch.tumor, by: 0)
-    .map { meta, bam, bai, snp_vcf, snp_tbi, sv_vcf, hp_out ->
-    tuple([id: "${meta.id}", condition: "somatic"], bam, bai, snp_vcf, snp_tbi, sv_vcf, hp_out)}
-    // cna_input_ch.view{ v -> "cna in: $v"}
+    wakhan_hp_ch = HAPLOTAG.out.wakhanHPOutput.branch { meta, HPout ->
+        tumor: meta.condition == 'tumor'
+        norm: meta.condition == 'normal'
+    }
+    hap_bam_snps = HAPLOTAG.out.bam_snps.branch { meta, bam, bai, vcf, tbi ->
+        tumor: meta.condition == 'tumor'
+        norm: meta.condition == 'normal'
+    }
+    // add phasing stats to multiqc
+    ch_multiqc_files = ch_multiqc_files.mix(HAPLOTAG.out.whatshap_stats.collect { it[1] })
+    // make default channels
+    sv_ch = Channel.empty()
+    cna_input_ch = Channel.empty()
+    // call somatic structural variants
+    if (!params.skip_somatic) {
+        SV_CALLING_SOMATIC(
+            params.somatic_callers,
+            HAPLOTAG.out.bam,
+            HAPLOTAG.out.bai,
+            HAPLOTAG.out.rephased_vcf,
+            params.vntr_bed,
+            params.fasta,
+            params.fai,
+        )
+        ch_versions = ch_versions.mix(SV_CALLING_SOMATIC.out.versions)
+        // construct sv channel for annotation subworkflow
+        support_ch = Channel.from(1, params.min_callers)
+        sv_ch = SV_CALLING_SOMATIC.out.savana_vcf
+            .join(SV_CALLING_SOMATIC.out.severus_vcf, by: 0)
+            .join(SV_CALLING_SOMATIC.out.nanomonsv_vcf, by: 0)
+            .combine(support_ch)
+            .map { meta, vcf1, vcf2, vcf3, min_callers ->
+                [
+                    [
+                        id: meta.id,
+                        condition: "somatic",
+                        min_callers: min_callers,
+                    ],
+                    [vcf1, vcf2, vcf3],
+                ]
+            }
+        // construct cna input channel
+        cna_input_ch = hap_bam_snps.tumor
+            .join(
+                SV_CALLING_SOMATIC.out.severus_vcf.map { meta, vcf ->
+                    [meta + [condition: "tumor"], vcf]
+                },
+                by: 0
+            )
+            .join(wakhan_hp_ch.tumor, by: 0)
+            .map { meta, bam, bai, snp_vcf, snp_tbi, sv_vcf, hp_out ->
+                tuple([id: "${meta.id}", condition: "somatic"], bam, bai, snp_vcf, snp_tbi, sv_vcf, hp_out)
+            }
+    }
 
     // run germline workflow
     // call germline structural variants
@@ -106,21 +111,27 @@ workflow NANOGENOME {
             .combine(support_ch)
             .map { meta, vcf1, vcf2, vcf3, vcf4, min_callers ->
                 [
-                    [id: meta.id,
-                    condition: "germline",
-                    min_callers: min_callers],
+                    [
+                        id: meta.id,
+                        condition: "germline",
+                        min_callers: min_callers,
+                    ],
                     [vcf1, vcf2, vcf3, vcf4],
                 ]
             }
         sv_ch = sv_ch.mix(germline_ch)
         // construct channel for germline CNA
         germline_cna_ch = hap_bam_snps.norm
-        .join(SV_CALLING_GERMLINE.out.severus_vcf.map {
-            meta, vcf -> [meta+[condition: "normal"], vcf]
-        }, by: 0)
-        .join(wakhan_hp_ch.norm, by: 0)
-        .map { meta, bam, bai, snp_vcf, snp_tbi, sv_vcf, hp_out ->
-        tuple([id: "${meta.id}", condition: "germline"], bam, bai, snp_vcf, snp_tbi, sv_vcf, hp_out)}
+            .join(
+                SV_CALLING_GERMLINE.out.severus_vcf.map { meta, vcf ->
+                    [meta + [condition: "normal"], vcf]
+                },
+                by: 0
+            )
+            .join(wakhan_hp_ch.norm, by: 0)
+            .map { meta, bam, bai, snp_vcf, snp_tbi, sv_vcf, hp_out ->
+                tuple([id: "${meta.id}", condition: "germline"], bam, bai, snp_vcf, snp_tbi, sv_vcf, hp_out)
+            }
         // germline_cna_ch.view()
         cna_input_ch = cna_input_ch.mix(germline_cna_ch)
     }
@@ -144,15 +155,21 @@ workflow NANOGENOME {
     // WAKHAN_CNA.out.HP1_bed.view()
     circos_ch = ANNOTATE_SV.out.annotated_sv
         .map { meta, sv -> tuple("${meta.id}-${meta.condition}", meta, sv) }
-        .combine(WAKHAN_CNA.out.HP1_bed.map {
-            meta, hp_bed -> tuple("${meta.id}-${meta.condition}", meta, hp_bed)
-        }, by: 0)
-        .combine(WAKHAN_CNA.out.HP2_bed.map {
-            meta, hp_bed -> tuple("${meta.id}-${meta.condition}", meta, hp_bed)
-        }, by: 0)
-     .map { id, meta, sv, meta1, hp1, meta2, hp2 ->
-         tuple(meta, sv, hp1, hp2)
-     }
+        .combine(
+            WAKHAN_CNA.out.HP1_bed.map { meta, hp_bed ->
+                tuple("${meta.id}-${meta.condition}", meta, hp_bed)
+            },
+            by: 0
+        )
+        .combine(
+            WAKHAN_CNA.out.HP2_bed.map { meta, hp_bed ->
+                tuple("${meta.id}-${meta.condition}", meta, hp_bed)
+            },
+            by: 0
+        )
+        .map { id, meta, sv, meta1, hp1, meta2, hp2 ->
+            tuple(meta, sv, hp1, hp2)
+        }
     // circos_ch.view()
     PLOTCIRCOS(circos_ch)
     ch_versions = ch_versions.mix(PLOTCIRCOS.out.versions.first())
