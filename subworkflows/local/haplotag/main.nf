@@ -41,18 +41,19 @@ workflow HAPLOTAG {
         }
     LONGPHASE_PHASE(longphase_input_ch, [[id: "ref"], fasta], [[id: "ref"], fai])
     ch_versions = ch_versions.mix(LONGPHASE_PHASE.out.versions)
-    // phase correct tumor bam using phased SNPs
-    hapcorrect_input_ch = bam_ch.tumor
+    // phase correct tumor + normal bam using phased SNPs
+    hapcorrect_input_ch = ch_samplesheet
         .map { meta, bam, bai -> tuple(meta.id, meta, bam) }
-        .join(LONGPHASE_PHASE.out.vcf.map { meta, vcf -> tuple(meta.id, meta, vcf) }, by: 0)
-        .map { id, tumor_meta, bam, norm_meta, vcf -> tuple(tumor_meta, bam, vcf) }
+        .combine(LONGPHASE_PHASE.out.vcf.map { meta, vcf -> tuple(meta.id, meta, vcf) }, by: 0)
+        .map { id, target_meta, bam, norm_meta, vcf -> tuple(target_meta, bam, vcf) }
+    // hapcorrect_input_ch.view()
     WAKHAN_HAPCORRECT([[id: "ref"], fasta], hapcorrect_input_ch)
     ch_versions = ch_versions.mix(WAKHAN_HAPCORRECT.out.versions)
     // tabix rephased vcf if it exists
     rephased_vcf_ch = WAKHAN_HAPCORRECT.out.rephased_vcf
         .concat(LONGPHASE_PHASE.out.vcf)
         .first()
-    rephased_vcf_ch.view()
+    // rephased_vcf_ch.view()
     TABIX_TABIX(rephased_vcf_ch)
     ch_versions = ch_versions.mix(TABIX_TABIX.out.versions)
     // compute phasing statistics

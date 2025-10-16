@@ -53,14 +53,14 @@ workflow ANNOTATE_SV {
     ch_versions = ch_versions.mix(ANNOTATEGENES.out.versions.first())
     // combine the annotated chunks back into single file per sample
     CSVTK_CONCAT(ANNOTATEGENES.out.annotated_sv.groupTuple(), "tsv", "tsv")
-    CSVTK_CONCAT.out.csv.view()
+    // CSVTK_CONCAT.out.csv.view()
     ch_versions = ch_versions.mix(CSVTK_CONCAT.out.versions.first())
     // annotate sv types
     // collect raw calls for strand information
     sv_ch
-        .flatMap { meta, vcf1, vcf2, vcf3 ->
-            [vcf1, vcf2, vcf3].collect { vcf -> [meta, vcf, []] }
-        }
+        .flatMap { meta, vcfs ->
+            vcfs.collect { vcf ->
+            tuple(meta, vcf, [])}}
         .set { caller_ch }
     // take raw calls and make into tsv files
     BCFTOOLS_QUERY(caller_ch, [], [], [])
@@ -70,7 +70,7 @@ workflow ANNOTATE_SV {
         .groupTuple()
         .join(CSVTK_CONCAT.out.csv)
         .set { calls_ch }
-    calls_ch.view()
+    // calls_ch.view()
     SVTYPES(calls_ch)
     ch_versions = ch_versions.mix(SVTYPES.out.versions.first())
 

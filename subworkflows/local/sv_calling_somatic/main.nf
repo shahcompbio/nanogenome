@@ -1,9 +1,9 @@
-// structural variant calling subworkflow
+// somatic structural variant calling subworkflow
 include { SEVERUS         } from '../../../modules/nf-core/severus/main'
 include { SAVANA_CLASSIFY } from '../../../modules/local/savana/classify/main'
 include { NANOMONSV_PARSE } from '../../../modules/local/nanomonsv/parse/main'
 include { NANOMONSV_GET   } from '../../../modules/local/nanomonsv/get/main'
-workflow SV_CALLING {
+workflow SV_CALLING_SOMATIC {
     take:
     sv_callers   // val: list of sv callers to use
     ch_hap_bam   // channel: [ val(meta), [ haplotagged_bam ] ]
@@ -29,29 +29,29 @@ workflow SV_CALLING {
         .map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }
         .join(hap_bam_ch.norm.map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }, by: 0)
         .join(rephased_vcf.map { meta, vcf -> tuple(meta.id, meta, vcf) }, by: 0)
-        .map { id, tumor_meta, tumor_bam, tumor_bai, norm_meta, norm_bam, norm_bai, meta3, vcf ->
+        .map { id, tumor_meta, tumor_bam, tumor_bai, _norm_meta, norm_bam, norm_bai, _meta3, vcf ->
             tuple([id: id], tumor_bam, tumor_bai, norm_bam, norm_bai, vcf)
         }
     // run severus if specified
     if (sv_callers.split(',').contains('severus')) {
         SEVERUS(input_sv_ch, [[id: "ref"], vntr_bed])
-        ch_versions = ch_versions.mix(SEVERUS.out.versions)
+        ch_versions = ch_versions.mix(SEVERUS.out.versions.first())
     }
     // run savana if specified
     if (sv_callers.split(',').contains('savana')) {
         SAVANA_CLASSIFY(
-            input_sv_ch.map { meta, tumor_bam, tumor_bai, norm_bam, norm_bai, vcf ->
+            input_sv_ch.map { meta, tumor_bam, tumor_bai, norm_bam, norm_bai, _vcf ->
                 tuple(meta, tumor_bam, tumor_bai, norm_bam, norm_bai)
             },
             ref_fasta,
             ref_fai,
         )
-        ch_versions = ch_versions.mix(SAVANA_CLASSIFY.out.versions)
+        ch_versions = ch_versions.mix(SAVANA_CLASSIFY.out.versions.first())
     }
     // run nanomonsv if specified
     if (sv_callers.split(',').contains('nanomonsv')) {
         NANOMONSV_PARSE(hap_bam_ch.tumor.mix(hap_bam_ch.norm))
-        ch_versions = ch_versions.mix(NANOMONSV_PARSE.out.versions)
+        ch_versions = ch_versions.mix(NANOMONSV_PARSE.out.versions.first())
         // Combine all outputs into a single channel
         parse_out_ch = NANOMONSV_PARSE.out.parse_out
             .map { meta, parse_out ->
@@ -60,15 +60,15 @@ workflow SV_CALLING {
             .groupTuple(by: 0)
         // now hand off to nanomonsv get
         input_get_ch = input_sv_ch
-            .map { meta, tumor_bam, tumor_bai, norm_bam, norm_bai, vcf ->
+            .map { meta, tumor_bam, tumor_bai, norm_bam, norm_bai, _vcf ->
                 tuple(meta.id, meta, tumor_bam, tumor_bai, norm_bam, norm_bai)
             }
             .join(parse_out_ch, by: 0)
-            .map { id, meta, tumor_bam, tumor_bai, norm_bam, norm_bai, parse_out ->
+            .map { _id, meta, tumor_bam, tumor_bai, norm_bam, norm_bai, parse_out ->
                 tuple(meta, tumor_bam, tumor_bai, norm_bam, norm_bai, parse_out.flatten())
             }
         NANOMONSV_GET(input_get_ch, ref_fasta, ref_fai)
-        ch_versions = ch_versions.mix(NANOMONSV_GET.out.versions)
+        ch_versions = ch_versions.mix(NANOMONSV_GET.out.versions.first())
     }
 
     emit:

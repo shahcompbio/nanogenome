@@ -228,6 +228,18 @@
                     "fa_icon": "far calendar",
                     "description": "Suffix to add to the trace report filename. Default is the date and time in the format yyyy-MM-dd_HH-mm-ss.",
                     "hidden": true
+                },
+                "help": {
+                    "type": ["boolean", "string"],
+                    "description": "Display the help message."
+                },
+                "help_full": {
+                    "type": "boolean",
+                    "description": "Display the full detailed help message."
+                },
+                "show_hidden": {
+                    "type": "boolean",
+                    "description": "Display hidden parameters in the help message (only works when --help or --help_full are provided)."
                 }
             }
         },
@@ -340,7 +352,7 @@
         "gene_annotation": {
             "title": "Gene annotation",
             "type": "object",
-            "description": "",
+            "description": "parameters for SV gene annotation",
             "default": "",
             "properties": {
                 "gene_annotations": {
@@ -360,6 +372,24 @@
                     "type": "string",
                     "default": "hg38",
                     "description": "genome build for biomaRt; options are hg38 or hg19"
+                }
+            }
+        },
+        "structural_variant_calling": {
+            "title": "Structural variant calling",
+            "type": "object",
+            "description": "options related to structural variant calling",
+            "default": "",
+            "properties": {
+                "somatic_callers": {
+                    "type": "string",
+                    "default": "severus,savana,nanomonsv",
+                    "description": "somatic structural variant caller options; supply as comma separated string"
+                },
+                "germline_callers": {
+                    "type": "string",
+                    "default": "severus,longcallD,cutesv,sniffles",
+                    "description": "germline structural variant caller options; supply as comma separated string"
                 }
             }
         }
@@ -397,13 +427,24 @@
         },
         {
             "$ref": "#/$defs/gene_annotation"
+        },
+        {
+            "$ref": "#/$defs/structural_variant_calling"
         }
     ],
     "properties": {
-        "sv_callers": {
+        "germline": {
+            "type": "boolean",
+            "description": "Enable germline structural variant workflow"
+        },
+        "skip_somatic": {
+            "type": "boolean",
+            "description": "Skip default somatic structural variant calling workflow"
+        },
+        "longcalld_platform": {
             "type": "string",
-            "default": "severus,savana,nanomonsv",
-            "description": "specify structural variant callers to run"
+            "default": "--ont",
+            "description": "platform flag for longcallD"
         }
     }
 }
