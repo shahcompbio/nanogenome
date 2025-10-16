@@ -25,4 +25,3 @@ jobs:
           TO_BRANCH: "dev"
           PULL_REQUEST_TITLE: "Sync dev with main"
           PULL_REQUEST_BODY: "Automated sync: New commits have landed in main, bringing dev up to date."
-          CONTENT_COMPARISON: true
