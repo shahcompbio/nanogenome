@@ -54,10 +54,37 @@ workflow NANOGENOME {
         .combine(support_ch)
         .map { meta, vcf1, vcf2, vcf3, min_callers ->
             [
-                [id: "${meta.id}.somatic", min_callers: min_callers],
+                [id: meta.id,
+                condition: "somatic",
+                min_callers: min_callers],
                 [vcf1, vcf2, vcf3],
             ]
         }
+    // branch haplotag results into tumor + normal
+    // for somatic and germline workflows
+    wakhan_hp_ch = HAPLOTAG.out.wakhanHPOutput
+        .branch { meta, HPout ->
+                tumor: meta.condition == 'tumor'
+                norm: meta.condition == 'normal'
+                }
+    hap_bam_snps = HAPLOTAG.out.bam_snps
+            .branch { meta, bam, bai, vcf, tbi ->
+                    tumor: meta.condition == 'tumor'
+                    norm: meta.condition == 'normal'
+                    }
+    // hap_bam_snps.tumor.view { v -> "hap_bam_snps: $v "}
+    // SV_CALLING_SOMATIC.out.severus_vcf.view{ v -> "severus: $v"}
+    // wakhan_hp_ch.tumor.view { v -> "wakhan_hp: $v"}
+    // construct cna input channel
+    cna_input_ch = hap_bam_snps.tumor
+    .join(SV_CALLING_SOMATIC.out.severus_vcf.map {
+        meta, vcf -> [meta+[condition: "tumor"], vcf]
+    }, by: 0)
+    .join(wakhan_hp_ch.tumor, by: 0)
+    .map { meta, bam, bai, snp_vcf, snp_tbi, sv_vcf, hp_out ->
+    tuple([id: "${meta.id}", condition: "somatic"], bam, bai, snp_vcf, snp_tbi, sv_vcf, hp_out)}
+    // cna_input_ch.view{ v -> "cna in: $v"}
+
     // run germline workflow
     // call germline structural variants
     if (params.germline) {
@@ -79,12 +106,25 @@ workflow NANOGENOME {
             .combine(support_ch)
             .map { meta, vcf1, vcf2, vcf3, vcf4, min_callers ->
                 [
-                    meta + [min_callers: min_callers],
+                    [id: meta.id,
+                    condition: "germline",
+                    min_callers: min_callers],
                     [vcf1, vcf2, vcf3, vcf4],
                 ]
             }
         sv_ch = sv_ch.mix(germline_ch)
+        // construct channel for germline CNA
+        germline_cna_ch = hap_bam_snps.norm
+        .join(SV_CALLING_GERMLINE.out.severus_vcf.map {
+            meta, vcf -> [meta+[condition: "normal"], vcf]
+        }, by: 0)
+        .join(wakhan_hp_ch.norm, by: 0)
+        .map { meta, bam, bai, snp_vcf, snp_tbi, sv_vcf, hp_out ->
+        tuple([id: "${meta.id}", condition: "germline"], bam, bai, snp_vcf, snp_tbi, sv_vcf, hp_out)}
+        // germline_cna_ch.view()
+        cna_input_ch = cna_input_ch.mix(germline_cna_ch)
     }
+    // sv_ch.view()
     // run merge + annotate SV subworkflow
     ANNOTATE_SV(
         sv_ch,
@@ -96,31 +136,23 @@ workflow NANOGENOME {
     )
     ch_versions = ch_versions.mix(ANNOTATE_SV.out.versions)
     // run wakhan cna
-    cna_input_ch = HAPLOTAG.out.bam_snps
-        .branch { meta, bam, bai, vcf, tbi ->
-            tumor: meta.condition == 'tumor'
-        }
-        .map { meta, bam, bai, vcf, tbi ->
-            tuple([id: meta.id], bam, bai, vcf, tbi)
-        }
-        .join(SV_CALLING_SOMATIC.out.severus_vcf, by: 0)
-        .join(
-            HAPLOTAG.out.wakhanHPOutput.map { meta, path ->
-                tuple([id: meta.id], path)
-            },
-            by: 0
-        )
     // cna_input_ch.view()
     WAKHAN_CNA(cna_input_ch, params.fasta)
     ch_versions = ch_versions.mix(WAKHAN_CNA.out.versions.first())
     // plot results
+    // ANNOTATE_SV.out.annotated_sv.view()
+    // WAKHAN_CNA.out.HP1_bed.view()
     circos_ch = ANNOTATE_SV.out.annotated_sv
-        .map { meta, sv -> tuple([id: meta.id], meta, sv) }
-        .combine(WAKHAN_CNA.out.HP1_bed, by: 0)
-        .combine(WAKHAN_CNA.out.HP2_bed, by: 0)
-        .map { meta, meta1, sv, hp1, hp2 ->
-            tuple(meta1, sv, hp1, hp2)
-        }
+        .map { meta, sv -> tuple("${meta.id}-${meta.condition}", meta, sv) }
+        .combine(WAKHAN_CNA.out.HP1_bed.map {
+            meta, hp_bed -> tuple("${meta.id}-${meta.condition}", meta, hp_bed)
+        }, by: 0)
+        .combine(WAKHAN_CNA.out.HP2_bed.map {
+            meta, hp_bed -> tuple("${meta.id}-${meta.condition}", meta, hp_bed)
+        }, by: 0)
+     .map { id, meta, sv, meta1, hp1, meta2, hp2 ->
+         tuple(meta, sv, hp1, hp2)
+     }
     // circos_ch.view()
     PLOTCIRCOS(circos_ch)
     ch_versions = ch_versions.mix(PLOTCIRCOS.out.versions.first())

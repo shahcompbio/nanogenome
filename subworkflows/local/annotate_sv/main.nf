@@ -53,7 +53,7 @@ workflow ANNOTATE_SV {
     ch_versions = ch_versions.mix(ANNOTATEGENES.out.versions.first())
     // combine the annotated chunks back into single file per sample
     CSVTK_CONCAT(ANNOTATEGENES.out.annotated_sv.groupTuple(), "tsv", "tsv")
-    CSVTK_CONCAT.out.csv.view()
+    // CSVTK_CONCAT.out.csv.view()
     ch_versions = ch_versions.mix(CSVTK_CONCAT.out.versions.first())
     // annotate sv types
     // collect raw calls for strand information
@@ -70,7 +70,7 @@ workflow ANNOTATE_SV {
         .groupTuple()
         .join(CSVTK_CONCAT.out.csv)
         .set { calls_ch }
-    calls_ch.view()
+    // calls_ch.view()
     SVTYPES(calls_ch)
     ch_versions = ch_versions.mix(SVTYPES.out.versions.first())
 

@@ -29,9 +29,10 @@ workflow SV_CALLING_GERMLINE {
     input_sv_ch = hap_bam_ch.norm
         .map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }
         .join(rephased_vcf.map { meta, vcf -> tuple(meta.id, meta, vcf) }, by: 0)
-        .map { id, _meta, norm_bam, norm_bai, _meta2, vcf ->
-            tuple([id: "${id}.germline"], norm_bam, norm_bai, vcf)
+        .map { id, meta, norm_bam, norm_bai, _meta2, vcf ->
+            tuple(meta, norm_bam, norm_bai, vcf)
         }
+    // input_sv_ch.view()
     // run severus if specified
     if (sv_callers.split(',').contains('severus')) {
         SEVERUS(
@@ -77,8 +78,7 @@ workflow SV_CALLING_GERMLINE {
                 norm: meta.condition == 'normal'
             }
             .set { bam_ch }
-        LONGCALLD(bam_ch.norm.map { meta, bam, bai ->
-        tuple([id: "${meta.id}.germline"], bam, bai)},
+        LONGCALLD(bam_ch.norm,
         [[id: "ref"], ref_fasta])
         ch_versions = ch_versions.mix(LONGCALLD.out.versions.first())
     }

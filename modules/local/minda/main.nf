@@ -13,8 +13,8 @@ process MINDA {
 
     output:
     // TODO nf-core: Named file extensions MUST be emitted for ALL output channels
-    tuple val(meta), path("*.minda_*.vcf"), emit: ensemble_vcf
-    tuple val(meta), path("${meta.id}_min_callers_${meta.min_callers}"), emit: minda_out
+    tuple val(meta), path("*_minda_*.vcf"), emit: ensemble_vcf
+    tuple val(meta), path("*_min_callers_${meta.min_callers}"), emit: minda_out
     // TODO nf-core: List additional required output channels/values here
     path "versions.yml", emit: versions
 
@@ -38,7 +38,7 @@ process MINDA {
         --min_size ${min_size} \\
         --out_dir ${prefix}_min_callers_${min_support}
     # rename file
-    cp ${prefix}_min_callers_${min_support}/${prefix}_minda_ensemble.vcf ${prefix}.minda_${set}.vcf
+    cp ${prefix}_min_callers_${min_support}/${meta.id}_minda_ensemble.vcf ${prefix}_minda_${set}.vcf
 
 
     cat <<-END_VERSIONS > versions.yml
