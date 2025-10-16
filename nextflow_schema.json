@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://raw.githubusercontent.com/shahcompbio/nanogenome/main/nextflow_schema.json",
+    "$id": "https://raw.githubusercontent.com/shahcompbio/nanogenome/master/nextflow_schema.json",
     "title": "shahcompbio/nanogenome pipeline parameters",
     "description": "Variant and mobile element analysis from long-read DNA",
     "type": "object",
