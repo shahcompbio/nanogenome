@@ -53,12 +53,14 @@ workflow NANOGENOME {
         .join(SV_CALLING_SOMATIC.out.nanomonsv_vcf, by: 0)
         .combine(support_ch)
         .map { meta, vcf1, vcf2, vcf3, min_callers ->
-            [[id: "${meta.id}.somatic", min_callers: min_callers],
-            [vcf1, vcf2, vcf3]]
+            [
+                [id: "${meta.id}.somatic", min_callers: min_callers],
+                [vcf1, vcf2, vcf3],
+            ]
         }
     // run germline workflow
     // call germline structural variants
-    if (params.germline == true) {
+    if (params.germline) {
         SV_CALLING_GERMLINE(
             params.germline_callers,
             HAPLOTAG.out.bam,
@@ -71,14 +73,16 @@ workflow NANOGENOME {
         ch_versions = ch_versions.mix(SV_CALLING_GERMLINE.out.versions)
         // construct channel of germline calls + mix with sv channel
         germline_ch = SV_CALLING_GERMLINE.out.severus_vcf
-        .join(SV_CALLING_GERMLINE.out.cutesv_vcf, by: 0)
-        .join(SV_CALLING_GERMLINE.out.sniffles_vcf, by: 0)
-        .join(SV_CALLING_GERMLINE.out.longcalld_vcf, by: 0)
-        .combine(support_ch)
-        .map { meta, vcf1, vcf2, vcf3, vcf4, min_callers ->
-            [meta+ [min_callers: min_callers],
-            [vcf1, vcf2, vcf3, vcf4]]
-        }
+            .join(SV_CALLING_GERMLINE.out.cutesv_vcf, by: 0)
+            .join(SV_CALLING_GERMLINE.out.sniffles_vcf, by: 0)
+            .join(SV_CALLING_GERMLINE.out.longcalld_vcf, by: 0)
+            .combine(support_ch)
+            .map { meta, vcf1, vcf2, vcf3, vcf4, min_callers ->
+                [
+                    meta + [min_callers: min_callers],
+                    [vcf1, vcf2, vcf3, vcf4],
+                ]
+            }
         sv_ch = sv_ch.mix(germline_ch)
     }
     // run merge + annotate SV subworkflow
