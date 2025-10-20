@@ -43,7 +43,7 @@ def _fetch_gene_names(brk, refdat, window = 0):
         df = df[df["start_position"] - (window/2) < pos]
         df = df[df["end_position"] + (window/2) > pos]
     ## generate gene names ...
-    genes = list(df["hgnc_symbol"])
+    genes = [str(g) for g in list(df["hgnc_symbol"]) if pd.notna(g)]
     if len(genes) == 1:
         gene_name = str(genes[0])
         alt_gene_names = 'nan'
