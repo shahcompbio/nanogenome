@@ -12,8 +12,10 @@ def check_oncokb(gsvs, oncokb):
     # load oncokb
     oncodat = pd.read_csv(oncokb, sep="\t")
     # match on hugo symbol
-    gsv_gene1 = pd.merge(gsvs, oncodat, left_on="gene_name_1", right_on="Hugo Symbol", how="left", suffixes=('', ''))
-    gsv_gene2 = pd.merge(gsvs, oncodat, left_on="gene_name_2", right_on="Hugo Symbol", how="left", suffixes=('', ''))
+    gsv_gene1 = pd.merge(gsvs, oncodat, left_on="gene_name_1", right_on="Hugo Symbol", how="left")
+    gsv_gene2 = pd.merge(gsvs, oncodat, left_on="gene_name_2", right_on="Hugo Symbol", how="left")
+    print(gsv_gene1)
+    print(gsv_gene2)
     gsvs["oncokb_gene1"] = gsv_gene1["Gene Type"]
     gsvs["oncokb_gene2"] = gsv_gene2["Gene Type"]
     return gsvs
