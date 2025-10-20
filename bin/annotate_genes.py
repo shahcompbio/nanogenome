@@ -124,10 +124,9 @@ if __name__ == "__main__":
     for ix in [1, 2]:
         svs[f'gene_name_{ix}'] = gene_names[ix]
         svs[f'alt_gene_name_{ix}'] = alt_gene_names[ix]
-
-
+    # close progress bar
+    pbar.close()
+    # annotate oncogenes/TSG
     print("check oncokb ....")
     svs = check_oncokb(svs, oncokb)
     svs.to_csv("annotated_sv_calls.tsv", sep='\t', index=False)
-    # close progress bar
-    pbar.close()
