@@ -50,6 +50,10 @@ def _fetch_gene_names(brk, refdat, window = 0):
     elif len(genes) > 1:
         gene_name = str(genes[0])
         alt_gene_names = genes[1:]
+        if isinstance(alt_gene_names, list):
+            alt_gene_names = ",".join(alt_gene_names)
+        else:
+            alt_gene_names = str(alt_gene_names)
     else:
         gene_name = 'nan'
         alt_gene_names = 'nan'
@@ -117,7 +121,7 @@ if __name__ == "__main__":
                 alt_gene_names[i].append(alt_gene_name)
     for ix in [1, 2]:
         svs[f'gene_name_{ix}'] = gene_names[ix]
-        svs[f'alt_gene_name_{ix}'] = ",".join(alt_gene_names[ix])
+        svs[f'alt_gene_name_{ix}'] = alt_gene_names[ix]
 
 
     print("check oncokb ....")
