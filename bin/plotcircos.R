@@ -48,9 +48,9 @@ sv.gene.data <- sv.gene.data %>%
   filter(!(sv.gene.data$Gene == "")) %>%
   distinct(Gene, .keep_all = TRUE)
 # load in haplotype-resolved CNA data from wakhan
-hp1.bed <- read.table(hp1.bed.path, sep="\t", skip=7, header=TRUE,
+hp1.bed <- read.table(hp1.bed.path, sep="\t", skip=8, header=TRUE,
                       comment.char="", stringsAsFactors=FALSE)
-hp2.bed <- read.table(hp2.bed.path, sep="\t", skip=7, header=TRUE,
+hp2.bed <- read.table(hp2.bed.path, sep="\t", skip=8, header=TRUE,
                       comment.char="", stringsAsFactors=FALSE)
 # restrict to columns of interest
 cols <- c("X.chr", "start", "end", "copynumber_state")
@@ -93,18 +93,32 @@ circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
               facing = "inside", niceFacing = TRUE)
 }, track.height = 0.1, bg.border = NA)
 # load in CNV data
-circos.genomicTrackPlotRegion(cna.data, ylim=c(0,4.5), numeric.column = c("copynumber_state_hp1", "copynumber_state_hp2"),
-                              panel.fun = function(region, value, ...){
-                                circos.genomicLines(region, value, lwd = 2, type = "segment", col=c("#E41A1C", "#377EB8"), cex=0.1, ...)
-                              }
+circos.genomicTrackPlotRegion(cna.data,
+  ylim = c(0, 4.5),
+  numeric.column = c("copynumber_state_hp1",
+                     "copynumber_state_hp2"),
+  panel.fun = function(region, value, ...) {
+    circos.genomicLines(region,
+                        value,
+                        lwd = 2,
+                        type = "segment",
+                        col=c("#E41A1C", "#377EB8"),
+                        cex=0.1, ...)
+  }
 )
 # use colors as before
 circos.genomicLink(bed1, bed2, col = link.colors,
                    border = NA)
 # Add a legend for the colors
 legend("topright",
-       legend = c("Insertion", "Deletion", "Translocation", "Inversion", "Duplication", "Breakends",
-                  "Haplotype 1 CN", "Haplotype 2 CN"),
+       legend = c("Insertion",
+                  "Deletion",
+                  "Translocation",
+                  "Inversion",
+                  "Duplication",
+                  "Breakends",
+                  "Haplotype 1 CN",
+                  "Haplotype 2 CN"),
        col = c(pal[1:6], "#E41A1C", "#377EB8"),
        lty = c(1, 1, 1, 1, 1, 1, NA, NA),
        pch = c(NA, NA, NA, NA, NA, NA, 16, 16),
