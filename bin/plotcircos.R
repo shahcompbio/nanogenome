@@ -38,15 +38,20 @@ get_link_color <- function(sv_type, pal, alpha=0.5) {
 # load sv data
 sv.data <- read.csv(sv.data.path, sep="\t")
 # load in gene info
-sv.gene.data <- sv.data[, c("chrom1", "base1", "base1", "gene_name_1")]
-new_cols <- c("Chromosome", "chromStart", "chromEnd", "Gene")
+sv.gene.data <- sv.data[, c("chrom1", "base1", "base1", "gene_name_1", "oncokb_gene1")]
+new_cols <- c("Chromosome", "chromStart", "chromEnd", "Gene", "Oncokb")
 colnames(sv.gene.data) <- new_cols
-sv.gene.data.1 <- sv.data[, c("chrom2", "base2", "base2", "gene_name_2")]
+sv.gene.data.1 <- sv.data[, c("chrom2", "base2", "base2", "gene_name_2", "oncokb_gene2")]
 colnames(sv.gene.data.1) <- new_cols
 sv.gene.data <- dplyr::bind_rows(sv.gene.data, sv.gene.data.1)
 sv.gene.data <- sv.gene.data %>%
   filter(!(sv.gene.data$Gene == "")) %>%
   distinct(Gene, .keep_all = TRUE)
+# filter genes if there are many SVs
+if (nrow(sv.gene.data) > 50) {
+  sv.gene.data <- sv.gene.data %>%
+    filter(Oncokb != "")
+}
 # load in haplotype-resolved CNA data from wakhan
 hp1.bed <- read.table(hp1.bed.path, sep="\t", skip=8, header=TRUE,
                       comment.char="", stringsAsFactors=FALSE)
