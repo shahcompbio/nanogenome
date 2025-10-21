@@ -73,9 +73,6 @@
                     "pandas": "1.5.3",
                     "numpy": "1.26.3"
                 },
-                "TABIX_BGZIPTABIX": {
-                    "tabix": 1.21
-                },
                 "TABIX_TABIX": {
                     "tabix": 1.21
                 },
@@ -291,6 +288,7 @@
                 "severus/COLO829/all_SVs",
                 "severus/COLO829/all_SVs/severus_all.vcf",
                 "severus/COLO829/breakpoints_double.csv",
+                "severus/COLO829/read_ids.csv",
                 "severus/COLO829/read_qual.txt",
                 "severus/COLO829/severus.log",
                 "severus/COLO829/somatic_SVs",
@@ -299,16 +297,13 @@
                 "severus/COLO829_germline/all_SVs",
                 "severus/COLO829_germline/all_SVs/severus_all.vcf",
                 "severus/COLO829_germline/breakpoints_double.csv",
+                "severus/COLO829_germline/read_ids.csv",
                 "severus/COLO829_germline/read_qual.txt",
                 "severus/COLO829_germline/severus.log",
                 "sniffles",
                 "sniffles/COLO829_germline.vcf.gz",
                 "sniffles/COLO829_germline.vcf.gz.tbi",
                 "tabix",
-                "tabix/COLO829_germline.vcf.gz",
-                "tabix/COLO829_germline.vcf.gz.tbi",
-                "tabix/COLO829_somatic.vcf.gz",
-                "tabix/COLO829_somatic.vcf.gz.tbi",
                 "tabix/rephased.vcf.gz.tbi",
                 "vcf2tsv",
                 "vcf2tsv/COLO829_germline_minda_consensus.tsv",
@@ -356,12 +351,11 @@
                 "wakhan/COLO829/hapcorrect_out/data/1.bed",
                 "wakhan/COLO829/hapcorrect_out/data/COLO829.vcf_het_phased_snps.vcf.gz",
                 "wakhan/COLO829/hapcorrect_out/data/COLO829.vcf_het_snps.csv",
-                "wakhan/COLO829/hapcorrect_out/data/PAU59949.d052sup4305mCG_5hmCGvHg38.chr22_reduced.bam",
+                "wakhan/COLO829/hapcorrect_out/data/PAU61427.d052sup4305mCG_5hmCGvHg38.chr22_reduced.bam",
                 "wakhan/COLO829/hapcorrect_out/data_phasing",
                 "wakhan/COLO829/hapcorrect_out/data_phasing/COLO829.vcf_het_snps.csv",
                 "wakhan/COLO829/hapcorrect_out/data_phasing/COLO829.vcf_het_snps_freqs.csv",
                 "wakhan/COLO829/hapcorrect_out/data_phasing/COLO829.vcf_phasesets.csv",
-                "wakhan/COLO829/hapcorrect_out/data_phasing/COLO829_phase_change_segments.csv",
                 "wakhan/COLO829/hapcorrect_out/data_phasing/COLO829_phasesets.csv",
                 "wakhan/COLO829/hapcorrect_out/data_phasing/snps_frequencies.csv",
                 "wakhan/COLO829/hapcorrect_out/phasing_output",
@@ -372,8 +366,6 @@
                 "wakhan/COLO829/hapcorrect_out/phasing_output/chr22_phase_correction_1.html",
                 "wakhan/COLO829/hapcorrect_out/phasing_output/chr22_phase_correction_2.html",
                 "wakhan/COLO829/hapcorrect_out/phasing_output/chr22_without_phase_correction.html",
-                "wakhan/COLO829/hapcorrect_out/phasing_output/rephased.vcf.gz",
-                "wakhan/COLO829/hapcorrect_out/phasing_output/rephased.vcf.gz.csi",
                 "wakhan/COLO829/hapcorrect_out/wakhan.log",
                 "wakhan/COLO829/solutions_ranks.tsv",
                 "wakhan/COLO829/versions.yml",
@@ -489,24 +481,23 @@
                 "loh_regions.bed:md5,051d016d7f985f3fb0580ff0e1f1457b",
                 "loh_regions_subclonal.bed:md5,051d016d7f985f3fb0580ff0e1f1457b",
                 "cancer_genes_coverage.csv:md5,d41d8cd98f00b204e9800998ecf8427e",
-                "coverage.csv:md5,3efb3125cc7ea789df91f3adc760b9bc",
-                "coverage_ps.csv:md5,8c5371bcfdffb80103fe5d9d17565f70",
-                "phase_corrected_coverage.csv:md5,9c30f72989f481c68b8a683e41c6609f",
+                "coverage.csv:md5,bd0c8f3d34b1b2ebb90b7b57a4eba0cf",
+                "coverage_ps.csv:md5,d815f13c9ce31a5ee80a108108a79ebf",
+                "phase_corrected_coverage.csv:md5,bd0c8f3d34b1b2ebb90b7b57a4eba0cf",
                 "0.bed:md5,4e33ed4ea1607432b4e7fbac899be3ed",
                 "1.bed:md5,a4f7898d39aa2e7943f003249cb8128a",
                 "COLO829.vcf_het_snps.csv:md5,6f6bf119c08382ca6a2c668aff642e7c",
                 "COLO829.vcf_het_snps.csv:md5,015a8b262bfb8a7065f753668431d6d5",
-                "COLO829.vcf_het_snps_freqs.csv:md5,593a00cd39838d150e245552a73fcbac",
+                "COLO829.vcf_het_snps_freqs.csv:md5,74227856df326438e3575c89d36097f7",
                 "COLO829.vcf_phasesets.csv:md5,9275a9dd47ea2dea6b222de0492fa275",
-                "COLO829_phase_change_segments.csv:md5,5d29fe5f0cc55a7a30847659cfbc49fe",
                 "COLO829_phasesets.csv:md5,a24e11e6936cc7b209e7f2de7a0b2474",
-                "snps_frequencies.csv:md5,6e1907dae5172ef799b26e2a50f575bc",
+                "snps_frequencies.csv:md5,4eb3e9d4c5c3763fbbcf4db8d96d109a",
                 "solutions_ranks.tsv:md5,21794fac29813861cca2b344c8f0010b",
                 "versions.yml:md5,43c0b9751153690bfedb3601de1d45ef",
                 "COLO829.tsv:md5,43c4ac72e56e2737713fc4e1c09bf567"
             ],
             [
-                "PAU59949.d052sup4305mCG_5hmCGvHg38.chr22_reduced.bam",
+                "PAU61427.d052sup4305mCG_5hmCGvHg38.chr22_reduced.bam",
                 "COLO829.normal.haplotagged.bam",
                 "COLO829.tumor.haplotagged.bam"
             ],
@@ -530,18 +521,15 @@
                 "severus_somatic.vcf",
                 "severus_all.vcf",
                 "COLO829_germline.vcf.gz",
-                "COLO829_germline.vcf.gz",
-                "COLO829_somatic.vcf.gz",
                 "COLO829_5.17_1.0_1.0_wakhan_cna_integers.vcf",
                 "COLO829_5.17_1.0_1.0_wakhan_cna_subclonals.vcf",
-                "COLO829.vcf_het_phased_snps.vcf.gz",
-                "rephased.vcf.gz"
+                "COLO829.vcf_het_phased_snps.vcf.gz"
             ]
         ],
         "meta": {
             "nf-test": "0.9.2",
             "nextflow": "25.04.7"
         },
-        "timestamp": "2025-10-16T16:15:28.011870757"
+        "timestamp": "2025-10-21T10:26:11.909120914"
     }
 }

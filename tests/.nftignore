@@ -26,3 +26,4 @@ pipeline_info/*.{html,json,txt,yml}
 **/*_SAVANAv1.3.6_tp.tsv
 **/*_support.tsv
 **/*minda_*.tsv
+**/read_ids.csv

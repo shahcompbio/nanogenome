@@ -3,7 +3,7 @@ process WAKHAN_HAPCORRECT {
     tag "${meta1.id}"
     label 'process_high'
     stageInMode 'copy'
-    publishDir "${params.outdir}/wakhan/${meta1.id}", mode: 'copy', overwrite: true
+    publishDir "${params.outdir}/wakhan/${meta1.id}", mode: 'copy', overwrite: false
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
     container "quay.io/shahlab_singularity/wakhan:94effdd"

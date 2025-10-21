@@ -12,8 +12,8 @@ def check_oncokb(gsvs, oncokb):
     # load oncokb
     oncodat = pd.read_csv(oncokb, sep="\t")
     # match on hugo symbol
-    gsv_gene1 = pd.merge(gsvs, oncodat, left_on="gene_name_1", right_on="Hugo Symbol", how="left", suffixes=('', ''))
-    gsv_gene2 = pd.merge(gsvs, oncodat, left_on="gene_name_2", right_on="Hugo Symbol", how="left", suffixes=('', ''))
+    gsv_gene1 = pd.merge(gsvs, oncodat, left_on="gene_name_1", right_on="Hugo Symbol", how="left")
+    gsv_gene2 = pd.merge(gsvs, oncodat, left_on="gene_name_2", right_on="Hugo Symbol", how="left")
     gsvs["oncokb_gene1"] = gsv_gene1["Gene Type"]
     gsvs["oncokb_gene2"] = gsv_gene2["Gene Type"]
     return gsvs
@@ -43,13 +43,17 @@ def _fetch_gene_names(brk, refdat, window = 0):
         df = df[df["start_position"] - (window/2) < pos]
         df = df[df["end_position"] + (window/2) > pos]
     ## generate gene names ...
-    genes = list(df["hgnc_symbol"])
+    genes = [str(g) for g in list(df["hgnc_symbol"]) if pd.notna(g)]
     if len(genes) == 1:
         gene_name = str(genes[0])
         alt_gene_names = 'nan'
     elif len(genes) > 1:
         gene_name = str(genes[0])
         alt_gene_names = genes[1:]
+        if isinstance(alt_gene_names, list):
+            alt_gene_names = ",".join(alt_gene_names)
+        else:
+            alt_gene_names = str(alt_gene_names)
     else:
         gene_name = 'nan'
         alt_gene_names = 'nan'
@@ -117,11 +121,10 @@ if __name__ == "__main__":
                 alt_gene_names[i].append(alt_gene_name)
     for ix in [1, 2]:
         svs[f'gene_name_{ix}'] = gene_names[ix]
-        svs[f'alt_gene_name_{ix}'] = ",".join(alt_gene_names[ix])
-
-
+        svs[f'alt_gene_name_{ix}'] = alt_gene_names[ix]
+    # close progress bar
+    pbar.close()
+    # annotate oncogenes/TSG
     print("check oncokb ....")
     svs = check_oncokb(svs, oncokb)
     svs.to_csv("annotated_sv_calls.tsv", sep='\t', index=False)
-    # close progress bar
-    pbar.close()
