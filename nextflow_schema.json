@@ -291,7 +291,7 @@
             "properties": {
                 "binsize": {
                     "type": "integer",
-                    "default": 10000,
+                    "default": 50000,
                     "description": "size of genome bins"
                 },
                 "contigs": {
