@@ -25,9 +25,9 @@ process PLOTCIRCOS {
     """
     plotcircos.R \\
         ${sv_table} \\
+        ${prefix}.circos.svg \\
         ${cn_hp1_bed} \\
         ${cn_hp2_bed} \\
-        ${prefix}.circos.svg \\
         ${args}
 
     cat <<-END_VERSIONS > versions.yml

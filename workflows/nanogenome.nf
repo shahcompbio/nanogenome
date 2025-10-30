@@ -132,35 +132,48 @@ workflow NANOGENOME {
         params.oncokb_url,
     )
     ch_versions = ch_versions.mix(ANNOTATE_SV.out.versions)
-    // run wakhan for cna
+    // run wakhan for somatic CNA
     // cna_input_ch.view()
     WAKHAN_REPHASE_CNA(cna_input_ch, params.fasta)
     ch_versions = ch_versions.mix(WAKHAN_REPHASE_CNA.out.versions.first())
-    }
 
     // plot results
     // ANNOTATE_SV.out.annotated_sv.view()
+    ANNOTATE_SV.out.annotated_sv
+        .map { meta, sv ->
+        tuple("${meta.id}-${meta.condition}", meta, sv) }
+        .branch { meta, meta1, sv ->
+            somatic: meta1.condition == 'somatic'
+            germline: meta1.condition == 'germline'
+        }
+        .set { annot_sv_ch }
     // WAKHAN_CNA.out.HP1_bed.view()
-    // circos_ch = ANNOTATE_SV.out.annotated_sv
-    //     .map { meta, sv -> tuple("${meta.id}-${meta.condition}", meta, sv) }
-    //     .combine(
-    //         WAKHAN_CNA.out.HP1_bed.map { meta, hp_bed ->
-    //             tuple("${meta.id}-${meta.condition}", meta, hp_bed)
-    //         },
-    //         by: 0
-    //     )
-    //     .combine(
-    //         WAKHAN_CNA.out.HP2_bed.map { meta, hp_bed ->
-    //             tuple("${meta.id}-${meta.condition}", meta, hp_bed)
-    //         },
-    //         by: 0
-    //     )
-    //     .map { id, meta, sv, meta1, hp1, meta2, hp2 ->
-    //         tuple(meta, sv, hp1, hp2)
-    //     }
-    // // circos_ch.view()
-    // PLOTCIRCOS(circos_ch)
-    // ch_versions = ch_versions.mix(PLOTCIRCOS.out.versions.first())
+    circos_ch = annot_sv_ch.somatic
+        .combine(
+            WAKHAN_REPHASE_CNA.out.HP1_bed.map { meta, hp_bed ->
+                tuple("${meta.id}-${meta.condition}", meta, hp_bed)
+            },
+            by: 0
+        )
+        .combine(
+            WAKHAN_REPHASE_CNA.out.HP2_bed.map { meta, hp_bed ->
+                tuple("${meta.id}-${meta.condition}", meta, hp_bed)
+            },
+            by: 0
+        )
+        .map { id, meta, sv, meta1, hp1, meta2, hp2 ->
+            tuple(meta, sv, hp1, hp2)
+        }
+        .concat(annot_sv_ch.germline
+        .map { meta, meta1, sv ->
+            [meta1, sv, [], []]
+        })
+    // circos_ch.view()
+    PLOTCIRCOS(circos_ch)
+    ch_versions = ch_versions.mix(PLOTCIRCOS.out.versions.first())
+
+    }
+
     //
     // Collate and save software versions
     //
