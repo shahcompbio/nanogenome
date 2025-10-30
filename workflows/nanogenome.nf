@@ -6,7 +6,7 @@
 include { HAPLOTAG               } from '../subworkflows/local/haplotag/main'
 include { SV_CALLING_SOMATIC     } from '../subworkflows/local/sv_calling_somatic/main'
 include { ANNOTATE_SV            } from '../subworkflows/local/annotate_sv/main'
-include { WAKHAN_CNA             } from '../modules/local/wakhan/cna/main'
+include { WAKHAN_REPHASE_CNA     } from '../modules/local/wakhan/rephase_cna/main'
 include { SV_CALLING_GERMLINE    } from '../subworkflows/local/sv_calling_germline/main'
 include { PLOTCIRCOS             } from '../modules/local/plotcircos/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
@@ -32,7 +32,7 @@ workflow NANOGENOME {
 
     // run haplotag subworkflow to haplotag bams
    if (params.skip_somatic && !params.germline) {
-    println("running haplotag workflow only")
+    println("running phasing workflow only")
    }
     HAPLOTAG(ch_samplesheet, params.clair3_model, params.clair3_platform, params.fasta, params.fai)
     ch_versions = ch_versions.mix(HAPLOTAG.out.versions)
@@ -74,6 +74,17 @@ workflow NANOGENOME {
                     ],
                     [vcf1, vcf2, vcf3],
                 ]
+            }
+                // construct cna input channel
+        cna_input_ch = hap_bam_snps.tumor
+            .join(
+                SV_CALLING_SOMATIC.out.severus_vcf.map { meta, vcf ->
+                    [meta + [condition: "tumor"], vcf]
+                },
+                by: 0
+            )
+            .map { meta, bam, bai, snp_vcf, snp_tbi, sv_vcf ->
+                tuple([id: "${meta.id}", condition: "somatic"], bam, bai, snp_vcf, snp_tbi, sv_vcf)
             }
     }
 
@@ -121,11 +132,12 @@ workflow NANOGENOME {
         params.oncokb_url,
     )
     ch_versions = ch_versions.mix(ANNOTATE_SV.out.versions)
-    }
-    // run wakhan cna
+    // run wakhan for cna
     // cna_input_ch.view()
-    // WAKHAN_CNA(cna_input_ch, params.fasta)
-    // ch_versions = ch_versions.mix(WAKHAN_CNA.out.versions.first())
+    WAKHAN_REPHASE_CNA(cna_input_ch, params.fasta)
+    ch_versions = ch_versions.mix(WAKHAN_REPHASE_CNA.out.versions.first())
+    }
+
     // plot results
     // ANNOTATE_SV.out.annotated_sv.view()
     // WAKHAN_CNA.out.HP1_bed.view()
