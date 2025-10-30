@@ -31,6 +31,9 @@ workflow NANOGENOME {
     ch_multiqc_files = Channel.empty()
 
     // run haplotag subworkflow to haplotag bams
+   if (params.skip_somatic && !params.germline) {
+    println("running haplotag workflow only")
+   }
     HAPLOTAG(ch_samplesheet, params.clair3_model, params.clair3_platform, params.fasta, params.fai)
     ch_versions = ch_versions.mix(HAPLOTAG.out.versions)
     // branch haplotag results into tumor + normal
@@ -50,7 +53,7 @@ workflow NANOGENOME {
             params.somatic_callers,
             HAPLOTAG.out.bam,
             HAPLOTAG.out.bai,
-            HAPLOTAG.out.rephased_vcf,
+            HAPLOTAG.out.phased_vcf,
             params.vntr_bed,
             params.fasta,
             params.fai,
@@ -81,7 +84,7 @@ workflow NANOGENOME {
             params.germline_callers,
             HAPLOTAG.out.bam,
             HAPLOTAG.out.bai,
-            HAPLOTAG.out.rephased_vcf,
+            HAPLOTAG.out.phased_vcf,
             params.vntr_bed,
             params.fasta,
             ch_samplesheet,
@@ -106,6 +109,8 @@ workflow NANOGENOME {
         sv_ch = sv_ch.mix(germline_ch)
     }
     // sv_ch.view()
+    // run annotation only if sv calling has been performed
+    if (!params.skip_somatic || params.germline) {
     // run merge + annotate SV subworkflow
     ANNOTATE_SV(
         sv_ch,
@@ -116,6 +121,7 @@ workflow NANOGENOME {
         params.oncokb_url,
     )
     ch_versions = ch_versions.mix(ANNOTATE_SV.out.versions)
+    }
     // run wakhan cna
     // cna_input_ch.view()
     // WAKHAN_CNA(cna_input_ch, params.fasta)

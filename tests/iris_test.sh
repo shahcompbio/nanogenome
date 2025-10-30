@@ -9,4 +9,6 @@ nextflow run ${pipelinedir}/main.nf \
     -profile test,singularity \
     -work-dir ${outdir}/work \
     --outdir ${outdir} \
+    --germline false \
+    --skip_somatic \
     -resume
