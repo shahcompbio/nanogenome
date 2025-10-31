@@ -450,6 +450,10 @@
             "type": "string",
             "default": "--ont",
             "description": "platform flag for longcallD"
+        },
+        "skip_phasing": {
+            "type": "boolean",
+            "description": "skip subworkflow to phase bams"
         }
     }
 }
