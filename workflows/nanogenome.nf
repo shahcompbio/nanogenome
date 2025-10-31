@@ -31,17 +31,22 @@ workflow NANOGENOME {
     ch_multiqc_files = Channel.empty()
 
     // run haplotag subworkflow to haplotag bams
-   if (params.skip_somatic && !params.germline) {
-    println("running phasing workflow only")
-   }
-    HAPLOTAG(ch_samplesheet, params.clair3_model, params.clair3_platform, params.fasta, params.fai)
-    ch_versions = ch_versions.mix(HAPLOTAG.out.versions)
-    // branch haplotag results into tumor + normal
-    // for somatic and germline workflows
-    hap_bam_snps = HAPLOTAG.out.bam_snps.branch { meta, bam, bai, vcf, tbi ->
-        tumor: meta.condition == 'tumor'
-        norm: meta.condition == 'normal'
+    if (params.skip_somatic && !params.germline) {
+        println("running phasing workflow only")
     }
+    HAPLOTAG(
+        ch_samplesheet,
+        params.clair3_model,
+        params.clair3_platform,
+        params.fasta,
+        params.fai,
+    )
+    ch_versions = ch_versions.mix(HAPLOTAG.out.versions)
+    // construct input for sv calling subworkflows
+    haplotag_out_ch = HAPLOTAG.out.bam
+        .join(HAPLOTAG.out.bai, by: 0)
+        .join(HAPLOTAG.out.phased_vcf, by: 0)
+    haplotag_out_ch.view()
     // add phasing stats to multiqc
     ch_multiqc_files = ch_multiqc_files.mix(HAPLOTAG.out.whatshap_stats.collect { it[1] })
     // make default channels
@@ -75,7 +80,12 @@ workflow NANOGENOME {
                     [vcf1, vcf2, vcf3],
                 ]
             }
-                // construct cna input channel
+        // branch haplotag results for cna input channel
+        hap_bam_snps = HAPLOTAG.out.bam_snps.branch { meta, bam, bai, vcf, tbi ->
+            tumor: meta.condition == 'tumor'
+            norm: meta.condition == 'normal'
+        }
+        // construct cna input channel
         cna_input_ch = hap_bam_snps.tumor
             .join(
                 SV_CALLING_SOMATIC.out.severus_vcf.map { meta, vcf ->
@@ -122,56 +132,57 @@ workflow NANOGENOME {
     // sv_ch.view()
     // run annotation only if sv calling has been performed
     if (!params.skip_somatic || params.germline) {
-    // run merge + annotate SV subworkflow
-    ANNOTATE_SV(
-        sv_ch,
-        params.tolerance,
-        params.min_size,
-        params.gene_annotations,
-        params.oncokb,
-        params.oncokb_url,
-    )
-    ch_versions = ch_versions.mix(ANNOTATE_SV.out.versions)
-    // run wakhan for somatic CNA
-    // cna_input_ch.view()
-    WAKHAN_REPHASE_CNA(cna_input_ch, params.fasta)
-    ch_versions = ch_versions.mix(WAKHAN_REPHASE_CNA.out.versions.first())
-
-    // plot results
-    // ANNOTATE_SV.out.annotated_sv.view()
-    ANNOTATE_SV.out.annotated_sv
-        .map { meta, sv ->
-        tuple("${meta.id}-${meta.condition}", meta, sv) }
-        .branch { meta, meta1, sv ->
-            somatic: meta1.condition == 'somatic'
-            germline: meta1.condition == 'germline'
-        }
-        .set { annot_sv_ch }
-    // WAKHAN_CNA.out.HP1_bed.view()
-    circos_ch = annot_sv_ch.somatic
-        .combine(
-            WAKHAN_REPHASE_CNA.out.HP1_bed.map { meta, hp_bed ->
-                tuple("${meta.id}-${meta.condition}", meta, hp_bed)
-            },
-            by: 0
+        // run merge + annotate SV subworkflow
+        ANNOTATE_SV(
+            sv_ch,
+            params.tolerance,
+            params.min_size,
+            params.gene_annotations,
+            params.oncokb,
+            params.oncokb_url,
         )
-        .combine(
-            WAKHAN_REPHASE_CNA.out.HP2_bed.map { meta, hp_bed ->
-                tuple("${meta.id}-${meta.condition}", meta, hp_bed)
-            },
-            by: 0
-        )
-        .map { id, meta, sv, meta1, hp1, meta2, hp2 ->
-            tuple(meta, sv, hp1, hp2)
-        }
-        .concat(annot_sv_ch.germline
-        .map { meta, meta1, sv ->
-            [meta1, sv, [], []]
-        })
-    // circos_ch.view()
-    PLOTCIRCOS(circos_ch)
-    ch_versions = ch_versions.mix(PLOTCIRCOS.out.versions.first())
+        ch_versions = ch_versions.mix(ANNOTATE_SV.out.versions)
+        // run wakhan for somatic CNA
+        // cna_input_ch.view()
+        WAKHAN_REPHASE_CNA(cna_input_ch, params.fasta)
+        ch_versions = ch_versions.mix(WAKHAN_REPHASE_CNA.out.versions.first())
 
+        // plot results
+        // ANNOTATE_SV.out.annotated_sv.view()
+        ANNOTATE_SV.out.annotated_sv
+            .map { meta, sv ->
+                tuple("${meta.id}-${meta.condition}", meta, sv)
+            }
+            .branch { meta, meta1, sv ->
+                somatic: meta1.condition == 'somatic'
+                germline: meta1.condition == 'germline'
+            }
+            .set { annot_sv_ch }
+        // WAKHAN_CNA.out.HP1_bed.view()
+        circos_ch = annot_sv_ch.somatic
+            .combine(
+                WAKHAN_REPHASE_CNA.out.HP1_bed.map { meta, hp_bed ->
+                    tuple("${meta.id}-${meta.condition}", meta, hp_bed)
+                },
+                by: 0
+            )
+            .combine(
+                WAKHAN_REPHASE_CNA.out.HP2_bed.map { meta, hp_bed ->
+                    tuple("${meta.id}-${meta.condition}", meta, hp_bed)
+                },
+                by: 0
+            )
+            .map { id, meta, sv, meta1, hp1, meta2, hp2 ->
+                tuple(meta, sv, hp1, hp2)
+            }
+            .concat(
+                annot_sv_ch.germline.map { meta, meta1, sv ->
+                    [meta1, sv, [], []]
+                }
+            )
+        // circos_ch.view()
+        PLOTCIRCOS(circos_ch)
+        ch_versions = ch_versions.mix(PLOTCIRCOS.out.versions.first())
     }
 
     //

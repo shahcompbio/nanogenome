@@ -27,6 +27,13 @@
                 "pattern": "^\\S+\\.bai$",
                 "errorMessage": "bai file for aligned bam cannot contain spaces and must have extension '.bai'"
             },
+            "vcf": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^\\S+\\.vcf$",
+                "errorMessage": "vcf file of phased snps (optional); cannot contain spaces and must have extension '.vcf'"
+            },
             "condition": {
                 "type": "string",
                 "pattern": "^\\S+$",
