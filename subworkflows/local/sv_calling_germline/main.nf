@@ -72,14 +72,15 @@ workflow SV_CALLING_GERMLINE {
     // run longcallD
     if (sv_callers.split(',').contains('longcallD')) {
         // split ch_samplesheet into a tumor and normal channel
-        ch_samplesheet
+        bam_ch = ch_samplesheet
+            .map { meta, bam, bai, _vcf ->
+                tuple(meta, bam, bai) }
             .branch { meta, bam, bai ->
                 tumor: meta.condition == 'tumor'
                 norm: meta.condition == 'normal'
             }
-            .set { bam_ch }
         LONGCALLD(bam_ch.norm,
-        [[id: "ref"], ref_fasta])
+            [[id: "ref"], ref_fasta])
         ch_versions = ch_versions.mix(LONGCALLD.out.versions.first())
     }
 

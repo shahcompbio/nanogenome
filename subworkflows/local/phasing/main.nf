@@ -6,9 +6,9 @@ include { WHATSHAP_HAPLOTAG } from '../../../modules/local/whatshap/haplotag/mai
 include { SAMTOOLS_INDEX    } from '../../../modules/nf-core/samtools/index/main'
 include { WHATSHAP_STATS    } from '../../../modules/local/whatshap/stats/main'
 /*
- * haplotag bam files
+ * Phase variants and haplotag bam files
  */
-workflow HAPLOTAG {
+workflow PHASING {
     take:
     ch_samplesheet // channel: [ val(meta), [ bam ] ]
     clair3_model // val: clair3 model specification
@@ -21,6 +21,8 @@ workflow HAPLOTAG {
     ch_versions = Channel.empty()
     // split ch_samplesheet into a tumor and normal channel
     ch_samplesheet
+        .map { meta, bam, bai, _vcf, _tbi ->
+        tuple(meta, bam, bai) }
         .branch { meta, bam, bai ->
             tumor: meta.condition == 'tumor'
             norm: meta.condition == 'normal'
@@ -48,7 +50,7 @@ workflow HAPLOTAG {
     ch_versions = ch_versions.mix(WHATSHAP_STATS.out.versions)
     // run whatshap haplotag to tag both tumor and normal bams
     hap_input_ch = ch_samplesheet
-        .map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }
+        .map { meta, bam, bai, _vcf, _tbi -> tuple(meta.id, meta, bam, bai) }
         .combine(
             LONGPHASE_PHASE.out.vcf.map { meta, vcf -> tuple(meta.id, meta, vcf) },
             by: 0
