@@ -154,11 +154,14 @@ workflow NANOGENOME {
     // run germline workflow
     // call germline structural variants
     if (params.germline) {
+        // sv caller input channel
+        input_germline_ch = bam_snps_ch.norm
+                                .map { meta, bam, bai, vcf, tbi ->
+                                       tuple(meta, bam, bai, vcf)}
+        input_germline_ch.view()
         SV_CALLING_GERMLINE(
             params.germline_callers,
-            PHASING.out.bam,
-            PHASING.out.bai,
-            PHASING.out.phased_vcf,
+            input_germline_ch,
             params.vntr_bed,
             params.fasta,
             ch_samplesheet,
