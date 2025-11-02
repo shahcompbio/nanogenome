@@ -17,10 +17,10 @@ jobs:
       github.repository == 'shahcompbio/nanogenome'
     runs-on: ubuntu-latest
     steps:
-      # Use the @nf-core-bot token to check out so we can push later
+      # Use the GitHub token to check out so we can push later
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
-          token: ${{ secrets.nf_core_bot_auth_token }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       # indication that the command is running
@@ -35,7 +35,7 @@ jobs:
       - name: Checkout Pull Request
         run: gh pr checkout ${{ github.event.issue.number }}
         env:
-          GITHUB_TOKEN: ${{ secrets.nf_core_bot_auth_token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Install dependencies and run nf-test
       - name: Setup Nextflow
