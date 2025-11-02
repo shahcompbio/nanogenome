@@ -1,0 +1,22 @@
+nextflow_pipeline {
+
+    name "Test pipeline"
+    script "../main.nf"
+    tag "pipeline"
+
+    test("-profile test_phasing") {
+
+        when {
+            params {
+                outdir = "$outputDir"
+                germline = false
+                skip_somatic = true
+
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+    }
+}

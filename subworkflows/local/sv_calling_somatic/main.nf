@@ -6,9 +6,8 @@ include { NANOMONSV_GET   } from '../../../modules/local/nanomonsv/get/main'
 workflow SV_CALLING_SOMATIC {
     take:
     sv_callers   // val: list of sv callers to use
-    ch_hap_bam   // channel: [ val(meta), [ haplotagged_bam ] ]
-    ch_hap_bai   // channel: [ val(meta), [ haplotagged_bai ] ]
-    rephased_vcf // channel: [ val(meta), [ rephased_vcf ] ]
+    input_sv_ch // channel: [ val(meta), tumor_bam, tumor_bai, norm_bam, norm_bai, vcf ]
+    hap_bam_ch  // channel [(val), bam, bai]
     vntr_bed     // val: bed file of known VNTRs for severus
     ref_fasta    // val: reference fasta file
     ref_fai      // val: reference fasta index file
@@ -16,22 +15,6 @@ workflow SV_CALLING_SOMATIC {
     main:
 
     ch_versions = Channel.empty()
-    // construct input channel for SV callers
-    // branch tumor and normal
-    hap_bam_ch = ch_hap_bam
-        .join(ch_hap_bai, by: 0)
-        .branch { meta, bam, bai ->
-            tumor: meta.condition == 'tumor'
-            norm: meta.condition == 'normal'
-        }
-    // sv caller input channel
-    input_sv_ch = hap_bam_ch.tumor
-        .map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }
-        .join(hap_bam_ch.norm.map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }, by: 0)
-        .join(rephased_vcf.map { meta, vcf -> tuple(meta.id, meta, vcf) }, by: 0)
-        .map { id, tumor_meta, tumor_bam, tumor_bai, _norm_meta, norm_bam, norm_bai, _meta3, vcf ->
-            tuple([id: id], tumor_bam, tumor_bai, norm_bam, norm_bai, vcf)
-        }
     // run severus if specified
     if (sv_callers.split(',').contains('severus')) {
         SEVERUS(input_sv_ch, [[id: "ref"], vntr_bed])
@@ -50,7 +33,8 @@ workflow SV_CALLING_SOMATIC {
     }
     // run nanomonsv if specified
     if (sv_callers.split(',').contains('nanomonsv')) {
-        NANOMONSV_PARSE(hap_bam_ch.tumor.mix(hap_bam_ch.norm))
+
+        NANOMONSV_PARSE(hap_bam_ch)
         ch_versions = ch_versions.mix(NANOMONSV_PARSE.out.versions.first())
         // Combine all outputs into a single channel
         parse_out_ch = NANOMONSV_PARSE.out.parse_out

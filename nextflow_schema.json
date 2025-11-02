@@ -302,6 +302,11 @@
                 "input_genes": {
                     "type": "string",
                     "description": "bed file of genes to be included in \"genes_copynumber_states\" bed file"
+                },
+                "use_sv_haplotypes": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "To use phased Severus SV/breakpoints"
                 }
             }
         },
@@ -445,6 +450,10 @@
             "type": "string",
             "default": "--ont",
             "description": "platform flag for longcallD"
+        },
+        "skip_phasing": {
+            "type": "boolean",
+            "description": "skip subworkflow to phase bams"
         }
     }
 }
