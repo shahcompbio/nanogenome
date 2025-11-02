@@ -7,9 +7,7 @@ include { PIGZ_UNCOMPRESS } from '../../../modules/nf-core/pigz/uncompress/main'
 workflow SV_CALLING_GERMLINE {
     take:
     sv_callers     // val: list of sv callers to use
-    ch_hap_bam     // channel: [ val(meta), [ haplotagged_bam ] ]
-    ch_hap_bai     // channel: [ val(meta), [ haplotagged_bai ] ]
-    rephased_vcf   // channel: [ val(meta), [ rephased_vcf ] ]
+    input_sv_ch    // channel: [ val(meta),  norm_bam, norm_bai, vcf ]
     vntr_bed       // val: bed file of known VNTRs for severus
     ref_fasta      // val: reference fasta file
     ch_samplesheet // channel: [ val(meta), bam]
@@ -17,22 +15,6 @@ workflow SV_CALLING_GERMLINE {
     main:
 
     ch_versions = Channel.empty()
-    // construct input channel for SV callers
-    // branch tumor and normal
-    hap_bam_ch = ch_hap_bam
-        .join(ch_hap_bai, by: 0)
-        .branch { meta, bam, bai ->
-            tumor: meta.condition == 'tumor'
-            norm: meta.condition == 'normal'
-        }
-    // sv caller input channel
-    input_sv_ch = hap_bam_ch.norm
-        .map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }
-        .join(rephased_vcf.map { meta, vcf -> tuple(meta.id, meta, vcf) }, by: 0)
-        .map { id, meta, norm_bam, norm_bai, _meta2, vcf ->
-            tuple(meta, norm_bam, norm_bai, vcf)
-        }
-    // input_sv_ch.view()
     // run severus if specified
     if (sv_callers.split(',').contains('severus')) {
         SEVERUS(
@@ -72,14 +54,15 @@ workflow SV_CALLING_GERMLINE {
     // run longcallD
     if (sv_callers.split(',').contains('longcallD')) {
         // split ch_samplesheet into a tumor and normal channel
-        ch_samplesheet
+        bam_ch = ch_samplesheet
+            .map { meta, bam, bai, _vcf, _tbi ->
+                tuple(meta, bam, bai) }
             .branch { meta, bam, bai ->
                 tumor: meta.condition == 'tumor'
                 norm: meta.condition == 'normal'
             }
-            .set { bam_ch }
         LONGCALLD(bam_ch.norm,
-        [[id: "ref"], ref_fasta])
+            [[id: "ref"], ref_fasta])
         ch_versions = ch_versions.mix(LONGCALLD.out.versions.first())
     }
 

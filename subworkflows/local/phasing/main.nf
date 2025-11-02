@@ -1,27 +1,28 @@
 // import modules
 include { CLAIR3            } from '../../../modules/nf-core/clair3/main'
 include { LONGPHASE_PHASE   } from '../../../modules/nf-core/longphase/phase/main'
-include { WAKHAN_HAPCORRECT } from '../../../modules/local/wakhan/hapcorrect/main'
 include { TABIX_TABIX       } from '../../../modules/nf-core/tabix/tabix/main'
 include { WHATSHAP_HAPLOTAG } from '../../../modules/local/whatshap/haplotag/main'
 include { SAMTOOLS_INDEX    } from '../../../modules/nf-core/samtools/index/main'
-include { WHATSHAP_STATS } from '../../../modules/local/whatshap/stats/main'
+include { WHATSHAP_STATS    } from '../../../modules/local/whatshap/stats/main'
 /*
- * haplotag bam files
+ * Phase variants and haplotag bam files
  */
-workflow HAPLOTAG {
+workflow PHASING {
     take:
-    ch_samplesheet  // channel: [ val(meta), [ bam ] ]
-    clair3_model    // val: clair3 model specification
+    ch_samplesheet // channel: [ val(meta), [ bam ] ]
+    clair3_model // val: clair3 model specification
     clair3_platform // val: clair3 platform specification
-    fasta           // val: reference fasta
-    fai             // val: reference fasta fai
+    fasta // val: reference fasta
+    fai // val: reference fasta fai
 
     main:
 
     ch_versions = Channel.empty()
     // split ch_samplesheet into a tumor and normal channel
     ch_samplesheet
+        .map { meta, bam, bai, _vcf, _tbi ->
+        tuple(meta, bam, bai) }
         .branch { meta, bam, bai ->
             tumor: meta.condition == 'tumor'
             norm: meta.condition == 'normal'
@@ -41,29 +42,17 @@ workflow HAPLOTAG {
         }
     LONGPHASE_PHASE(longphase_input_ch, [[id: "ref"], fasta], [[id: "ref"], fai])
     ch_versions = ch_versions.mix(LONGPHASE_PHASE.out.versions)
-    // phase correct tumor + normal bam using phased SNPs
-    hapcorrect_input_ch = ch_samplesheet
-        .map { meta, bam, bai -> tuple(meta.id, meta, bam) }
-        .combine(LONGPHASE_PHASE.out.vcf.map { meta, vcf -> tuple(meta.id, meta, vcf) }, by: 0)
-        .map { id, target_meta, bam, norm_meta, vcf -> tuple(target_meta, bam, vcf) }
-    // hapcorrect_input_ch.view()
-    WAKHAN_HAPCORRECT([[id: "ref"], fasta], hapcorrect_input_ch)
-    ch_versions = ch_versions.mix(WAKHAN_HAPCORRECT.out.versions)
-    // tabix rephased vcf if it exists
-    rephased_vcf_ch = WAKHAN_HAPCORRECT.out.rephased_vcf
-        .concat(LONGPHASE_PHASE.out.vcf)
-        .first()
-    // rephased_vcf_ch.view()
-    TABIX_TABIX(rephased_vcf_ch)
+    // tabix phased snps
+    TABIX_TABIX(LONGPHASE_PHASE.out.vcf)
     ch_versions = ch_versions.mix(TABIX_TABIX.out.versions)
     // compute phasing statistics
-    WHATSHAP_STATS(rephased_vcf_ch)
+    WHATSHAP_STATS(LONGPHASE_PHASE.out.vcf)
     ch_versions = ch_versions.mix(WHATSHAP_STATS.out.versions)
     // run whatshap haplotag to tag both tumor and normal bams
     hap_input_ch = ch_samplesheet
-        .map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }
+        .map { meta, bam, bai, _vcf, _tbi -> tuple(meta.id, meta, bam, bai) }
         .combine(
-            rephased_vcf_ch.map { meta, vcf -> tuple(meta.id, meta, vcf) },
+            LONGPHASE_PHASE.out.vcf.map { meta, vcf -> tuple(meta.id, meta, vcf) },
             by: 0
         )
         .combine(
@@ -82,9 +71,8 @@ workflow HAPLOTAG {
     emit:
     bam            = WHATSHAP_HAPLOTAG.out.bam // channel: [ val(meta), [ bam ] ]
     bai            = SAMTOOLS_INDEX.out.bai // channel: [ val(meta), [ bai ] ]
-    rephased_vcf   = rephased_vcf_ch // channel: [ val(meta), [ vcf ] ]
+    phased_vcf     = LONGPHASE_PHASE.out.vcf // channel: [ val(meta), [ vcf ] ]
     bam_snps       = hap_input_ch // channel: [ val(meta), bam, bai, vcf, tbi ] ]
-    wakhanHPOutput = WAKHAN_HAPCORRECT.out.wakhanHPOutput // channel: [ val(meta), [ path ] ]
     whatshap_stats = WHATSHAP_STATS.out.tsv // channel: [ val(meta), [path]]
     versions       = ch_versions // channel: [ versions.yml ]
 }

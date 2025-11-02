@@ -1,0 +1,179 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: "wakhan_rephase_cna"
+description: Complete wakhan workflow for haplotype rephasing and copy number analysis
+keywords:
+  - copy number
+  - rephasing
+  - haplotypes
+  - long reads
+  - genomics
+tools:
+  - "wakhan":
+      description: "A tool to analyze haplotype-specific chromosome-scale somatic copy number aberrations and aneuploidy using long reads."
+      homepage: "None"
+      documentation: "None"
+      tool_dev_url: "https://github.com/KolmogorovLab/Wakhan"
+      doi: ""
+      licence: ["MIT"]
+      identifier: null
+
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. `[ id:'sample1' ]`
+    - bam:
+        type: file
+        description: Sorted BAM file
+        pattern: "*.bam"
+        ontologies:
+          - edam: "http://edamontology.org/format_2572" # BAM
+    - bai:
+        type: file
+        description: BAM index file
+        pattern: "*.bai"
+        ontologies:
+          - edam: "http://edamontology.org/format_3327" # BAI
+    - phased_vcf:
+        type: file
+        description: Phased VCF file
+        pattern: "*.vcf.gz"
+        ontologies:
+          - edam: "http://edamontology.org/format_3016" # VCF
+    - phased_vcf_tbi:
+        type: file
+        description: Phased VCF index file
+        pattern: "*.vcf.gz.tbi"
+        ontologies:
+          - edam: "http://edamontology.org/format_3616" # Tabix index
+    - severus_vcf:
+        type: file
+        description: Structural variant VCF file (e.g., from Severus)
+        pattern: "*.vcf"
+        ontologies:
+          - edam: "http://edamontology.org/format_3016" # VCF
+  - - ref_fasta:
+        type: file
+        description: Reference genome FASTA file
+        pattern: "*.{fasta,fa}"
+        ontologies:
+          - edam: "http://edamontology.org/format_1929" # FASTA
+
+output:
+  rephased_vcf:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. `[ id:'sample1' ]`
+      - "rephased.vcf.gz":
+          type: file
+          description: Rephased VCF file
+          pattern: "rephased.vcf.gz"
+          ontologies:
+            - edam: "http://edamontology.org/format_3016" # VCF
+  rephased_vcf_tbi:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. `[ id:'sample1' ]`
+      - "rephased.vcf.gz.tbi":
+          type: file
+          description: Rephased VCF index file
+          pattern: "rephased.vcf.gz.tbi"
+          ontologies:
+            - edam: "http://edamontology.org/format_3616" # Tabix index
+  solutions_ranks:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. `[ id:'sample1' ]`
+      - "solutions_ranks.tsv":
+          type: file
+          description: TSV file ranking CNA solutions
+          pattern: "solutions_ranks.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  wakhanCNAOutput:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. `[ id:'sample1' ]`
+      - "solution_*":
+          type: directory
+          description: CNA solution directories
+          pattern: "solution_*"
+  coverage_plots:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. `[ id:'sample1' ]`
+      - "coverage_plots":
+          type: directory
+          description: Directory containing coverage plots
+          pattern: "coverage_plots"
+  ploidy_purity_html:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. `[ id:'sample1' ]`
+      - "*_ploidy_purity.html":
+          type: file
+          description: HTML report for ploidy and purity
+          pattern: "*_ploidy_purity.html"
+          ontologies:
+            - edam: "http://edamontology.org/format_2331" # HTML
+  optimized_peak_html:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. `[ id:'sample1' ]`
+      - "*_optimized_peak.html":
+          type: file
+          description: HTML report for optimized peak calling
+          pattern: "*_optimized_peak.html"
+          ontologies:
+            - edam: "http://edamontology.org/format_2331" # HTML
+  HP1_bed:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. `[ id:'sample1' ]`
+      - "solution_1/**/*_subclonal_segments_HP_1.bed":
+          type: file
+          description: BED file with subclonal segments for haplotype 1
+          pattern: "*_subclonal_segments_HP_1.bed"
+          ontologies:
+            - edam: "http://edamontology.org/format_3003" # BED
+  HP2_bed:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. `[ id:'sample1' ]`
+      - "solution_1/**/*_subclonal_segments_HP_2.bed":
+          type: file
+          description: BED file with subclonal segments for haplotype 2
+          pattern: "*_subclonal_segments_HP_2.bed"
+          ontologies:
+            - edam: "http://edamontology.org/format_3003" # BED
+  versions:
+    - "versions.yml":
+        type: file
+        description: File containing software versions
+        pattern: "versions.yml"
+        ontologies:
+          - edam: "http://edamontology.org/format_3750" # YAML
+
+authors:
+  - "@apsteinberg"
+maintainers:
+  - "@apsteinberg"

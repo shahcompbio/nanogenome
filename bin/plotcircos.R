@@ -4,9 +4,10 @@ library(dplyr)
 # code for plotting circos from SV and CNA data
 args <- commandArgs(trailingOnly = TRUE)
 sv.data.path <- args[1]
-hp1.bed.path <- args[2]
-hp2.bed.path <- args[3]
-circos.path <- args[4]
+circos.path  <- args[2]
+hp1.bed.path <- args[3]
+hp2.bed.path <- args[4]
+
 # functions
 #' sv link colors
 #'
@@ -53,19 +54,30 @@ if (nrow(sv.gene.data) > 50) {
     filter(Oncokb != "")
 }
 # load in haplotype-resolved CNA data from wakhan
-hp1.bed <- read.table(hp1.bed.path, sep="\t", skip=8, header=TRUE,
-                      comment.char="", stringsAsFactors=FALSE)
-hp2.bed <- read.table(hp2.bed.path, sep="\t", skip=8, header=TRUE,
-                      comment.char="", stringsAsFactors=FALSE)
-# restrict to columns of interest
-cols <- c("X.chr", "start", "end", "copynumber_state")
-hp1.bed <- hp1.bed[, cols]
-hp2.bed <- hp2.bed[, cols]
-# merge the two dataframes
-cna.data <- inner_join(hp1.bed, hp2.bed, by=c("X.chr", "start", "end"), suffix=c("_hp1", "_hp2"))
-# Using pmin to clip the maximum value at 4
-cna.data$copynumber_state_hp1 <- pmin(cna.data$copynumber_state_hp1, 4)
-cna.data$copynumber_state_hp2 <- pmin(cna.data$copynumber_state_hp2, 4)
+# check if bed file paths are provided and files exist
+has_cna_data <- FALSE
+if (!is.na(hp1.bed.path) && !is.na(hp2.bed.path) &&
+    hp1.bed.path != "" && hp2.bed.path != "" &&
+    file.exists(hp1.bed.path) && file.exists(hp2.bed.path)) {
+
+  hp1.bed <- read.table(hp1.bed.path, sep="\t", skip=8, header=TRUE,
+                        comment.char="", stringsAsFactors=FALSE)
+  hp2.bed <- read.table(hp2.bed.path, sep="\t", skip=8, header=TRUE,
+                        comment.char="", stringsAsFactors=FALSE)
+  # restrict to columns of interest
+  cols <- c("X.chr", "start", "end", "copynumber_state")
+  hp1.bed <- hp1.bed[, cols]
+  hp2.bed <- hp2.bed[, cols]
+  # merge the two dataframes
+  cna.data <- inner_join(hp1.bed, hp2.bed, by=c("X.chr", "start", "end"), suffix=c("_hp1", "_hp2"))
+  # Using pmin to clip the maximum value at 4
+  cna.data$copynumber_state_hp1 <- pmin(cna.data$copynumber_state_hp1, 4)
+  cna.data$copynumber_state_hp2 <- pmin(cna.data$copynumber_state_hp2, 4)
+
+  has_cna_data <- TRUE
+} else {
+  message("No CNA data provided - plotting circos without copy number track")
+}
 # take sv data and prep for circlize
 # prep bed files for circlize
 bed1 <- sv.data[, c("chrom1", "base1", "base1", "SV_Type")]
@@ -97,42 +109,61 @@ circos.track(ylim = c(0, 1), panel.fun = function(x, y) {
   circos.text(mean(xlim), mean(ylim), chr, cex = 0.5, col = "white",
               facing = "inside", niceFacing = TRUE)
 }, track.height = 0.1, bg.border = NA)
-# load in CNV data
-circos.genomicTrackPlotRegion(cna.data,
-  ylim = c(0, 4.5),
-  numeric.column = c("copynumber_state_hp1",
-                     "copynumber_state_hp2"),
-  panel.fun = function(region, value, ...) {
-    circos.genomicLines(region,
-                        value,
-                        lwd = 2,
-                        type = "segment",
-                        col=c("#E41A1C", "#377EB8"),
-                        cex=0.1, ...)
-  }
-)
+# load in CNV data (only if available)
+if (has_cna_data) {
+  circos.genomicTrackPlotRegion(cna.data,
+    ylim = c(0, 4.5),
+    numeric.column = c("copynumber_state_hp1",
+                       "copynumber_state_hp2"),
+    panel.fun = function(region, value, ...) {
+      circos.genomicLines(region,
+                          value,
+                          lwd = 2,
+                          type = "segment",
+                          col=c("#E41A1C", "#377EB8"),
+                          cex=0.1, ...)
+    }
+  )
+}
 # use colors as before
 circos.genomicLink(bed1, bed2, col = link.colors,
                    border = NA)
 # Add a legend for the colors
-legend("topright",
-       legend = c("Insertion",
-                  "Deletion",
-                  "Translocation",
-                  "Inversion",
-                  "Duplication",
-                  "Breakends",
-                  "Haplotype 1 CN",
-                  "Haplotype 2 CN"),
-       col = c(pal[1:6], "#E41A1C", "#377EB8"),
-       lty = c(1, 1, 1, 1, 1, 1, NA, NA),
-       pch = c(NA, NA, NA, NA, NA, NA, 16, 16),
-       cex = 0.9,
-       lwd = 3.5,
-       pt.cex = 1.5,
-       title.adj = 0.2,
-       y.intersp = 1,
-       x.intersp = 0.7)
+if (has_cna_data) {
+  legend("topright",
+         legend = c("Insertion",
+                    "Deletion",
+                    "Translocation",
+                    "Inversion",
+                    "Duplication",
+                    "Breakends",
+                    "Haplotype 1 CN",
+                    "Haplotype 2 CN"),
+         col = c(pal[1:6], "#E41A1C", "#377EB8"),
+         lty = c(1, 1, 1, 1, 1, 1, NA, NA),
+         pch = c(NA, NA, NA, NA, NA, NA, 16, 16),
+         cex = 0.9,
+         lwd = 3.5,
+         pt.cex = 1.5,
+         title.adj = 0.2,
+         y.intersp = 1,
+         x.intersp = 0.7)
+} else {
+  legend("topright",
+         legend = c("Insertion",
+                    "Deletion",
+                    "Translocation",
+                    "Inversion",
+                    "Duplication",
+                    "Breakends"),
+         col = pal[1:6],
+         lty = 1,
+         cex = 0.9,
+         lwd = 3.5,
+         title.adj = 0.2,
+         y.intersp = 1,
+         x.intersp = 0.7)
+}
 
 # Close the SVG graphics device
 dev.off()
