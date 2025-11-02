@@ -14,48 +14,58 @@
 
 ## Introduction
 
-**shahcompbio/nanogenome** is a bioinformatics pipeline that ...
+**shahcompbio/nanogenome** is a bioinformatics pipeline for comprehensive analysis of long-read DNA sequencing data. The pipeline performs variant calling, phasing, structural variant (SV) detection, copy number aberration (CNA) analysis, and gene annotation from Oxford Nanopore Technologies (ONT) sequencing data. It supports both somatic (tumor-normal) and germline analysis workflows with ensemble calling approaches for improved accuracy.
 
-<!-- TODO nf-core:
-   Complete this sentence with a 2-3 sentence summary of what types of data the pipeline ingests, a brief overview of the
-   major pipeline sections and the types of output it produces. You're giving an overview to someone new
-   to nf-core here, in 15-20 seconds. For an example, see https://github.com/nf-core/rnaseq/blob/master/README.md#introduction
--->
+The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It uses Docker/Singularity containers making installation trivial and results highly reproducible. The [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html) implementation of this pipeline uses one container per process which makes it much easier to maintain and update software dependencies.
 
-<!-- TODO nf-core: Include a figure that guides the user through the major workflow steps. Many nf-core
-     workflows use the "tube map" design for that. See https://nf-co.re/docs/guidelines/graphic_design/workflow_diagrams#examples for examples.   -->
-<!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
+## Pipeline summary
+
+1. Variant calling and phasing ([`Clair3`](https://github.com/HKU-BAL/Clair3), [`LongPhase`](https://github.com/twolinin/LongPhase))
+2. BAM haplotagging ([`WhatsHap`](https://whatshap.readthedocs.io/))
+3. Somatic structural variant calling with ensemble approach
+   - Individual callers: [`SEVERUS`](https://github.com/KolmogorovLab/Severus), [`SAVANA`](https://github.com/cortes-ciriano-lab/savana), [`NanoMonSV`](https://github.com/friend1ws/nanomonsv)
+   - Consensus calling: [`MINDA`](https://github.com/shahcompbio/minda)
+4. Germline structural variant calling (optional)
+   - Individual callers: [`SEVERUS`](https://github.com/KolmogorovLab/Severus), [`Sniffles`](https://github.com/fritzsedlazeck/Sniffles), [`CuteSV`](https://github.com/tjiangHIT/cuteSV), [`LongcallD`](https://github.com/ydLiu-HIT/LongcallD)
+   - Consensus calling: [`MINDA`](https://github.com/shahcompbio/minda)
+5. Haplotype-resolved copy number analysis ([`Wakhan`](https://github.com/shahcompbio/wakhan))
+6. SV and CNA annotation ([`BioMart`](https://www.ensembl.org/info/data/biomart/index.html), [`OncoKB`](https://www.oncokb.org/))
+7. Circos visualization of SVs and CNAs
+8. Present QC for all workflow stages ([`MultiQC`](http://multiqc.info/))
 
 ## Usage
 
 > [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline) with `-profile test` before running the workflow on actual data.
 
-<!-- TODO nf-core: Describe the minimum required steps to execute the pipeline, e.g. how to prepare samplesheets.
-     Explain what rows and columns represent. For instance (please edit as appropriate):
-
 First, prepare a samplesheet with your input data that looks as follows:
 
 `samplesheet.csv`:
 
 ```csv
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
+sample,condition,bam,bai,vcf,tbi
+SAMPLE_TUMOR,tumor,/path/to/tumor.bam,/path/to/tumor.bam.bai,,
+SAMPLE_NORMAL,normal,/path/to/normal.bam,/path/to/normal.bam.bai,,
 ```
 
-Each row represents a fastq file (single-end) or a pair of fastq files (paired end).
+Each row represents a sample with the following columns:
 
--->
+- `sample`: Sample identifier (must be the same for tumor-normal pairs)
+- `condition`: Either `tumor` or `normal`
+- `bam`: Full path to aligned BAM file
+- `bai`: Full path to BAM index file
+- `vcf`: (Optional) Path to pre-phased VCF file (required if `--skip_phasing` is used)
+- `tbi`: (Optional) Path to VCF index file
 
 Now, you can run the pipeline using:
 
-<!-- TODO nf-core: update the following command to include all required parameters for a minimal example -->
-
 ```bash
 nextflow run shahcompbio/nanogenome \
-   -profile <docker/singularity/.../institute> \
+   -profile docker \
    --input samplesheet.csv \
-   --outdir <OUTDIR>
+   --outdir <OUTDIR> \
+   --fasta <REFERENCE_FASTA> \
+   --fai <REFERENCE_FAI>
 ```
 
 > [!WARNING]
