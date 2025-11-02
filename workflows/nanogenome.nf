@@ -53,7 +53,7 @@ workflow NANOGENOME {
                 norm: meta.condition == 'normal'
             }
         // construct snps channel for downstream processing
-        snps_ch = PHASING.out.phased_vcf
+        snps_ch = PHASING.out.phased_vcf.map { meta, vcf -> tuple(meta, vcf, [])}
         // branch phasing results for cna input channel
         bam_snps_ch = PHASING.out.bam_snps.branch { meta, bam, bai, vcf, tbi ->
             tumor: meta.condition == 'tumor'

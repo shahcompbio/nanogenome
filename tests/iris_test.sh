@@ -6,7 +6,7 @@ mkdir -p ${outdir}
 cd ${outdir}
 
 nextflow run ${pipelinedir}/main.nf \
-    -profile test_sv_only,singularity \
+    -profile test,singularity \
     -work-dir ${outdir}/work \
     --outdir ${outdir} \
     -resume
