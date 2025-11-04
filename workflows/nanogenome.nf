@@ -53,7 +53,7 @@ workflow NANOGENOME {
                 norm: meta.condition == 'normal'
             }
         // construct snps channel for downstream processing
-        snps_ch = PHASING.out.phased_vcf.map { meta, vcf -> tuple(meta, vcf, [])}
+        snps_ch = PHASING.out.phased_vcf.map { meta, vcf -> tuple(meta, vcf, []) }
         // branch phasing results for cna input channel
         bam_snps_ch = PHASING.out.bam_snps.branch { meta, bam, bai, vcf, tbi ->
             tumor: meta.condition == 'tumor'
@@ -65,17 +65,20 @@ workflow NANOGENOME {
         // split samplesheet into tumor/normal
         bam_ch = ch_samplesheet
             .map { meta, bam, bai, _vcf, _tbi ->
-            tuple(meta, bam, bai) }
+                tuple(meta, bam, bai)
+            }
             .branch { meta, bam, bai ->
                 tumor: meta.condition == 'tumor'
                 norm: meta.condition == 'normal'
             }
         // construct snps channel
         snps_ch = ch_samplesheet
-                    .map {meta, _bam, _bai, vcf, tbi ->
-                          tuple(meta, vcf, tbi) }
-                    .filter { meta, vcf, tbi ->
-                              vcf != null && vcf != [] }
+            .map { meta, _bam, _bai, vcf, tbi ->
+                tuple(meta, vcf, tbi)
+            }
+            .filter { meta, vcf, tbi ->
+                vcf != null && vcf != []
+            }
         // snps_ch.view()
         // also construct bam/snps channel for wakhan
         // ch_samplesheet.view()
@@ -91,9 +94,7 @@ workflow NANOGENOME {
             .branch { meta, bam, bai, vcf, tbi ->
                 tumor: meta.condition == 'tumor'
                 norm: meta.condition == 'normal'
-        }
-        // bam_snps_ch.tumor.view()
-
+            }
     }
 
     // make default channels
@@ -108,14 +109,14 @@ workflow NANOGENOME {
             .join(snps_ch.map { meta, vcf, _tbi -> tuple(meta.id, meta, vcf) }, by: 0)
             .map { id, tumor_meta, tumor_bam, tumor_bai, _norm_meta, norm_bam, norm_bai, _meta3, vcf ->
                 tuple([id: id], tumor_bam, tumor_bai, norm_bam, norm_bai, vcf)
-        }
+            }
         SV_CALLING_SOMATIC(
             params.somatic_callers,
             input_somatic_ch,
             bam_ch.tumor.mix(bam_ch.norm),
             params.vntr_bed,
             params.fasta,
-            params.fai
+            params.fai,
         )
         ch_versions = ch_versions.mix(SV_CALLING_SOMATIC.out.versions)
         // construct sv channel for annotation subworkflow
@@ -147,7 +148,7 @@ workflow NANOGENOME {
             }
         // run wakhan for somatic CNA
         // cna_input_ch.view()
-        WAKHAN_REPHASE_CNA(cna_input_ch, params.fasta)
+        WAKHAN_REPHASE_CNA(cna_input_ch, params.fasta, params.fai)
         ch_versions = ch_versions.mix(WAKHAN_REPHASE_CNA.out.versions.first())
     }
 
@@ -155,9 +156,9 @@ workflow NANOGENOME {
     // call germline structural variants
     if (params.germline) {
         // sv caller input channel
-        input_germline_ch = bam_snps_ch.norm
-                                .map { meta, bam, bai, vcf, tbi ->
-                                       tuple(meta, bam, bai, vcf)}
+        input_germline_ch = bam_snps_ch.norm.map { meta, bam, bai, vcf, tbi ->
+            tuple(meta, bam, bai, vcf)
+        }
         input_germline_ch.view()
         SV_CALLING_GERMLINE(
             params.germline_callers,

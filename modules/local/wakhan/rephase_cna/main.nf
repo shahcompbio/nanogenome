@@ -11,6 +11,7 @@ process WAKHAN_REPHASE_CNA {
     input:
     tuple val(meta), path(bam), path(bai), path(phased_vcf), path(phased_vcf_tbi), path(severus_vcf)
     path ref_fasta
+    path ref_fai
 
     output:
     // Rephasing outputs
