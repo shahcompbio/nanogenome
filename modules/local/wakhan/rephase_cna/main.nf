@@ -6,7 +6,7 @@ process WAKHAN_REPHASE_CNA {
     publishDir "${params.outdir}/wakhan/${meta.id}", mode: 'copy', overwrite: true, saveAs: { filename -> filename.startsWith("solution_") ? "cna_solutions/${filename}" : filename }
 
     conda "${moduleDir}/environment.yml"
-    container "quay.io/biocontainers/wakhan:0.2.0--pyhdfd78af_1"
+    container "quay.io/shahlab_singularity/wakhan:20251104-43c3197"
 
     input:
     tuple val(meta), path(bam), path(bai), path(phased_vcf), path(phased_vcf_tbi), path(severus_vcf)

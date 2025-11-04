@@ -3,7 +3,7 @@ FROM quay.io/condaforge/mambaforge:latest
 # Clone Wakhan and create conda environment (git is pre-installed in mambaforge)
 WORKDIR /opt/wakhan
 RUN git clone https://github.com/KolmogorovLab/Wakhan.git && \
-    cd Wakhan && \
+    cd Wakhan && git checkout 43c3197 && \
     git rev-parse --short HEAD > /opt/wakhan_version.txt && \
     git rev-parse HEAD > /opt/wakhan_version_full.txt && \
     mamba env create -f environment.yml -n wakhan && \
