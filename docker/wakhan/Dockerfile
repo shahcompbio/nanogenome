@@ -1,4 +1,4 @@
-FROM quay.io/condaforge/mambaforge:latest
+FROM quay.io/condaforge/mambaforge:24.9.2-0
 
 # Clone Wakhan and create conda environment (git is pre-installed in mambaforge)
 WORKDIR /opt/wakhan
