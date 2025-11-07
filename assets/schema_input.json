@@ -27,14 +27,14 @@
                 "pattern": "^\\S+\\.bai$",
                 "errorMessage": "bai file for aligned bam cannot contain spaces and must have extension '.bai'"
             },
-            "vcf": {
+            "snp_vcf": {
                 "type": "string",
                 "format": "file-path",
                 "exists": true,
                 "pattern": "^\\S+\\.(vcf|vcf\\.gz)$",
                 "errorMessage": "vcf file of phased snps (optional); cannot contain spaces and must have extension '.vcf' or '.vcf.gz'"
             },
-            "tbi": {
+            "snp_tbi": {
                 "type": "string",
                 "format": "file-path",
                 "exists": true,
@@ -47,6 +47,13 @@
                 "errorMessage": "specify condition (i.e., tumor or normal) and cannot contain spaces",
                 "meta": ["condition"]
             }
+        },
+        "severus_vcf": {
+            "type": "string",
+            "format": "file-path",
+            "exists": true,
+            "pattern": "^\\S+\\.(vcf|vcf\\.gz)$",
+            "errorMessage": "severus sv vcf (optional); cannot contain spaces and must have extension '.vcf' or '.vcf.gz'"
         },
         "required": ["sample", "bam", "bai", "condition"]
     }

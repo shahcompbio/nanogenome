@@ -454,6 +454,15 @@
         "skip_phasing": {
             "type": "boolean",
             "description": "skip subworkflow to phase bams"
+        },
+        "skip_cna": {
+            "type": "boolean",
+            "description": "skip copy number calling"
+        },
+        "cna_tools": {
+            "type": "string",
+            "default": "wakhan",
+            "description": "select copy number analysis tools to use"
         }
     }
 }

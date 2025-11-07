@@ -3,17 +3,18 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { PHASING                } from '../subworkflows/local/phasing/main'
-include { SV_CALLING_SOMATIC     } from '../subworkflows/local/sv_calling_somatic/main'
-include { ANNOTATE_SV            } from '../subworkflows/local/annotate_sv/main'
-include { WAKHAN_REPHASE_CNA     } from '../modules/local/wakhan/rephase_cna/main'
-include { SV_CALLING_GERMLINE    } from '../subworkflows/local/sv_calling_germline/main'
-include { PLOTCIRCOS             } from '../modules/local/plotcircos/main'
-include { MULTIQC                } from '../modules/nf-core/multiqc/main'
-include { paramsSummaryMap       } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_nanogenome_pipeline'
+include { PHASING                 } from '../subworkflows/local/phasing/main'
+include { SV_CALLING_SOMATIC      } from '../subworkflows/local/sv_calling_somatic/main'
+include { ANNOTATE_SV             } from '../subworkflows/local/annotate_sv/main'
+include { WAKHAN_REPHASE_CNA      } from '../modules/local/wakhan/rephase_cna/main'
+include { BAM_CNV_CALLING_SOMATIC } from '../subworkflows/local/bam_cnv_calling_somatic/main'
+include { SV_CALLING_GERMLINE     } from '../subworkflows/local/sv_calling_germline/main'
+include { PLOTCIRCOS              } from '../modules/local/plotcircos/main'
+include { MULTIQC                 } from '../modules/nf-core/multiqc/main'
+include { paramsSummaryMap        } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc    } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML  } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText  } from '../subworkflows/local/utils_nfcore_nanogenome_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -135,20 +136,41 @@ workflow NANOGENOME {
                     [vcf1, vcf2, vcf3],
                 ]
             }
+    }
+    // run somatic cnv analysis
+    if (!params.skip_cna) {
         // construct cna input channel
-        cna_input_ch = bam_snps_ch.tumor
-            .join(
-                SV_CALLING_SOMATIC.out.severus_vcf.map { meta, vcf ->
-                    [meta + [condition: "tumor"], vcf]
-                },
-                by: 0
-            )
-            .map { meta, bam, bai, snp_vcf, snp_tbi, sv_vcf ->
-                tuple([id: "${meta.id}", condition: "somatic"], bam, bai, snp_vcf, snp_tbi, sv_vcf)
-            }
-        // run wakhan for somatic CNA
-        // cna_input_ch.view()
-        WAKHAN_REPHASE_CNA(cna_input_ch, params.fasta, params.fai)
+        if (!params.skip_somatic) {
+            wakhan_input_ch = bam_snps_ch.tumor
+                .join(
+                    SV_CALLING_SOMATIC.out.severus_vcf.map { meta, vcf ->
+                        [meta + [condition: "tumor"], vcf]
+                    },
+                    by: 0
+                )
+                .map { meta, bam, bai, snp_vcf, snp_tbi, sv_vcf ->
+                    tuple([id: "${meta.id}", condition: "somatic"], bam, bai, snp_vcf, snp_tbi, sv_vcf)
+                }
+        }
+        else {
+            bam_snps_ch = ch_samplesheet
+                .map { meta, bam, bai, _snp_vcf, _snp_tbi, severus_vcf -> tuple(meta.id, meta, bam, bai, severus_vcf) }
+                .combine(
+                    snps_ch.map { meta, snp_vcf, snp_tbi -> tuple(meta.id, snp_vcf, snp_tbi) },
+                    by: 0
+                )
+                .map { _id, meta, bam, bai, severus_vcf, snp_vcf, snp_tbi ->
+                    // reorder to match expected input
+                    tuple(meta, bam, bai, snp_vcf, snp_tbi, severus_vcf)
+                }
+                .branch { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf ->
+                    tumor: meta.condition == 'tumor'
+                    norm: meta.condition == 'normal'
+                }
+            wakhan_input_ch = bam_snps_ch.tumor
+        }
+
+        WAKHAN_REPHASE_CNA(wakhan_input_ch, params.fasta, params.fai)
         ch_versions = ch_versions.mix(WAKHAN_REPHASE_CNA.out.versions.first())
     }
 
