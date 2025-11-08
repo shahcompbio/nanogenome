@@ -6,9 +6,8 @@
 include { PHASING                 } from '../subworkflows/local/phasing/main'
 include { SV_CALLING_SOMATIC      } from '../subworkflows/local/sv_calling_somatic/main'
 include { ANNOTATE_SV             } from '../subworkflows/local/annotate_sv/main'
-include { WAKHAN_REPHASE_CNA      } from '../modules/local/wakhan/rephase_cna/main'
-include { BAM_CNV_CALLING_SOMATIC } from '../subworkflows/local/bam_cnv_calling_somatic/main'
 include { SV_CALLING_GERMLINE     } from '../subworkflows/local/sv_calling_germline/main'
+include { BAM_CNV_CALLING_SOMATIC } from '../subworkflows/local/bam_cnv_calling_somatic/main'
 include { PLOTCIRCOS              } from '../modules/local/plotcircos/main'
 include { MULTIQC                 } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap        } from 'plugin/nf-schema'
@@ -32,7 +31,7 @@ workflow NANOGENOME {
     ch_multiqc_files = Channel.empty()
 
     // run phasing subworkflow to phase variants and haplotag bams
-    if (params.skip_somatic && !params.germline) {
+    if (params.skip_somatic && !params.germline && params.skip_cna) {
         println("running phasing workflow only")
     }
     if (!params.skip_phasing) {
@@ -61,7 +60,7 @@ workflow NANOGENOME {
             norm: meta.condition == 'normal'
         }
     }
-    else {
+    else if (!params.skip_somatic || params.germline) {
         println("running variant calling only")
         // split samplesheet into tumor/normal
         bam_ch = ch_samplesheet
@@ -96,6 +95,9 @@ workflow NANOGENOME {
                 tumor: meta.condition == 'tumor'
                 norm: meta.condition == 'normal'
             }
+    }
+    else {
+        println("run cna only")
     }
 
     // make default channels
@@ -137,42 +139,6 @@ workflow NANOGENOME {
                 ]
             }
     }
-    // run somatic cnv analysis
-    if (!params.skip_cna) {
-        // construct cna input channel
-        if (!params.skip_somatic) {
-            wakhan_input_ch = bam_snps_ch.tumor
-                .join(
-                    SV_CALLING_SOMATIC.out.severus_vcf.map { meta, vcf ->
-                        [meta + [condition: "tumor"], vcf]
-                    },
-                    by: 0
-                )
-                .map { meta, bam, bai, snp_vcf, snp_tbi, sv_vcf ->
-                    tuple([id: "${meta.id}", condition: "somatic"], bam, bai, snp_vcf, snp_tbi, sv_vcf)
-                }
-        }
-        else {
-            bam_snps_ch = ch_samplesheet
-                .map { meta, bam, bai, _snp_vcf, _snp_tbi, severus_vcf -> tuple(meta.id, meta, bam, bai, severus_vcf) }
-                .combine(
-                    snps_ch.map { meta, snp_vcf, snp_tbi -> tuple(meta.id, snp_vcf, snp_tbi) },
-                    by: 0
-                )
-                .map { _id, meta, bam, bai, severus_vcf, snp_vcf, snp_tbi ->
-                    // reorder to match expected input
-                    tuple(meta, bam, bai, snp_vcf, snp_tbi, severus_vcf)
-                }
-                .branch { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf ->
-                    tumor: meta.condition == 'tumor'
-                    norm: meta.condition == 'normal'
-                }
-            wakhan_input_ch = bam_snps_ch.tumor
-        }
-
-        WAKHAN_REPHASE_CNA(wakhan_input_ch, params.fasta, params.fai)
-        ch_versions = ch_versions.mix(WAKHAN_REPHASE_CNA.out.versions.first())
-    }
 
     // run germline workflow
     // call germline structural variants
@@ -208,7 +174,89 @@ workflow NANOGENOME {
             }
         sv_ch = sv_ch.mix(germline_ch)
     }
-    // sv_ch.view()
+    // run somatic cnv analysis
+    hp1_bed_ch = Channel.empty()
+    hp2_bed_ch = Channel.empty()
+    if (!params.skip_cna) {
+        // construct cna input channel
+        if (!params.skip_somatic) {
+            wakhan_input_ch = bam_snps_ch.tumor
+                .join(
+                    SV_CALLING_SOMATIC.out.severus_vcf.map { meta, vcf ->
+                        [meta + [condition: "tumor"], vcf]
+                    },
+                    by: 0
+                )
+                .map { meta, bam, bai, snp_vcf, snp_tbi, sv_vcf ->
+                    tuple([id: "${meta.id}", condition: "somatic"], bam, bai, snp_vcf, snp_tbi, sv_vcf)
+                }
+        }
+        else {
+            // construct snps channel
+            snps_ch = ch_samplesheet
+                .map { meta, _bam, _bai, snp_vcf, snp_tbi, _severus_vcf ->
+                    tuple(meta, snp_vcf, snp_tbi)
+                }
+                .filter { meta, snp_vcf, snp_tbi ->
+                    snp_vcf != null && snp_vcf != []
+                }
+            // snps_ch.view()
+            bam_snps_ch = ch_samplesheet
+                .map { meta, bam, bai, _snp_vcf, _snp_tbi, severus_vcf -> tuple(meta.id, meta, bam, bai, severus_vcf) }
+                .combine(
+                    snps_ch.map { meta, snp_vcf, snp_tbi -> tuple(meta.id, snp_vcf, snp_tbi) },
+                    by: 0
+                )
+                .map { _id, meta, bam, bai, severus_vcf, snp_vcf, snp_tbi ->
+                    // reorder to match expected input
+                    tuple(meta, bam, bai, snp_vcf, snp_tbi, severus_vcf)
+                }
+                .branch { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf ->
+                    tumor: meta.condition == 'tumor'
+                    norm: meta.condition == 'normal'
+                }
+            wakhan_input_ch = bam_snps_ch.tumor
+        }
+        // construct ascat input channel
+        ch_samplesheet
+            .map { meta, bam, bai, _snp_vcf, _snp_tbi, _severus_vcf ->
+            tuple(meta.id, meta.condition, bam, bai) }
+            .branch { id, condition, bam, bai ->
+                tumor: condition == 'tumor'
+                norm: condition == 'normal'
+            }
+            .set { ascat_bam_ch}
+        // join t/n pairs
+        ascat_input_ch =  ascat_bam_ch.norm
+                .join(ascat_bam_ch.tumor, by: 0)
+                .map { id, norm_meta, input_norm, idx_norm, _tumor_meta, input_tumor, idx_tumor ->
+                    tuple(
+                        [id: id],
+                        input_norm,
+                        idx_norm,
+                        input_tumor,
+                        idx_tumor
+                    )
+                }
+        // ascat_input_ch.view()
+        // ascat reference files prep
+        gc_files = params.ascat_gc_files ?: []
+        rt_files = params.ascat_rt_files ?: []
+        // run somatic cnv calling subworkflow
+        BAM_CNV_CALLING_SOMATIC(params.cna_tools,
+                                wakhan_input_ch,
+                                ascat_input_ch,
+                                params.genome_build,
+                                params.ascat_allele_files,
+                                params.ascat_loci_files,
+                                params.fasta,
+                                params.fai,
+                                gc_files,
+                                rt_files)
+        ch_versions = ch_versions.mix(BAM_CNV_CALLING_SOMATIC.out.versions)
+        hp1_bed_ch = BAM_CNV_CALLING_SOMATIC.out.hp1_bed
+        hp2_bed_ch = BAM_CNV_CALLING_SOMATIC.out.hp2_bed
+    }
     // run annotation only if sv calling has been performed
     if (!params.skip_somatic || params.germline) {
         // run merge + annotate SV subworkflow
@@ -221,7 +269,6 @@ workflow NANOGENOME {
             params.oncokb_url,
         )
         ch_versions = ch_versions.mix(ANNOTATE_SV.out.versions)
-
         // plot results
         // ANNOTATE_SV.out.annotated_sv.view()
         ANNOTATE_SV.out.annotated_sv
@@ -236,13 +283,13 @@ workflow NANOGENOME {
         // WAKHAN_CNA.out.HP1_bed.view()
         circos_ch = annot_sv_ch.somatic
             .combine(
-                WAKHAN_REPHASE_CNA.out.HP1_bed.map { meta, hp_bed ->
+                hp1_bed_ch.map { meta, hp_bed ->
                     tuple("${meta.id}-${meta.condition}", meta, hp_bed)
                 },
                 by: 0
             )
             .combine(
-                WAKHAN_REPHASE_CNA.out.HP2_bed.map { meta, hp_bed ->
+                hp2_bed_ch.map { meta, hp_bed ->
                     tuple("${meta.id}-${meta.condition}", meta, hp_bed)
                 },
                 by: 0
