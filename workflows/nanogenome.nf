@@ -246,7 +246,6 @@ workflow NANOGENOME {
         BAM_CNV_CALLING_SOMATIC(params.cna_tools,
                                 wakhan_input_ch,
                                 ascat_input_ch,
-                                params.genome_build,
                                 params.ascat_allele_files,
                                 params.ascat_loci_files,
                                 params.fasta,

@@ -48,6 +48,7 @@ process ASCAT {
     def min_map_qual_arg                = args.min_map_qual                ? ", min_map_qual = ${args.min_map_qual}"                               : ""
     def skip_allele_counting_tumour_arg = args.skip_allele_counting_tumour ? ", skip_allele_counting_tumour = ${args.skip_allele_counting_tumour}" : ""
     def skip_allele_counting_normal_arg = args.skip_allele_counting_normal ? ", skip_allele_counting_normal = ${args.skip_allele_counting_normal}" : ""
+    def loci_binsize                    = args.ascat_longread_bins         ? ", loci_binsize = ${args.ascat_longread_bins}"                        : ""
 
     if (args.additional_allelecounter_flags && fasta) {
         additional_allelecounter_arg = ", additional_allelecounter_flags = \"${args.additional_allelecounter_flags} -r ${fasta}\" "
@@ -109,7 +110,7 @@ process ASCAT {
         allelecounter_exe = "alleleCounter",
         alleles.prefix = allele_prefix,
         loci.prefix = loci_prefix,
-        gender = "${gender}",
+        gender = NULL,
         genomeVersion = "${genomeVersion}",
         nthreads = ${task.cpus}
         ${minCounts_arg}
