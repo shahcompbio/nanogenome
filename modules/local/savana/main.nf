@@ -1,5 +1,5 @@
 // classify putative structural variants as somatic or germline
-process SAVANA_CLASSIFY {
+process SAVANA {
     tag "${meta.id}"
     label 'process_high'
 
@@ -8,15 +8,21 @@ process SAVANA_CLASSIFY {
     container "quay.io/biocontainers/savana:1.3.6--pyhdfd78af_0"
 
     input:
-    tuple val(meta), path(tumor_bam), path(tumor_bai), path(norm_bam), path(norm_bai)
+    tuple val(meta), path(tumor_bam), path(tumor_bai), path(norm_bam), path(norm_bai), path(snp_vcf)
     path ref_fasta
     path ref_fai
 
     output:
-    // TODO nf-core: Named file extensions MUST be emitted for ALL output channels
+    // sv calling outputs
     tuple val(meta), path("**/*.classified.somatic.vcf"), emit: somatic_vcf
     tuple val(meta), path("**/*.sv_breakpoints_read_support.tsv"), emit: read_support
     tuple val(meta), path("**/*.inserted_sequences.fa"), emit: inserted_seqs
+    // cna outpus
+    tuple val(meta), path("**/*_raw_read_counts.tsv"), emit: read_counts, optional: true
+    tuple val(meta), path("**/*_read_counts_mnorm_log2r_segmented.tsv"), emit: log2r, optional: true
+    tuple val(meta), path("**/*_fitted_purity_ploidy.tsv"), emit: purity_ploidy, optional: true
+    tuple val(meta), path("**/*_segmented_absolute_copy_number.tsv"), emit: cnv, optional: true
+
     // TODO nf-core: List additional required output channels/values here
     path "versions.yml", emit: versions
 
@@ -26,6 +32,8 @@ process SAVANA_CLASSIFY {
     script:
     def args = task.ext.args ?: ''
     def model_args = task.ext.model_args ?: ''
+    // arguments for copy number analysis
+    def cna_args = snp_vcf ? "--snp_vcf ${snp_vcf}" : ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     savana \\
@@ -35,7 +43,8 @@ process SAVANA_CLASSIFY {
         --outdir ${prefix} \\
         --threads ${task.cpus} \\
         ${args} \\
-        ${model_args}
+        ${model_args} \\
+        ${cna_args}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

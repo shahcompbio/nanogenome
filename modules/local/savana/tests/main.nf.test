@@ -2,9 +2,9 @@
 // nf-core modules test savana/sv
 nextflow_process {
 
-    name "Test Process SAVANA_CLASSIFY"
+    name "Test Process SAVANA"
     script "../main.nf"
-    process "SAVANA_CLASSIFY"
+    process "SAVANA"
 
     tag "modules"
     tag "modules_"

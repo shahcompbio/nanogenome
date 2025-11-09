@@ -5,11 +5,6 @@
         "https://github.com/nf-core/modules.git": {
             "modules": {
                 "nf-core": {
-                    "ascat": {
-                        "branch": "master",
-                        "git_sha": "e88b4e59762c2e816ca90e623ed83300ecbc9222",
-                        "installed_by": ["modules"]
-                    },
                     "bcftools/query": {
                         "branch": "master",
                         "git_sha": "f17049e03697726ace7499d2fe342f892594f6f3",

@@ -29,7 +29,9 @@ workflow NANOGENOME {
 
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
-
+    /*
+    * PHASING WORKFLOW
+    */
     // run phasing subworkflow to phase variants and haplotag bams
     if (params.skip_somatic && !params.germline && params.skip_cna) {
         println("running phasing workflow only")
@@ -103,6 +105,9 @@ workflow NANOGENOME {
     // make default channels
     sv_ch = Channel.empty()
     cna_input_ch = Channel.empty()
+    /*
+    * SOMATIC STRUCTURAL VARIANT CALLING WORKFLOW
+    */
     // call somatic structural variants
     if (!params.skip_somatic) {
         // construct somatic sv input channel
@@ -139,8 +144,9 @@ workflow NANOGENOME {
                 ]
             }
     }
-
-    // run germline workflow
+    /*
+    * GERMLINE SV CALLING WORKFLOW
+    */
     // call germline structural variants
     if (params.germline) {
         // sv caller input channel
@@ -174,84 +180,58 @@ workflow NANOGENOME {
             }
         sv_ch = sv_ch.mix(germline_ch)
     }
+    /*
+    * SOMATIC CNV CALLING WORKFLOW
+    */
     // run somatic cnv analysis
     hp1_bed_ch = Channel.empty()
     hp2_bed_ch = Channel.empty()
     if (!params.skip_cna) {
         // construct cna input channel
         if (!params.skip_somatic) {
-            wakhan_input_ch = bam_snps_ch.tumor
+            // construct somatic sv input channel
+            cna_input_ch = bam_ch.tumor
+                .map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }
+                .join(bam_ch.norm.map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }, by: 0)
+                .join(snps_ch.map { meta, snp_vcf, snp_tbi -> tuple(meta.id, meta, snp_vcf, snp_tbi) }, by: 0)
                 .join(
-                    SV_CALLING_SOMATIC.out.severus_vcf.map { meta, vcf ->
-                        [meta + [condition: "tumor"], vcf]
+                    SV_CALLING_SOMATIC.out.severus_vcf.map { meta, sv_vcf ->
+                        tuple(meta.id, meta, sv_vcf)
                     },
                     by: 0
                 )
-                .map { meta, bam, bai, snp_vcf, snp_tbi, sv_vcf ->
-                    tuple([id: "${meta.id}", condition: "somatic"], bam, bai, snp_vcf, snp_tbi, sv_vcf)
+                .map { id, _tumor_meta, tumor_bam, tumor_bai, _norm_meta, norm_bam, norm_bai, _meta3, snp_vcf, snp_tbi, _meta4, sv_vcf ->
+                    tuple([id: id, condition: "somatic"], tumor_bam, tumor_bai, norm_bam, norm_bai, snp_vcf, snp_tbi, sv_vcf)
                 }
         }
         else {
-            // construct snps channel
-            snps_ch = ch_samplesheet
-                .map { meta, _bam, _bai, snp_vcf, snp_tbi, _severus_vcf ->
-                    tuple(meta, snp_vcf, snp_tbi)
+            // branch the samplesheet
+            cna_ch = ch_samplesheet.branch { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf ->
+                tumor: meta.condition == 'tumor'
+                norm: meta.condition == 'normal'
+            }
+            // contruct cna input ch
+            cna_input_ch = cna_ch.tumor
+                .map { meta, bam, bai, _snp_vcf, _snp_tbi, sv_vcf ->
+                    tuple(meta.id, bam, bai, sv_vcf)
                 }
-                .filter { meta, snp_vcf, snp_tbi ->
-                    snp_vcf != null && snp_vcf != []
-                }
-            // snps_ch.view()
-            bam_snps_ch = ch_samplesheet
-                .map { meta, bam, bai, _snp_vcf, _snp_tbi, severus_vcf -> tuple(meta.id, meta, bam, bai, severus_vcf) }
-                .combine(
-                    snps_ch.map { meta, snp_vcf, snp_tbi -> tuple(meta.id, snp_vcf, snp_tbi) },
+                .join(
+                    cna_ch.norm.map.map { meta, bam, bai, snp_vcf, snp_tbi, _sv_vcf ->
+                        tuple(meta.id, bam, bai, snp_vcf, snp_tbi)
+                    },
                     by: 0
                 )
-                .map { _id, meta, bam, bai, severus_vcf, snp_vcf, snp_tbi ->
-                    // reorder to match expected input
-                    tuple(meta, bam, bai, snp_vcf, snp_tbi, severus_vcf)
+                .map { id, tumor_bam, tumor_bai, sv_vcf, norm_bam, norm_bai, snp_vcf, snp_tbi ->
+                    tuple([id: id, condition: "somatic"], tumor_bam, tumor_bai, norm_bam, norm_bai, snp_vcf, snp_tbi, sv_vcf)
                 }
-                .branch { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf ->
-                    tumor: meta.condition == 'tumor'
-                    norm: meta.condition == 'normal'
-                }
-            wakhan_input_ch = bam_snps_ch.tumor
         }
-        // construct ascat input channel
-        ch_samplesheet
-            .map { meta, bam, bai, _snp_vcf, _snp_tbi, _severus_vcf ->
-            tuple(meta.id, meta.condition, bam, bai) }
-            .branch { id, condition, bam, bai ->
-                tumor: condition == 'tumor'
-                norm: condition == 'normal'
-            }
-            .set { ascat_bam_ch}
-        // join t/n pairs
-        ascat_input_ch =  ascat_bam_ch.norm
-                .join(ascat_bam_ch.tumor, by: 0)
-                .map { id, norm_meta, input_norm, idx_norm, _tumor_meta, input_tumor, idx_tumor ->
-                    tuple(
-                        [id: id],
-                        input_norm,
-                        idx_norm,
-                        input_tumor,
-                        idx_tumor
-                    )
-                }
-        // ascat_input_ch.view()
-        // ascat reference files prep
-        gc_files = params.ascat_gc_files ?: []
-        rt_files = params.ascat_rt_files ?: []
         // run somatic cnv calling subworkflow
-        BAM_CNV_CALLING_SOMATIC(params.cna_tools,
-                                wakhan_input_ch,
-                                ascat_input_ch,
-                                params.ascat_allele_files,
-                                params.ascat_loci_files,
-                                params.fasta,
-                                params.fai,
-                                gc_files,
-                                rt_files)
+        BAM_CNV_CALLING_SOMATIC(
+            params.cna_tools,
+            cna_input_ch,
+            params.fasta,
+            params.fai,
+        )
         ch_versions = ch_versions.mix(BAM_CNV_CALLING_SOMATIC.out.versions)
         hp1_bed_ch = BAM_CNV_CALLING_SOMATIC.out.hp1_bed
         hp2_bed_ch = BAM_CNV_CALLING_SOMATIC.out.hp2_bed
