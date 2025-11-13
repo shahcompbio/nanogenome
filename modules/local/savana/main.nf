@@ -11,6 +11,7 @@ process SAVANA {
     tuple val(meta), path(tumor_bam), path(tumor_bai), path(norm_bam), path(norm_bai), path(snp_vcf)
     path ref_fasta
     path ref_fai
+    path contigs_list
 
     output:
     // sv calling outputs
@@ -33,7 +34,8 @@ process SAVANA {
     def args = task.ext.args ?: ''
     def model_args = task.ext.model_args ?: ''
     // arguments for copy number analysis
-    def cna_args = snp_vcf ? "--snp_vcf ${snp_vcf}" : ''
+    def cna_args = snp_vcf ? "--snp_vcf ${snp_vcf} --cna_threads ${task.cpus}" : ''
+    def contigs_arg = contigs_list ? "--contigs ${contigs_list}" : ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     savana \\
@@ -44,7 +46,8 @@ process SAVANA {
         --threads ${task.cpus} \\
         ${args} \\
         ${model_args} \\
-        ${cna_args}
+        ${cna_args} \\
+        ${contigs_arg}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

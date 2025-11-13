@@ -29,6 +29,8 @@ workflow NANOGENOME {
 
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
+    // define contigs list when null
+    contigs_list = params.contigs_list ?: []
     /*
     * PHASING WORKFLOW
     */
@@ -125,6 +127,7 @@ workflow NANOGENOME {
             params.vntr_bed,
             params.fasta,
             params.fai,
+            contigs_list
         )
         ch_versions = ch_versions.mix(SV_CALLING_SOMATIC.out.versions)
         // construct sv channel for annotation subworkflow
@@ -216,7 +219,7 @@ workflow NANOGENOME {
                     tuple(meta.id, bam, bai, sv_vcf)
                 }
                 .join(
-                    cna_ch.norm.map.map { meta, bam, bai, snp_vcf, snp_tbi, _sv_vcf ->
+                    cna_ch.norm.map { meta, bam, bai, snp_vcf, snp_tbi, _sv_vcf ->
                         tuple(meta.id, bam, bai, snp_vcf, snp_tbi)
                     },
                     by: 0
@@ -231,6 +234,7 @@ workflow NANOGENOME {
             cna_input_ch,
             params.fasta,
             params.fai,
+            contigs_list
         )
         ch_versions = ch_versions.mix(BAM_CNV_CALLING_SOMATIC.out.versions)
         hp1_bed_ch = BAM_CNV_CALLING_SOMATIC.out.hp1_bed

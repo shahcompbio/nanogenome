@@ -11,14 +11,20 @@ workflow SV_CALLING_SOMATIC {
     vntr_bed // val: bed file of known VNTRs for severus
     ref_fasta // val: reference fasta file
     ref_fai // val: reference fasta index file
+    contigs_list // path: contigs list file for savana (optional)
 
     main:
 
     ch_versions = Channel.empty()
+    ch_severus_vcf = Channel.empty()
+    ch_savana_vcf = Channel.empty()
+    ch_nanomonsv_vcf = Channel.empty()
+
     // run severus if specified
     if (sv_callers.split(',').contains('severus')) {
         SEVERUS(input_sv_ch, [[id: "ref"], vntr_bed])
         ch_versions = ch_versions.mix(SEVERUS.out.versions.first())
+        ch_severus_vcf = SEVERUS.out.somatic_vcf
     }
     // run savana if specified
     if (sv_callers.split(',').contains('savana')) {
@@ -28,8 +34,10 @@ workflow SV_CALLING_SOMATIC {
             },
             ref_fasta,
             ref_fai,
+            contigs_list
         )
         ch_versions = ch_versions.mix(SAVANA_CLASSIFY.out.versions.first())
+        ch_savana_vcf = SAVANA_CLASSIFY.out.somatic_vcf
     }
     // run nanomonsv if specified
     if (sv_callers.split(',').contains('nanomonsv')) {
@@ -53,11 +61,12 @@ workflow SV_CALLING_SOMATIC {
             }
         NANOMONSV_GET(input_get_ch, ref_fasta, ref_fai)
         ch_versions = ch_versions.mix(NANOMONSV_GET.out.versions.first())
+        ch_nanomonsv_vcf = NANOMONSV_GET.out.somatic_vcf
     }
 
     emit:
-    severus_vcf   = SEVERUS.out.somatic_vcf // channel: [ val(meta), [ somatic_vcf ] ]
-    savana_vcf    = SAVANA_CLASSIFY.out.somatic_vcf // channel: [ val(meta), [ somatic_vcf ] ]
-    nanomonsv_vcf = NANOMONSV_GET.out.somatic_vcf // channel: [ val(meta), [ somatic_vcf ] ]
+    severus_vcf   = ch_severus_vcf // channel: [ val(meta), [ somatic_vcf ] ]
+    savana_vcf    = ch_savana_vcf // channel: [ val(meta), [ somatic_vcf ] ]
+    nanomonsv_vcf = ch_nanomonsv_vcf // channel: [ val(meta), [ somatic_vcf ] ]
     versions      = ch_versions // channel: [ versions.yml ]
 }
