@@ -107,6 +107,7 @@ workflow NANOGENOME {
     // make default channels
     sv_ch = Channel.empty()
     cna_input_ch = Channel.empty()
+    support_ch = Channel.from(1, params.min_callers)
     /*
     * SOMATIC STRUCTURAL VARIANT CALLING WORKFLOW
     */
@@ -127,11 +128,10 @@ workflow NANOGENOME {
             params.vntr_bed,
             params.fasta,
             params.fai,
-            contigs_list
+            contigs_list,
         )
         ch_versions = ch_versions.mix(SV_CALLING_SOMATIC.out.versions)
         // construct sv channel for annotation subworkflow
-        support_ch = Channel.from(1, params.min_callers)
         sv_ch = SV_CALLING_SOMATIC.out.savana_vcf
             .join(SV_CALLING_SOMATIC.out.severus_vcf, by: 0)
             .join(SV_CALLING_SOMATIC.out.nanomonsv_vcf, by: 0)
@@ -234,7 +234,7 @@ workflow NANOGENOME {
             cna_input_ch,
             params.fasta,
             params.fai,
-            contigs_list
+            contigs_list,
         )
         ch_versions = ch_versions.mix(BAM_CNV_CALLING_SOMATIC.out.versions)
         hp1_bed_ch = BAM_CNV_CALLING_SOMATIC.out.hp1_bed
