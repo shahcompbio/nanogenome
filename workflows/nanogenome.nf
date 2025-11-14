@@ -116,7 +116,7 @@ workflow NANOGENOME {
     if (!params.skip_somatic) {
         // validate that vntr_bed is provided if severus is selected
         if (params.somatic_callers.split(',').contains('severus') && !params.vntr_bed) {
-            error "ERROR: --vntr_bed is required when using SEVERUS for somatic SV calling. Please provide a VNTR BED file."
+            error("ERROR: --vntr_bed is required when using SEVERUS for somatic SV calling. Please provide a VNTR BED file.")
         }
         // construct somatic sv input channel
         input_somatic_ch = bam_ch.tumor
@@ -159,7 +159,7 @@ workflow NANOGENOME {
     if (params.germline) {
         // validate that vntr_bed is provided if severus is selected
         if (params.germline_callers.split(',').contains('severus') && !params.vntr_bed) {
-            error "ERROR: --vntr_bed is required when using SEVERUS for germline SV calling. Please provide a VNTR BED file."
+            error("ERROR: --vntr_bed is required when using SEVERUS for germline SV calling. Please provide a VNTR BED file.")
         }
         // sv caller input channel
         // ch_samplesheet.view { v -> "samplesheet ${v}" }
@@ -168,7 +168,7 @@ workflow NANOGENOME {
         input_germline_ch = bam_snps_ch.norm.map { meta, bam, bai, snp_vcf, _snp_tbi ->
             tuple(meta, bam, bai, snp_vcf)
         }
-        input_germline_ch.view { v -> "input germline ${v}" }
+        // input_germline_ch.view { v -> "input germline ${v}" }
         SV_CALLING_GERMLINE(
             params.germline_callers,
             input_germline_ch,
