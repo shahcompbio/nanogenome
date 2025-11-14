@@ -5,7 +5,7 @@ process LONGCALLD {
 
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
-    container "biocontainers/longcalld:0.0.5--h7d57edc_0"
+    container "biocontainers/longcalld:0.0.6--h7d57edc_0"
 
     input:
     tuple val(meta), path(bam), path(bai)

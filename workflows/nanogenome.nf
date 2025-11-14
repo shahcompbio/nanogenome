@@ -67,35 +67,36 @@ workflow NANOGENOME {
     else if (!params.skip_somatic || params.germline) {
         println("running variant calling only")
         // split samplesheet into tumor/normal
+        // ch_samplesheet.view()
         bam_ch = ch_samplesheet
-            .map { meta, bam, bai, _vcf, _tbi ->
+            .map { meta, bam, bai, _snp_vcf, _snp_tbi, _sv_vcf ->
                 tuple(meta, bam, bai)
             }
-            .branch { meta, bam, bai ->
+            .branch { meta, _bam, _bai ->
                 tumor: meta.condition == 'tumor'
                 norm: meta.condition == 'normal'
             }
         // construct snps channel
         snps_ch = ch_samplesheet
-            .map { meta, _bam, _bai, vcf, tbi ->
-                tuple(meta, vcf, tbi)
+            .map { meta, _bam, _bai, snp_vcf, snp_tbi, _sv_vcf ->
+                tuple(meta, snp_vcf, snp_tbi)
             }
-            .filter { meta, vcf, tbi ->
-                vcf != null && vcf != []
+            .filter { _meta, snp_vcf, _snp_tbi ->
+                snp_vcf != null && snp_vcf != []
             }
         // snps_ch.view()
         // also construct bam/snps channel for wakhan
         // ch_samplesheet.view()
         bam_snps_ch = ch_samplesheet
-            .map { meta, bam, bai, _vcf, _tbi -> tuple(meta.id, meta, bam, bai) }
+            .map { meta, bam, bai, _snp_vcf, _snp_tbi, _sv_vcf -> tuple(meta.id, meta, bam, bai) }
             .combine(
-                snps_ch.map { meta, vcf, tbi -> tuple(meta.id, vcf, tbi) },
+                snps_ch.map { meta, snp_vcf, snp_tbi -> tuple(meta.id, snp_vcf, snp_tbi) },
                 by: 0
             )
-            .map { id, meta, bam, bai, vcf, tbi ->
-                tuple(meta, bam, bai, vcf, tbi)
+            .map { _id, meta, bam, bai, snp_vcf, snp_tbi ->
+                tuple(meta, bam, bai, snp_vcf, snp_tbi)
             }
-            .branch { meta, bam, bai, vcf, tbi ->
+            .branch { meta, _bam, _bai, _snp_vcf, _snp_tbi ->
                 tumor: meta.condition == 'tumor'
                 norm: meta.condition == 'normal'
             }
@@ -105,9 +106,9 @@ workflow NANOGENOME {
     }
 
     // make default channels
-    sv_ch = Channel.empty()
-    cna_input_ch = Channel.empty()
-    support_ch = Channel.from(1, params.min_callers)
+    sv_ch = channel.empty()
+    cna_input_ch = channel.empty()
+    support_ch = channel.from(1, params.min_callers)
     /*
     * SOMATIC STRUCTURAL VARIANT CALLING WORKFLOW
     */
@@ -153,16 +154,18 @@ workflow NANOGENOME {
     // call germline structural variants
     if (params.germline) {
         // sv caller input channel
-        input_germline_ch = bam_snps_ch.norm.map { meta, bam, bai, vcf, tbi ->
-            tuple(meta, bam, bai, vcf)
+        // ch_samplesheet.view { v -> "samplesheet ${v}" }
+        // bam_snps_ch.norm.view { v -> "normal bam_snps ${v}" }
+        // bam_snps_ch.tumor.view { v -> "tumor bam_snps ${v}" }
+        input_germline_ch = bam_snps_ch.norm.map { meta, bam, bai, snp_vcf, _snp_tbi ->
+            tuple(meta, bam, bai, snp_vcf)
         }
-        input_germline_ch.view()
+        input_germline_ch.view { v -> "input germline ${v}" }
         SV_CALLING_GERMLINE(
             params.germline_callers,
             input_germline_ch,
             params.vntr_bed,
             params.fasta,
-            ch_samplesheet,
         )
         ch_versions = ch_versions.mix(SV_CALLING_GERMLINE.out.versions)
         // construct channel of germline calls + mix with sv channel
