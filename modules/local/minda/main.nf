@@ -48,13 +48,13 @@ process MINDA {
     """
 
     stub:
-    def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def set = min_support == 1 ? "union" : "consensus"
+    def min_support = meta.min_callers
+    def set = meta.min_callers == 1 ? "union" : "consensus"
     """
-    touch ${prefix}.minda_${set}.vcf
+    touch ${prefix}_minda_${set}.vcf
     mkdir -p ${prefix}_min_callers_${min_support}
-    touch ${prefix}_min_callers_${min_support}/${prefix}_minda_ensemble.vcf
+    touch ${prefix}_min_callers_${min_support}/${meta.id}_minda_ensemble.vcf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

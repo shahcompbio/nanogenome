@@ -56,23 +56,20 @@ process SAVANA {
     """
 
     stub:
-    def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    // TODO nf-core: A stub section should mimic the execution of the original module as best as possible
-    //               Have a look at the following examples:
-    //               Simple example: https://github.com/nf-core/modules/blob/818474a292b4860ae8ff88e149fbcda68814114d/modules/nf-core/bcftools/annotate/main.nf#L47-L63
-    //               Complex example: https://github.com/nf-core/modules/blob/818474a292b4860ae8ff88e149fbcda68814114d/modules/nf-core/bedtools/split/main.nf#L38-L54
-    // TODO nf-core: If the module doesn't use arguments ($args), you SHOULD remove:
-    //               - The definition of args `def args = task.ext.args ?: ''` above.
-    //               - The use of the variable in the script `echo $args ` below.
     """
-    echo ${args}
-
-    touch ${prefix}.bam
+    mkdir -p ${prefix}
+    touch ${prefix}/${prefix}.classified.somatic.vcf
+    touch ${prefix}/${prefix}.sv_breakpoints_read_support.tsv
+    touch ${prefix}/${prefix}.inserted_sequences.fa
+    touch ${prefix}/${prefix}_raw_read_counts.tsv
+    touch ${prefix}/${prefix}_read_counts_mnorm_log2r_segmented.tsv
+    touch ${prefix}/${prefix}_fitted_purity_ploidy.tsv
+    touch ${prefix}/${prefix}_segmented_absolute_copy_number.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        savana: \$(savana --version)
+        savana: \$(savana --version 2>&1 | tail -n 1 | sed 's/SAVANA //')
     END_VERSIONS
     """
 }
