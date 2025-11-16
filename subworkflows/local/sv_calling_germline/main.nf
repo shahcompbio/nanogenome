@@ -2,6 +2,7 @@ include { SEVERUS         } from '../../../modules/nf-core/severus/main'
 include { CUTESV          } from '../../../modules/nf-core/cutesv/main'
 include { SNIFFLES        } from '../../../modules/nf-core/sniffles/main'
 include { LONGCALLD       } from '../../../modules/local/longcalld/main'
+include { SURVIVOR_FILTER } from '../../../modules/nf-core/survivor/filter/main'
 include { PIGZ_UNCOMPRESS } from '../../../modules/nf-core/pigz/uncompress/main'
 
 workflow SV_CALLING_GERMLINE {
@@ -13,11 +14,11 @@ workflow SV_CALLING_GERMLINE {
 
     main:
 
-    ch_versions = Channel.empty()
-    ch_severus_vcf = Channel.empty()
-    ch_cutesv_vcf = Channel.empty()
-    ch_sniffles_vcf = Channel.empty()
-    ch_longcalld_vcf = Channel.empty()
+    ch_versions = channel.empty()
+    ch_severus_vcf = channel.empty()
+    ch_cutesv_vcf = channel.empty()
+    ch_sniffles_vcf = channel.empty()
+    ch_longcalld_vcf = channel.empty()
 
     // run severus if specified
     if (sv_callers.split(',').contains('severus')) {
@@ -68,7 +69,10 @@ workflow SV_CALLING_GERMLINE {
             [[id: "ref"], ref_fasta],
         )
         ch_versions = ch_versions.mix(LONGCALLD.out.versions.first())
-        ch_longcalld_vcf = LONGCALLD.out.vcf
+        // filter longcallD calls for structural variants
+        survivor_in_ch = LONGCALLD.out.vcf.map { meta, vcf -> [meta, vcf, []] }
+        SURVIVOR_FILTER(survivor_in_ch, 30, -1, 0, -1)
+        ch_longcalld_vcf = SURVIVOR_FILTER.out.vcf
     }
 
     emit:

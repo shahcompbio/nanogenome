@@ -65,7 +65,7 @@ workflow NANOGENOME {
         }
     }
     else if (!params.skip_somatic || params.germline) {
-        println("running variant calling only")
+        println("running variant calling")
         // split samplesheet into tumor/normal
         // ch_samplesheet.view()
         bam_ch = ch_samplesheet

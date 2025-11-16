@@ -26,7 +26,7 @@ process LONGCALLD {
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     longcallD \\
-        call -t16 \\
+        call -t ${task.cpus} \\
         ${fasta} \\
         ${bam} \\
         ${contig_args} \\
@@ -35,7 +35,7 @@ process LONGCALLD {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        longcallD: \$(longcallD --version)
+        longcallD: \$(longcallD call -v)
     END_VERSIONS
     """
 
@@ -46,7 +46,7 @@ process LONGCALLD {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        longcallD: \$(longcallD --version)
+        longcallD: \$(longcallD call -v)
     END_VERSIONS
     """
 }
