@@ -7,9 +7,6 @@ on:
       - "**/*.md"
       - "**/*.png"
       - "**/*.svg"
-  push:
-    branches:
-      - main
   release:
     types: [published]
   workflow_dispatch:
