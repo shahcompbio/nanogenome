@@ -5,7 +5,7 @@ process LONGCALLD {
 
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
-    container "biocontainers/longcalld:0.0.5--h7d57edc_0"
+    container "biocontainers/longcalld:0.0.6--h7d57edc_0"
 
     input:
     tuple val(meta), path(bam), path(bai)
@@ -26,7 +26,7 @@ process LONGCALLD {
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     longcallD \\
-        call -t16 \\
+        call -t ${task.cpus} \\
         ${fasta} \\
         ${bam} \\
         ${contig_args} \\
@@ -35,28 +35,18 @@ process LONGCALLD {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        longcallD: \$(longcallD --version)
+        longcallD: \$(longcallD call -v)
     END_VERSIONS
     """
 
     stub:
-    def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    // TODO nf-core: A stub section should mimic the execution of the original module as best as possible
-    //               Have a look at the following examples:
-    //               Simple example: https://github.com/nf-core/modules/blob/818474a292b4860ae8ff88e149fbcda68814114d/modules/nf-core/bcftools/annotate/main.nf#L47-L63
-    //               Complex example: https://github.com/nf-core/modules/blob/818474a292b4860ae8ff88e149fbcda68814114d/modules/nf-core/bedtools/split/main.nf#L38-L54
-    // TODO nf-core: If the module doesn't use arguments ($args), you SHOULD remove:
-    //               - The definition of args `def args = task.ext.args ?: ''` above.
-    //               - The use of the variable in the script `echo $args ` below.
     """
-    echo ${args}
-
-    touch ${prefix}.bam
+    touch ${prefix}.vcf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        longcalld: \$(longcalld --version)
+        longcallD: \$(longcallD call -v)
     END_VERSIONS
     """
 }

@@ -62,23 +62,26 @@ process WAKHAN_CNA {
     """
 
     stub:
-    def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    // TODO nf-core: A stub section should mimic the execution of the original module as best as possible
-    //               Have a look at the following examples:
-    //               Simple example: https://github.com/nf-core/modules/blob/818474a292b4860ae8ff88e149fbcda68814114d/modules/nf-core/bcftools/annotate/main.nf#L47-L63
-    //               Complex example: https://github.com/nf-core/modules/blob/818474a292b4860ae8ff88e149fbcda68814114d/modules/nf-core/bedtools/split/main.nf#L38-L54
-    // TODO nf-core: If the module doesn't use arguments ($args), you SHOULD remove:
-    //               - The definition of args `def args = task.ext.args ?: ''` above.
-    //               - The use of the variable in the script `echo $args ` below.
     """
-    echo ${args}
+    touch solutions_ranks.tsv
+    mkdir -p solution_1 coverage_plots
+    touch ${prefix}_ploidy_purity.html
+    touch ${prefix}_optimized_peak.html
+    mkdir -p solution_1/subclonal_segments
+    touch solution_1/subclonal_segments/${prefix}_subclonal_segments_HP_1.bed
+    touch solution_1/subclonal_segments/${prefix}_subclonal_segments_HP_2.bed
 
-    touch ${prefix}.bam
+    WAKHAN_VERSION=\$(python3 -c "
+    import sys
+    sys.path.insert(0, '/opt/wakhan/Wakhan')
+    from src.__version__ import __version__
+    print(__version__)
+    ")
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        wakhan: \$(wakhan --version)
+        wakhan: \$WAKHAN_VERSION
     END_VERSIONS
     """
 }

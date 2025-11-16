@@ -46,14 +46,15 @@ process NANOMONSV_PARSE {
     stub:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    echo | gzip > ${prefix}.insertion.sorted.bed.gz
-    touch ${prefix}.insertion.sorted.bed.gz.tbi
-    echo | gzip > ${prefix}.deletion.sorted.bed.gz
-    touch ${prefix}.deletion.sorted.bed.gz.tbi
-    echo | gzip > ${prefix}.rearrangement.sorted.bedpe.gz
-    touch ${prefix}.rearrangement.sorted.bedpe.gz.tbi
-    echo | gzip > ${prefix}.bp_info.sorted.bed.gz
-    touch ${prefix}.bp_info.sorted.bed.gz.tbi
+    mkdir -p ${meta.id}
+    echo | gzip > ${meta.id}/${prefix}.insertion.sorted.bed.gz
+    touch ${meta.id}/${prefix}.insertion.sorted.bed.gz.tbi
+    echo | gzip > ${meta.id}/${prefix}.deletion.sorted.bed.gz
+    touch ${meta.id}/${prefix}.deletion.sorted.bed.gz.tbi
+    echo | gzip > ${meta.id}/${prefix}.rearrangement.sorted.bedpe.gz
+    touch ${meta.id}/${prefix}.rearrangement.sorted.bedpe.gz.tbi
+    echo | gzip > ${meta.id}/${prefix}.bp_info.sorted.bed.gz
+    touch ${meta.id}/${prefix}.bp_info.sorted.bed.gz.tbi
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

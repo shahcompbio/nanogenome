@@ -1,0 +1,26 @@
+nextflow_pipeline {
+
+    name "Test savana cna only workflow"
+    script "../main.nf"
+    tag "pipeline"
+
+    test("savana cna only workflow") {
+        options "-stub"
+
+        when {
+            params {
+                outdir = "$outputDir"
+                input = 'https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/samplesheet_cna_only.csv'
+                skip_phasing = true
+                germline = false
+                skip_somatic = true
+                skip_cna = false
+                cna_tools = 'savana'
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+    }
+}
