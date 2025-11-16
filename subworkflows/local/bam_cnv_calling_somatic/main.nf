@@ -13,10 +13,10 @@ workflow BAM_CNV_CALLING_SOMATIC {
 
     main:
 
-    ch_versions = Channel.empty()
-    ch_hp1_bed = Channel.empty()
-    ch_hp2_bed = Channel.empty()
-    ch_savana_cnv = Channel.empty()
+    ch_versions = channel.empty()
+    ch_hp1_bed = channel.empty()
+    ch_hp2_bed = channel.empty()
+    ch_savana_cnv = channel.empty()
 
     // run wakahn for cna
     if (tools.split(',').contains('wakhan')) {

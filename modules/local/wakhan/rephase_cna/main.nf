@@ -72,13 +72,22 @@ process WAKHAN_REPHASE_CNA {
     touch rephased.vcf.gz
     touch rephased.vcf.gz.tbi
     touch solutions_ranks.tsv
-    mkdir -p solution_1 coverage_plots
+    mkdir -p solution_1/subclonal_segments coverage_plots
     touch ${prefix}_ploidy_purity.html
     touch ${prefix}_optimized_peak.html
+    touch solution_1/subclonal_segments/${prefix}_subclonal_segments_HP_1.bed
+    touch solution_1/subclonal_segments/${prefix}_subclonal_segments_HP_2.bed
+
+    WAKHAN_VERSION=\$(python3 -c "
+    import sys
+    sys.path.insert(0, '/opt/wakhan/Wakhan')
+    from src.__version__ import __version__
+    print(__version__)
+    ")
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        wakhan: \$(wakhan --version)
+        wakhan: \$WAKHAN_VERSION
     END_VERSIONS
     """
 }

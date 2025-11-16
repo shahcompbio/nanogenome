@@ -4,10 +4,12 @@ nextflow_pipeline {
     script "../main.nf"
     tag "pipeline"
 
-    test("-profile test") {
+    test("Test full workflow") {
 
         when {
             params {
+                // savana cna has an issue which prevents running on test file
+                cna_tools = "wakhan"
                 outdir = "$outputDir"
             }
         }
