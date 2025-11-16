@@ -1,10 +1,11 @@
 nextflow_pipeline {
 
-    name "Test pipeline"
+    name "Test phasing only workflow"
     script "../main.nf"
     tag "pipeline"
 
-    test("-profile test_phasing") {
+    test("phasing only workflow") {
+        options "-stub"
 
         when {
             params {
