@@ -1,9 +1,10 @@
-include { SEVERUS         } from '../../../modules/nf-core/severus/main'
-include { CUTESV          } from '../../../modules/nf-core/cutesv/main'
-include { SNIFFLES        } from '../../../modules/nf-core/sniffles/main'
-include { LONGCALLD       } from '../../../modules/local/longcalld/main'
-include { SURVIVOR_FILTER } from '../../../modules/nf-core/survivor/filter/main'
-include { PIGZ_UNCOMPRESS } from '../../../modules/nf-core/pigz/uncompress/main'
+include { SEVERUS           } from '../../../modules/nf-core/severus/main'
+include { CUTESV            } from '../../../modules/nf-core/cutesv/main'
+include { SNIFFLES          } from '../../../modules/nf-core/sniffles/main'
+include { LONGCALLD         } from '../../../modules/local/longcalld/main'
+include { PIGZ_UNCOMPRESS   } from '../../../modules/nf-core/pigz/uncompress/main'
+include { BCFTOOLS_VIEW     } from '../../../modules/nf-core/bcftools/view/main'
+include { BCFTOOLS_ANNOTATE } from '../../../modules/nf-core/bcftools/annotate/main'
 
 workflow SV_CALLING_GERMLINE {
     take:
@@ -70,9 +71,26 @@ workflow SV_CALLING_GERMLINE {
         )
         ch_versions = ch_versions.mix(LONGCALLD.out.versions.first())
         // filter longcallD calls for structural variants
-        survivor_in_ch = LONGCALLD.out.vcf.map { meta, vcf -> [meta, vcf, []] }
-        SURVIVOR_FILTER(survivor_in_ch, 30, -1, 0, -1)
-        ch_longcalld_vcf = SURVIVOR_FILTER.out.vcf
+        BCFTOOLS_VIEW(
+            LONGCALLD.out.vcf.map { meta, vcf ->
+                [meta, vcf, []]
+            },
+            [],
+            [],
+            [],
+        )
+        ch_versions = ch_versions.mix(BCFTOOLS_VIEW.out.versions.first())
+        // give each SV an id so we can track
+        BCFTOOLS_ANNOTATE(
+            BCFTOOLS_VIEW.out.vcf.map { meta, vcf ->
+                [meta, vcf, [], [], []]
+            },
+            [],
+            [],
+            [],
+        )
+        ch_versions = ch_versions.mix(BCFTOOLS_ANNOTATE.out.versions.first())
+        ch_longcalld_vcf = BCFTOOLS_ANNOTATE.out.vcf
     }
 
     emit:

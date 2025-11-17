@@ -1,8 +1,7 @@
 // annotate sv types
 process SVTYPES {
-    tag "$meta.id"
+    tag "${meta.id}"
     label 'process_single'
-    publishDir "${params.outdir}/annotated_sv", mode: 'copy', overwrite: true
 
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
@@ -15,7 +14,7 @@ process SVTYPES {
     // TODO nf-core: Named file extensions MUST be emitted for ALL output channels
     tuple val(meta), path("*.tsv"), emit: annotated_sv
     // TODO nf-core: List additional required output channels/values here
-    path "versions.yml"           , emit: versions
+    path "versions.yml", emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -29,7 +28,7 @@ process SVTYPES {
         \"${caller_tables}\" \\
         ${merged_table} \\
         ${prefix}.${set}.annotated_sv.tsv \\
-        $args
+        ${args}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
