@@ -9,6 +9,7 @@ include { ANNOTATE_SV             } from '../subworkflows/local/annotate_sv/main
 include { SV_CALLING_GERMLINE     } from '../subworkflows/local/sv_calling_germline/main'
 include { BAM_CNV_CALLING_SOMATIC } from '../subworkflows/local/bam_cnv_calling_somatic/main'
 include { PLOTCIRCOS              } from '../modules/local/plotcircos/main'
+include { SVKARYOPLOT             } from '../modules/local/svkaryoplot/main'
 include { MULTIQC                 } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap        } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc    } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -274,7 +275,7 @@ workflow NANOGENOME {
                 germline: meta1.condition == 'germline'
             }
             .set { annot_sv_ch }
-        // WAKHAN_CNA.out.HP1_bed.view()
+        // circos plot for somatic SVs
         circos_ch = annot_sv_ch.somatic
             .combine(
                 hp1_bed_ch.map { meta, hp_bed ->
@@ -291,14 +292,17 @@ workflow NANOGENOME {
             .map { id, meta, sv, meta1, hp1, meta2, hp2 ->
                 tuple(meta, sv, hp1, hp2)
             }
-            .concat(
-                annot_sv_ch.germline.map { meta, meta1, sv ->
-                    [meta1, sv, [], []]
-                }
-            )
         // circos_ch.view()
         PLOTCIRCOS(circos_ch)
         ch_versions = ch_versions.mix(PLOTCIRCOS.out.versions.first())
+        // karyoplot for germline SVs
+        SVKARYOPLOT(
+            annot_sv_ch.germline.map { _meta, meta1, sv ->
+                tuple(meta1, sv)
+            },
+            params.genome_build,
+        )
+        ch_versions = ch_versions.mix(SVKARYOPLOT.out.versions.first())
     }
 
     //
