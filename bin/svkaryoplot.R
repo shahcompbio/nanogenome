@@ -22,7 +22,7 @@ kp <- plotKaryotype(genome=genome.version)
 kpPlotRegions(kp, data=sv.data, col=sv.colors, r0=0, r1=2)
 legend("bottomright",
         legend=c("Insertion", "Deletion", "Other"),
-        col = c("#CC6677", "#332288", "#DDDDDD"),
+        fill = c("#CC6677", "#332288", "#DDDDDD"),
         title.adj = 0.2,
         title = "SV Types"
         )
