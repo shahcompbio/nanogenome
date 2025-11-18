@@ -19,8 +19,8 @@ sv.colors <- ifelse(dd.filtered$SV_Type == "INS", "#CC6677",
 svg(file=out.file, height=11, width=8);
 # Create karyotype plot
 kp <- plotKaryotype(genome=genome.version)
-kpPlotRegions(kp, data=sv.data, col=sv.colors)
-legend("topright",
+kpPlotRegions(kp, data=sv.data, col=sv.colors, r0=0, r1=2)
+legend("bottomright",
         legend=c("Insertion", "Deletion", "Other"),
         col = c("#CC6677", "#332288", "#DDDDDD"),
         title.adj = 0.2,
