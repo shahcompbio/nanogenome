@@ -276,23 +276,27 @@ workflow NANOGENOME {
             }
             .set { annot_sv_ch }
         // circos plot for somatic SVs
-        circos_ch = annot_sv_ch.somatic
-            .combine(
-                hp1_bed_ch.map { meta, hp_bed ->
-                    tuple("${meta.id}-${meta.condition}", meta, hp_bed)
-                },
-                by: 0
-            )
-            .combine(
-                hp2_bed_ch.map { meta, hp_bed ->
-                    tuple("${meta.id}-${meta.condition}", meta, hp_bed)
-                },
-                by: 0
-            )
-            .map { id, meta, sv, meta1, hp1, meta2, hp2 ->
-                tuple(meta, sv, hp1, hp2)
-            }
-        // circos_ch.view()
+        if (!params.skip_cna) {
+            circos_ch = annot_sv_ch.somatic
+                .combine(
+                    hp1_bed_ch.map { meta, hp_bed ->
+                        tuple("${meta.id}-${meta.condition}", meta, hp_bed)
+                    },
+                    by: 0
+                )
+                .combine(
+                    hp2_bed_ch.map { meta, hp_bed ->
+                        tuple("${meta.id}-${meta.condition}", meta, hp_bed)
+                    },
+                    by: 0
+                )
+                .map { id, meta, sv, meta1, hp1, meta2, hp2 ->
+                    tuple(meta, sv, hp1, hp2)
+                }
+        }
+        else {
+            circos_ch = annot_sv_ch.somatic.map { _id, meta, sv -> [meta, sv, [], []] }
+        }
         PLOTCIRCOS(circos_ch)
         ch_versions = ch_versions.mix(PLOTCIRCOS.out.versions.first())
         // karyoplot for germline SVs
