@@ -5,7 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.1.0] - 2025-11-19
+
+### Added
+
+- Karyoplot visualization for germline structural variants using karyoploteR
+- SAVANA as an alternative CNA calling tool alongside Wakhan
+- Option to skip CNA analysis with `--skip_cna` parameter
+- Configurable CNA tools selection with `--cna_tools` parameter (default: "wakhan,savana")
+- Step change parameter for SAVANA CNA calling (`--main_cn_step_change`)
+- CNA-only workflow mode for running copy number analysis independently
+- Test profiles for CNA-only (`test_cna_only`) and germline-only (`test_germline_only`) workflows
+- Stub tests for local modules
+- Warning message when VNTR BED file is not provided
+- Assertion tests for problematic chromosome filtering
+
+### Changed
+
+- Replaced Circos plots with karyoplot visualization for germline SV analysis
+- LongcallD output is now filtered to include only structural variants (excludes small indels)
+- Increased SLURM queue size from 50 to 200 for improved throughput
+- Limited number of parallel gene annotation processes for resource management
+- Updated queue selection logic for SLURM executor
+
+### Fixed
+
+- Fixed Circos plot generation when CNA data is missing
+- Fixed karyoplot legend display
+- Fixed phasing workflow issues
+- Fixed germline-only workflow configuration
+- Fixed typos in configuration
+
+### Removed
+
+- Removed ASCAT module (experimental feature)
+- Removed Wakhan build script
 
 ## [1.0.0] - 2025-11-01
 
@@ -134,5 +168,6 @@ Initial release of shahcompbio/nanogenome, created with the [nf-core](https://nf
 - BioMart (gene annotation)
 - R and Python dependencies for custom modules
 
-[unreleased]: https://github.com/shahcompbio/nanogenome/compare/v1.0.0...HEAD
+[unreleased]: https://github.com/shahcompbio/nanogenome/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/shahcompbio/nanogenome/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/shahcompbio/nanogenome/releases/tag/v1.0.0
