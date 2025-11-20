@@ -1,13 +1,12 @@
 lint:
-  files_exist:
-    - CODE_OF_CONDUCT.md
-    - assets/nf-core-nanogenome_logo_light.png
-    - docs/images/nf-core-nanogenome_logo_light.png
-    - docs/images/nf-core-nanogenome_logo_dark.png
-    - .github/ISSUE_TEMPLATE/config.yml
-    - .github/workflows/awstest.yml
-    - .github/workflows/awsfulltest.yml
+  actions_schema_validation: false
+  files_exist: false
   files_unchanged:
+    - .github/workflows/ci.yml
+    - .github/workflows/nf-test.yml
+    - .github/workflows/linting.yml
+    - .github/workflows/linting_comment.yml
+    - .prettierrc.yml
     - CODE_OF_CONDUCT.md
     - assets/nf-core-nanogenome_logo_light.png
     - docs/images/nf-core-nanogenome_logo_light.png
@@ -19,14 +18,10 @@ lint:
     - docs/README.md
   multiqc_config:
     - report_comment
-  nextflow_config:
-    - manifest.name
-    - manifest.homePage
-    - validation.help.beforeText
-    - validation.help.afterText
-    - validation.summary.beforeText
-    - validation.summary.afterText
-nf_core_version: 3.4.1
+  nextflow_config: false
+  nf_test_content: false
+  rocrate_readme_sync: false
+nf_core_version: 3.5.1
 repository_type: pipeline
 template:
   author: Asher Preska Steinberg
@@ -39,4 +34,4 @@ template:
   skip_features:
     - fastqc
     - gpu
-  version: 1.0.0dev
+  version: 1.1.0
