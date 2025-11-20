@@ -313,7 +313,7 @@
         "savana_options": {
             "title": "savana options",
             "type": "object",
-            "description": "options for SAVANA structural variant caller",
+            "description": "options for SAVANA SV and CN analysis",
             "default": "",
             "properties": {
                 "contigs_list": {
@@ -324,6 +324,10 @@
                     "type": "string",
                     "default": "--ont",
                     "description": "specify savana model; can be a path"
+                },
+                "main_cn_step_change": {
+                    "type": "integer",
+                    "description": "Max main copy number step change across genome to be considered for a given solution"
                 }
             }
         },
@@ -454,6 +458,15 @@
         "skip_phasing": {
             "type": "boolean",
             "description": "skip subworkflow to phase bams"
+        },
+        "skip_cna": {
+            "type": "boolean",
+            "description": "skip copy number calling"
+        },
+        "cna_tools": {
+            "type": "string",
+            "default": "wakhan,savana",
+            "description": "select copy number analysis tools to use"
         }
     }
 }

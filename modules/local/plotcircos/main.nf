@@ -39,23 +39,15 @@ process PLOTCIRCOS {
     """
 
     stub:
-    def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
-    // TODO nf-core: A stub section should mimic the execution of the original module as best as possible
-    //               Have a look at the following examples:
-    //               Simple example: https://github.com/nf-core/modules/blob/818474a292b4860ae8ff88e149fbcda68814114d/modules/nf-core/bcftools/annotate/main.nf#L47-L63
-    //               Complex example: https://github.com/nf-core/modules/blob/818474a292b4860ae8ff88e149fbcda68814114d/modules/nf-core/bedtools/split/main.nf#L38-L54
-    // TODO nf-core: If the module doesn't use arguments ($args), you SHOULD remove:
-    //               - The definition of args `def args = task.ext.args ?: ''` above.
-    //               - The use of the variable in the script `echo $args ` below.
+    def prefix = task.ext.prefix ?: getFilePrefix("${sv_table}")
     """
-    echo ${args}
-
-    touch ${prefix}.bam
+    touch ${prefix}.circos.svg
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        plotcircos: \$(plotcircos --version)
+        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
+        circlize: \$(Rscript -e "library(circlize); cat(as.character(packageVersion('circlize')))")
+        dplyr: \$(Rscript -e "library(dplyr); cat(as.character(packageVersion('dplyr')))")
     END_VERSIONS
     """
 }

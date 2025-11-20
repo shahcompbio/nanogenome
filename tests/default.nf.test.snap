@@ -1,5 +1,5 @@
 {
-    "-profile test": {
+    "Test full workflow": {
         "content": [
             {
                 "ANNOTATEGENES": {
@@ -7,7 +7,13 @@
                     "pandas": "1.5.3",
                     "numpy": "1.26.3"
                 },
+                "BCFTOOLS_ANNOTATE": {
+                    "bcftools": 1.22
+                },
                 "BCFTOOLS_QUERY": {
+                    "bcftools": 1.22
+                },
+                "BCFTOOLS_VIEW": {
                     "bcftools": 1.22
                 },
                 "BIOMART": {
@@ -24,7 +30,7 @@
                     "cuteSV": "2.0.2"
                 },
                 "LONGCALLD": {
-                    "longcallD": null
+                    "longcallD": "0.0.6"
                 },
                 "LONGPHASE_PHASE": {
                     "longphase": 2.0
@@ -68,6 +74,12 @@
                 "SNIFFLES": {
                     "sniffles": 2.4
                 },
+                "SVKARYOPLOT": {
+                    "r-base": "4.5.1",
+                    "karyoploteR": null,
+                    "BSgenome": null,
+                    "dplyr": "1.1.4"
+                },
                 "SVTYPES": {
                     "python": "3.9.18",
                     "pandas": "1.5.3",
@@ -94,7 +106,7 @@
                     "whatshap": 2.8
                 },
                 "Workflow": {
-                    "shahcompbio/nanogenome": "v1.0.0"
+                    "shahcompbio/nanogenome": "v1.1.0"
                 }
             },
             [
@@ -103,7 +115,6 @@
                 "annotated_sv/COLO829_germline.union.annotated_sv.tsv",
                 "annotated_sv/COLO829_somatic.consensus.annotated_sv.tsv",
                 "annotated_sv/COLO829_somatic.union.annotated_sv.tsv",
-                "annotated_sv/versions.yml",
                 "biomart",
                 "biomart/hg38-genes.txt",
                 "clair3",
@@ -112,6 +123,7 @@
                 "cutesv",
                 "cutesv/COLO829_germline.vcf",
                 "longcalld",
+                "longcalld/COLO829_germline.sv_only.vcf",
                 "longcalld/COLO829_germline.vcf",
                 "longphase",
                 "longphase/COLO829.vcf.gz",
@@ -128,9 +140,9 @@
                 "minda/COLO829_germline_min_callers_1/COLO829_cuteSV-2.0.2_fn.tsv",
                 "minda/COLO829_germline_min_callers_1/COLO829_cuteSV-2.0.2_fp.tsv",
                 "minda/COLO829_germline_min_callers_1/COLO829_cuteSV-2.0.2_tp.tsv",
-                "minda/COLO829_germline_min_callers_1/COLO829_longcallD version=0.0.5_fn.tsv",
-                "minda/COLO829_germline_min_callers_1/COLO829_longcallD version=0.0.5_fp.tsv",
-                "minda/COLO829_germline_min_callers_1/COLO829_longcallD version=0.0.5_tp.tsv",
+                "minda/COLO829_germline_min_callers_1/COLO829_longcallD version=0.0.6_fn.tsv",
+                "minda/COLO829_germline_min_callers_1/COLO829_longcallD version=0.0.6_fp.tsv",
+                "minda/COLO829_germline_min_callers_1/COLO829_longcallD version=0.0.6_tp.tsv",
                 "minda/COLO829_germline_min_callers_1/COLO829_minda_ensemble.vcf",
                 "minda/COLO829_germline_min_callers_1/COLO829_removed_records.txt",
                 "minda/COLO829_germline_min_callers_1/COLO829_support.tsv",
@@ -153,9 +165,9 @@
                 "minda/COLO829_germline_min_callers_2/COLO829_cuteSV-2.0.2_fn.tsv",
                 "minda/COLO829_germline_min_callers_2/COLO829_cuteSV-2.0.2_fp.tsv",
                 "minda/COLO829_germline_min_callers_2/COLO829_cuteSV-2.0.2_tp.tsv",
-                "minda/COLO829_germline_min_callers_2/COLO829_longcallD version=0.0.5_fn.tsv",
-                "minda/COLO829_germline_min_callers_2/COLO829_longcallD version=0.0.5_fp.tsv",
-                "minda/COLO829_germline_min_callers_2/COLO829_longcallD version=0.0.5_tp.tsv",
+                "minda/COLO829_germline_min_callers_2/COLO829_longcallD version=0.0.6_fn.tsv",
+                "minda/COLO829_germline_min_callers_2/COLO829_longcallD version=0.0.6_fp.tsv",
+                "minda/COLO829_germline_min_callers_2/COLO829_longcallD version=0.0.6_tp.tsv",
                 "minda/COLO829_germline_min_callers_2/COLO829_minda_ensemble.vcf",
                 "minda/COLO829_germline_min_callers_2/COLO829_removed_records.txt",
                 "minda/COLO829_germline_min_callers_2/COLO829_support.tsv",
@@ -269,8 +281,6 @@
                 "pipeline_info",
                 "pipeline_info/nanogenome_software_mqc_versions.yml",
                 "plotcircos",
-                "plotcircos/COLO829_germline.consensus.circos.svg",
-                "plotcircos/COLO829_germline.union.circos.svg",
                 "plotcircos/COLO829_somatic.consensus.circos.svg",
                 "plotcircos/COLO829_somatic.union.circos.svg",
                 "savana",
@@ -298,6 +308,9 @@
                 "sniffles",
                 "sniffles/COLO829_germline.vcf.gz",
                 "sniffles/COLO829_germline.vcf.gz.tbi",
+                "svkaryoplot",
+                "svkaryoplot/COLO829_germline.consensus.karyoplot.svg",
+                "svkaryoplot/COLO829_germline.union.karyoplot.svg",
                 "vcf2tsv",
                 "vcf2tsv/COLO829_germline_minda_consensus.tsv",
                 "vcf2tsv/COLO829_germline_minda_union.tsv",
@@ -341,29 +354,28 @@
                 "whatshap/versions.yml"
             ],
             [
-                "versions.yml:md5,6846d759badbeb213d5e9a007ee60770",
                 "hg38-genes.txt:md5,13eb2d89b7a7933565728ba80cc77b0c",
                 "versions.yml:md5,8c776f95b1e23dd56cf56cc6af80cba2",
-                "COLO829_Severus_v1.5_fn.tsv:md5,fb59f69f8bd1aef08e7d4f6daca4db16",
+                "COLO829_Severus_v1.5_fn.tsv:md5,fa98eaf1d646e5864aa56312107d3b9a",
                 "COLO829_Severus_v1.5_fp.tsv:md5,4da0f0c685f9a3e6e89dad776fbc258d",
                 "COLO829_Severus_v1.5_tp.tsv:md5,13a5ecb682a4d15e90b746b7666c8122",
-                "COLO829_Sniffles2_2.4_fn.tsv:md5,fb59f69f8bd1aef08e7d4f6daca4db16",
+                "COLO829_Sniffles2_2.4_fn.tsv:md5,fa98eaf1d646e5864aa56312107d3b9a",
                 "COLO829_Sniffles2_2.4_fp.tsv:md5,4da0f0c685f9a3e6e89dad776fbc258d",
                 "COLO829_Sniffles2_2.4_tp.tsv:md5,f105f97f36fd1a7743091002019defad",
-                "COLO829_cuteSV-2.0.2_fn.tsv:md5,fb59f69f8bd1aef08e7d4f6daca4db16",
+                "COLO829_cuteSV-2.0.2_fn.tsv:md5,fa98eaf1d646e5864aa56312107d3b9a",
                 "COLO829_cuteSV-2.0.2_fp.tsv:md5,4da0f0c685f9a3e6e89dad776fbc258d",
                 "COLO829_cuteSV-2.0.2_tp.tsv:md5,794e7452a9e8efbb19e31d5ba01c59fc",
-                "COLO829_longcallD version=0.0.5_fn.tsv:md5,92b6e2f4ba7ec5316005a36271e1e8e2",
-                "COLO829_longcallD version=0.0.5_fp.tsv:md5,4da0f0c685f9a3e6e89dad776fbc258d",
-                "COLO829_longcallD version=0.0.5_tp.tsv:md5,fd0704c4196f7e103517ac611d0e9532",
-                "COLO829_removed_records.txt:md5,a04f29aba375b7c823ddceadc93ac6c3",
-                "SV_length_FN.tsv:md5,ce00754bcee51950bf9bf08de656b96f",
-                "SV_length_FP.tsv:md5,a04c8d3f2923f2b003c0a7b6a603c680",
-                "SV_length_TP.tsv:md5,b87a1be4c7cdfc870b1579abc985a75a",
-                "SV_type_FN.tsv:md5,b63ac6ed9e723c7f4cf8c829c5b79da9",
-                "SV_type_FP.tsv:md5,a04c8d3f2923f2b003c0a7b6a603c680",
-                "SV_type_TP.tsv:md5,66f799df8f0b2c106912f45b307e3814",
-                "overall.tsv:md5,deead071465cf5a01c7a49072d15f8e4",
+                "COLO829_longcallD version=0.0.6_fn.tsv:md5,92b6e2f4ba7ec5316005a36271e1e8e2",
+                "COLO829_longcallD version=0.0.6_fp.tsv:md5,4da0f0c685f9a3e6e89dad776fbc258d",
+                "COLO829_longcallD version=0.0.6_tp.tsv:md5,0139c9f30753a7cd5f0bbf1f7614c976",
+                "COLO829_removed_records.txt:md5,29b63170314577de33990e4f43f2ec1b",
+                "SV_length_FN.tsv:md5,c2bb14be1b8130295ba3a6928c4b048f",
+                "SV_length_FP.tsv:md5,d1708ed329952c7abcdd5ddbb5345900",
+                "SV_length_TP.tsv:md5,beb20dfd4f897208b9e296a93d69b2c7",
+                "SV_type_FN.tsv:md5,3dc24bc027ae204cb8a4862fa0be7a0f",
+                "SV_type_FP.tsv:md5,d1708ed329952c7abcdd5ddbb5345900",
+                "SV_type_TP.tsv:md5,e4268b4c02df32da87d1aa21db57f5dd",
+                "overall.tsv:md5,bf42cd491b617b94df8f4109d9418c35",
                 "COLO829_Severus_v1.5_fn.tsv:md5,92b6e2f4ba7ec5316005a36271e1e8e2",
                 "COLO829_Severus_v1.5_fp.tsv:md5,4da0f0c685f9a3e6e89dad776fbc258d",
                 "COLO829_Severus_v1.5_tp.tsv:md5,13a5ecb682a4d15e90b746b7666c8122",
@@ -373,17 +385,17 @@
                 "COLO829_cuteSV-2.0.2_fn.tsv:md5,92b6e2f4ba7ec5316005a36271e1e8e2",
                 "COLO829_cuteSV-2.0.2_fp.tsv:md5,4da0f0c685f9a3e6e89dad776fbc258d",
                 "COLO829_cuteSV-2.0.2_tp.tsv:md5,794e7452a9e8efbb19e31d5ba01c59fc",
-                "COLO829_longcallD version=0.0.5_fn.tsv:md5,92b6e2f4ba7ec5316005a36271e1e8e2",
-                "COLO829_longcallD version=0.0.5_fp.tsv:md5,88dbe549ed0eacd116adb48d8551d63f",
-                "COLO829_longcallD version=0.0.5_tp.tsv:md5,a2dafa0d8cc0f02facd7cd0e0d067ff1",
-                "COLO829_removed_records.txt:md5,a04f29aba375b7c823ddceadc93ac6c3",
-                "SV_length_FN.tsv:md5,a04c8d3f2923f2b003c0a7b6a603c680",
-                "SV_length_FP.tsv:md5,7bd6be2fb6372c2ae3619b8b61ac3a8a",
-                "SV_length_TP.tsv:md5,0c0c384e5fc39ea9d141fee01bb4ecdf",
-                "SV_type_FN.tsv:md5,a04c8d3f2923f2b003c0a7b6a603c680",
-                "SV_type_FP.tsv:md5,fe61b4dba98ceb5fc0f1c0af54a0485a",
-                "SV_type_TP.tsv:md5,ac7ea0fc60d6a32bc7da05f83f0e1540",
-                "overall.tsv:md5,ea6bc85e8536788759628dad737d3f0f",
+                "COLO829_longcallD version=0.0.6_fn.tsv:md5,92b6e2f4ba7ec5316005a36271e1e8e2",
+                "COLO829_longcallD version=0.0.6_fp.tsv:md5,b1247e4f781757df8f1d6f7a2c9bacd4",
+                "COLO829_longcallD version=0.0.6_tp.tsv:md5,a024217db93836e8b38658e3208fc420",
+                "COLO829_removed_records.txt:md5,29b63170314577de33990e4f43f2ec1b",
+                "SV_length_FN.tsv:md5,d1708ed329952c7abcdd5ddbb5345900",
+                "SV_length_FP.tsv:md5,5103a0d67f5e6ba55cb7b4e1b2ccfa4c",
+                "SV_length_TP.tsv:md5,65f003891a1b2a9ef956b1aeea90838a",
+                "SV_type_FN.tsv:md5,d1708ed329952c7abcdd5ddbb5345900",
+                "SV_type_FP.tsv:md5,6fa1995b858be85714586c478b66d2de",
+                "SV_type_TP.tsv:md5,b55665a01e582b0b9d7ffea6cc7dca8b",
+                "overall.tsv:md5,7caad14433227a1f3f38c02decdb0aac",
                 "COLO829_SAVANAv1.3.6_fn.tsv:md5,92b6e2f4ba7ec5316005a36271e1e8e2",
                 "COLO829_SAVANAv1.3.6_fp.tsv:md5,28534fe94a939efbfebb9d992508ac20",
                 "COLO829_Severus_v1.5_fn.tsv:md5,92b6e2f4ba7ec5316005a36271e1e8e2",
@@ -448,7 +460,7 @@
                 "loh_regions.bed:md5,051d016d7f985f3fb0580ff0e1f1457b",
                 "loh_regions_subclonal.bed:md5,051d016d7f985f3fb0580ff0e1f1457b",
                 "solutions_ranks.tsv:md5,776c06fc5c0c11dd9920ada91633ac1c",
-                "versions.yml:md5,3850a6b97c539839522d59ff4f338c05",
+                "versions.yml:md5,54c22c4035d20d61e6a924f13f503ed8",
                 "COLO829.tsv:md5,842c35f628391e8dc83fc56c3825fe6e",
                 "versions.yml:md5,fa7e13133703c762580103dcf8e8604d"
             ],
@@ -459,6 +471,7 @@
             [
                 "COLO829merge_output.vcf.gz",
                 "COLO829_germline.vcf",
+                "COLO829_germline.sv_only.vcf",
                 "COLO829_germline.vcf",
                 "COLO829.vcf.gz",
                 "COLO829_minda_ensemble.vcf",
@@ -482,8 +495,8 @@
         ],
         "meta": {
             "nf-test": "0.9.3",
-            "nextflow": "25.04.0"
+            "nextflow": "25.10.0"
         },
-        "timestamp": "2025-11-02T15:52:32.815898758"
+        "timestamp": "2025-11-19T21:52:08.00677111"
     }
 }

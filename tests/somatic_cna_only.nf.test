@@ -1,0 +1,25 @@
+nextflow_pipeline {
+
+    name "Test somatic copy number only workflow"
+    script "../main.nf"
+    tag "pipeline"
+
+    test("somatic cna only workflow") {
+        options "-stub"
+
+        when {
+            params {
+                outdir = "$outputDir"
+                input = 'https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/samplesheet_cna_only.csv'
+                skip_phasing = true
+                germline = false
+                skip_somatic = true
+                skip_cna = false
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+    }
+}

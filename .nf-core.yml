@@ -11,6 +11,11 @@ lint:
     - .github/workflows/linting.yml
     - .github/workflows/linting_comment.yml
     - .prettierrc.yml
+    - .github/workflows/ci.yml
+    - .github/workflows/nf-test.yml
+    - .github/workflows/linting.yml
+    - .github/workflows/linting_comment.yml
+    - .prettierrc.yml
     - CODE_OF_CONDUCT.md
     - assets/nf-core-nanogenome_logo_light.png
     - docs/images/nf-core-nanogenome_logo_light.png
@@ -22,7 +27,7 @@ lint:
     - docs/README.md
   multiqc_config:
     - report_comment
-nf_core_version: 3.4.1
+nf_core_version: 3.5.1
 repository_type: pipeline
 template:
   author: Asher Preska Steinberg
@@ -35,4 +40,4 @@ template:
   skip_features:
     - fastqc
     - gpu
-  version: 1.0.0
+  version: 1.1.0

@@ -3,17 +3,18 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { PHASING                } from '../subworkflows/local/phasing/main'
-include { SV_CALLING_SOMATIC     } from '../subworkflows/local/sv_calling_somatic/main'
-include { ANNOTATE_SV            } from '../subworkflows/local/annotate_sv/main'
-include { WAKHAN_REPHASE_CNA     } from '../modules/local/wakhan/rephase_cna/main'
-include { SV_CALLING_GERMLINE    } from '../subworkflows/local/sv_calling_germline/main'
-include { PLOTCIRCOS             } from '../modules/local/plotcircos/main'
-include { MULTIQC                } from '../modules/nf-core/multiqc/main'
-include { paramsSummaryMap       } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_nanogenome_pipeline'
+include { PHASING                 } from '../subworkflows/local/phasing/main'
+include { SV_CALLING_SOMATIC      } from '../subworkflows/local/sv_calling_somatic/main'
+include { ANNOTATE_SV             } from '../subworkflows/local/annotate_sv/main'
+include { SV_CALLING_GERMLINE     } from '../subworkflows/local/sv_calling_germline/main'
+include { BAM_CNV_CALLING_SOMATIC } from '../subworkflows/local/bam_cnv_calling_somatic/main'
+include { PLOTCIRCOS              } from '../modules/local/plotcircos/main'
+include { SVKARYOPLOT             } from '../modules/local/svkaryoplot/main'
+include { MULTIQC                 } from '../modules/nf-core/multiqc/main'
+include { paramsSummaryMap        } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc    } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML  } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText  } from '../subworkflows/local/utils_nfcore_nanogenome_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -29,9 +30,13 @@ workflow NANOGENOME {
 
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
-
+    // define contigs list when null
+    contigs_list = params.contigs_list ?: []
+    /*
+    * PHASING WORKFLOW
+    */
     // run phasing subworkflow to phase variants and haplotag bams
-    if (params.skip_somatic && !params.germline) {
+    if (params.skip_somatic && !params.germline && params.skip_cna) {
         println("running phasing workflow only")
     }
     if (!params.skip_phasing) {
@@ -53,54 +58,67 @@ workflow NANOGENOME {
                 norm: meta.condition == 'normal'
             }
         // construct snps channel for downstream processing
-        snps_ch = PHASING.out.phased_vcf.map { meta, vcf -> tuple(meta, vcf, [])}
+        snps_ch = PHASING.out.phased_vcf.map { meta, vcf -> tuple(meta, vcf, []) }
         // branch phasing results for cna input channel
         bam_snps_ch = PHASING.out.bam_snps.branch { meta, bam, bai, vcf, tbi ->
             tumor: meta.condition == 'tumor'
             norm: meta.condition == 'normal'
         }
     }
-    else {
-        println("running variant calling only")
+    else if (!params.skip_somatic || params.germline) {
+        println("running variant calling")
         // split samplesheet into tumor/normal
+        // ch_samplesheet.view()
         bam_ch = ch_samplesheet
-            .map { meta, bam, bai, _vcf, _tbi ->
-            tuple(meta, bam, bai) }
-            .branch { meta, bam, bai ->
+            .map { meta, bam, bai, _snp_vcf, _snp_tbi, _sv_vcf ->
+                tuple(meta, bam, bai)
+            }
+            .branch { meta, _bam, _bai ->
                 tumor: meta.condition == 'tumor'
                 norm: meta.condition == 'normal'
             }
         // construct snps channel
         snps_ch = ch_samplesheet
-                    .map {meta, _bam, _bai, vcf, tbi ->
-                          tuple(meta, vcf, tbi) }
-                    .filter { meta, vcf, tbi ->
-                              vcf != null && vcf != [] }
+            .map { meta, _bam, _bai, snp_vcf, snp_tbi, _sv_vcf ->
+                tuple(meta, snp_vcf, snp_tbi)
+            }
+            .filter { _meta, snp_vcf, _snp_tbi ->
+                snp_vcf != null && snp_vcf != []
+            }
         // snps_ch.view()
         // also construct bam/snps channel for wakhan
         // ch_samplesheet.view()
         bam_snps_ch = ch_samplesheet
-            .map { meta, bam, bai, _vcf, _tbi -> tuple(meta.id, meta, bam, bai) }
+            .map { meta, bam, bai, _snp_vcf, _snp_tbi, _sv_vcf -> tuple(meta.id, meta, bam, bai) }
             .combine(
-                snps_ch.map { meta, vcf, tbi -> tuple(meta.id, vcf, tbi) },
+                snps_ch.map { meta, snp_vcf, snp_tbi -> tuple(meta.id, snp_vcf, snp_tbi) },
                 by: 0
             )
-            .map { id, meta, bam, bai, vcf, tbi ->
-                tuple(meta, bam, bai, vcf, tbi)
+            .map { _id, meta, bam, bai, snp_vcf, snp_tbi ->
+                tuple(meta, bam, bai, snp_vcf, snp_tbi)
             }
-            .branch { meta, bam, bai, vcf, tbi ->
+            .branch { meta, _bam, _bai, _snp_vcf, _snp_tbi ->
                 tumor: meta.condition == 'tumor'
                 norm: meta.condition == 'normal'
-        }
-        // bam_snps_ch.tumor.view()
-
+            }
+    }
+    else {
+        println("run cna only")
     }
 
     // make default channels
-    sv_ch = Channel.empty()
-    cna_input_ch = Channel.empty()
+    sv_ch = channel.empty()
+    cna_input_ch = channel.empty()
+    support_ch = channel.from(1, params.min_callers)
+    /*
+    * SOMATIC STRUCTURAL VARIANT CALLING WORKFLOW
+    */
     // call somatic structural variants
     if (!params.skip_somatic) {
+        // validate that vntr_bed is provided if severus is selected
+        if (params.somatic_callers.split(',').contains('severus') && !params.vntr_bed) {
+            error("ERROR: --vntr_bed is required when using SEVERUS for somatic SV calling. Please provide a VNTR BED file.")
+        }
         // construct somatic sv input channel
         input_somatic_ch = bam_ch.tumor
             .map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }
@@ -108,18 +126,18 @@ workflow NANOGENOME {
             .join(snps_ch.map { meta, vcf, _tbi -> tuple(meta.id, meta, vcf) }, by: 0)
             .map { id, tumor_meta, tumor_bam, tumor_bai, _norm_meta, norm_bam, norm_bai, _meta3, vcf ->
                 tuple([id: id], tumor_bam, tumor_bai, norm_bam, norm_bai, vcf)
-        }
+            }
         SV_CALLING_SOMATIC(
             params.somatic_callers,
             input_somatic_ch,
             bam_ch.tumor.mix(bam_ch.norm),
             params.vntr_bed,
             params.fasta,
-            params.fai
+            params.fai,
+            contigs_list,
         )
         ch_versions = ch_versions.mix(SV_CALLING_SOMATIC.out.versions)
         // construct sv channel for annotation subworkflow
-        support_ch = Channel.from(1, params.min_callers)
         sv_ch = SV_CALLING_SOMATIC.out.savana_vcf
             .join(SV_CALLING_SOMATIC.out.severus_vcf, by: 0)
             .join(SV_CALLING_SOMATIC.out.nanomonsv_vcf, by: 0)
@@ -134,37 +152,29 @@ workflow NANOGENOME {
                     [vcf1, vcf2, vcf3],
                 ]
             }
-        // construct cna input channel
-        cna_input_ch = bam_snps_ch.tumor
-            .join(
-                SV_CALLING_SOMATIC.out.severus_vcf.map { meta, vcf ->
-                    [meta + [condition: "tumor"], vcf]
-                },
-                by: 0
-            )
-            .map { meta, bam, bai, snp_vcf, snp_tbi, sv_vcf ->
-                tuple([id: "${meta.id}", condition: "somatic"], bam, bai, snp_vcf, snp_tbi, sv_vcf)
-            }
-        // run wakhan for somatic CNA
-        // cna_input_ch.view()
-        WAKHAN_REPHASE_CNA(cna_input_ch, params.fasta)
-        ch_versions = ch_versions.mix(WAKHAN_REPHASE_CNA.out.versions.first())
     }
-
-    // run germline workflow
+    /*
+    * GERMLINE SV CALLING WORKFLOW
+    */
     // call germline structural variants
     if (params.germline) {
+        // validate that vntr_bed is provided if severus is selected
+        if (params.germline_callers.split(',').contains('severus') && !params.vntr_bed) {
+            error("ERROR: --vntr_bed is required when using SEVERUS for germline SV calling. Please provide a VNTR BED file.")
+        }
         // sv caller input channel
-        input_germline_ch = bam_snps_ch.norm
-                                .map { meta, bam, bai, vcf, tbi ->
-                                       tuple(meta, bam, bai, vcf)}
-        input_germline_ch.view()
+        // ch_samplesheet.view { v -> "samplesheet ${v}" }
+        // bam_snps_ch.norm.view { v -> "normal bam_snps ${v}" }
+        // bam_snps_ch.tumor.view { v -> "tumor bam_snps ${v}" }
+        input_germline_ch = bam_snps_ch.norm.map { meta, bam, bai, snp_vcf, _snp_tbi ->
+            tuple(meta, bam, bai, snp_vcf)
+        }
+        // input_germline_ch.view { v -> "input germline ${v}" }
         SV_CALLING_GERMLINE(
             params.germline_callers,
             input_germline_ch,
             params.vntr_bed,
             params.fasta,
-            ch_samplesheet,
         )
         ch_versions = ch_versions.mix(SV_CALLING_GERMLINE.out.versions)
         // construct channel of germline calls + mix with sv channel
@@ -185,7 +195,63 @@ workflow NANOGENOME {
             }
         sv_ch = sv_ch.mix(germline_ch)
     }
-    // sv_ch.view()
+    /*
+    * SOMATIC CNV CALLING WORKFLOW
+    */
+    // run somatic cnv analysis
+    hp1_bed_ch = Channel.empty()
+    hp2_bed_ch = Channel.empty()
+    if (!params.skip_cna) {
+        // construct cna input channel
+        if (!params.skip_somatic) {
+            // construct somatic sv input channel
+            cna_input_ch = bam_ch.tumor
+                .map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }
+                .join(bam_ch.norm.map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }, by: 0)
+                .join(snps_ch.map { meta, snp_vcf, snp_tbi -> tuple(meta.id, meta, snp_vcf, snp_tbi) }, by: 0)
+                .join(
+                    SV_CALLING_SOMATIC.out.severus_vcf.map { meta, sv_vcf ->
+                        tuple(meta.id, meta, sv_vcf)
+                    },
+                    by: 0
+                )
+                .map { id, _tumor_meta, tumor_bam, tumor_bai, _norm_meta, norm_bam, norm_bai, _meta3, snp_vcf, snp_tbi, _meta4, sv_vcf ->
+                    tuple([id: id, condition: "somatic"], tumor_bam, tumor_bai, norm_bam, norm_bai, snp_vcf, snp_tbi, sv_vcf)
+                }
+        }
+        else {
+            // branch the samplesheet
+            cna_ch = ch_samplesheet.branch { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf ->
+                tumor: meta.condition == 'tumor'
+                norm: meta.condition == 'normal'
+            }
+            // contruct cna input ch
+            cna_input_ch = cna_ch.tumor
+                .map { meta, bam, bai, _snp_vcf, _snp_tbi, sv_vcf ->
+                    tuple(meta.id, bam, bai, sv_vcf)
+                }
+                .join(
+                    cna_ch.norm.map { meta, bam, bai, snp_vcf, snp_tbi, _sv_vcf ->
+                        tuple(meta.id, bam, bai, snp_vcf, snp_tbi)
+                    },
+                    by: 0
+                )
+                .map { id, tumor_bam, tumor_bai, sv_vcf, norm_bam, norm_bai, snp_vcf, snp_tbi ->
+                    tuple([id: id, condition: "somatic"], tumor_bam, tumor_bai, norm_bam, norm_bai, snp_vcf, snp_tbi, sv_vcf)
+                }
+        }
+        // run somatic cnv calling subworkflow
+        BAM_CNV_CALLING_SOMATIC(
+            params.cna_tools,
+            cna_input_ch,
+            params.fasta,
+            params.fai,
+            contigs_list,
+        )
+        ch_versions = ch_versions.mix(BAM_CNV_CALLING_SOMATIC.out.versions)
+        hp1_bed_ch = BAM_CNV_CALLING_SOMATIC.out.hp1_bed
+        hp2_bed_ch = BAM_CNV_CALLING_SOMATIC.out.hp2_bed
+    }
     // run annotation only if sv calling has been performed
     if (!params.skip_somatic || params.germline) {
         // run merge + annotate SV subworkflow
@@ -198,7 +264,6 @@ workflow NANOGENOME {
             params.oncokb_url,
         )
         ch_versions = ch_versions.mix(ANNOTATE_SV.out.versions)
-
         // plot results
         // ANNOTATE_SV.out.annotated_sv.view()
         ANNOTATE_SV.out.annotated_sv
@@ -210,37 +275,62 @@ workflow NANOGENOME {
                 germline: meta1.condition == 'germline'
             }
             .set { annot_sv_ch }
-        // WAKHAN_CNA.out.HP1_bed.view()
-        circos_ch = annot_sv_ch.somatic
-            .combine(
-                WAKHAN_REPHASE_CNA.out.HP1_bed.map { meta, hp_bed ->
-                    tuple("${meta.id}-${meta.condition}", meta, hp_bed)
-                },
-                by: 0
-            )
-            .combine(
-                WAKHAN_REPHASE_CNA.out.HP2_bed.map { meta, hp_bed ->
-                    tuple("${meta.id}-${meta.condition}", meta, hp_bed)
-                },
-                by: 0
-            )
-            .map { id, meta, sv, meta1, hp1, meta2, hp2 ->
-                tuple(meta, sv, hp1, hp2)
-            }
-            .concat(
-                annot_sv_ch.germline.map { meta, meta1, sv ->
-                    [meta1, sv, [], []]
+        // circos plot for somatic SVs
+        if (!params.skip_cna) {
+            circos_ch = annot_sv_ch.somatic
+                .combine(
+                    hp1_bed_ch.map { meta, hp_bed ->
+                        tuple("${meta.id}-${meta.condition}", meta, hp_bed)
+                    },
+                    by: 0
+                )
+                .combine(
+                    hp2_bed_ch.map { meta, hp_bed ->
+                        tuple("${meta.id}-${meta.condition}", meta, hp_bed)
+                    },
+                    by: 0
+                )
+                .map { id, meta, sv, meta1, hp1, meta2, hp2 ->
+                    tuple(meta, sv, hp1, hp2)
                 }
-            )
-        // circos_ch.view()
+        }
+        else {
+            circos_ch = annot_sv_ch.somatic.map { _id, meta, sv -> [meta, sv, [], []] }
+        }
         PLOTCIRCOS(circos_ch)
         ch_versions = ch_versions.mix(PLOTCIRCOS.out.versions.first())
+        // karyoplot for germline SVs
+        SVKARYOPLOT(
+            annot_sv_ch.germline.map { _meta, meta1, sv ->
+                tuple(meta1, sv)
+            },
+            params.genome_build,
+        )
+        ch_versions = ch_versions.mix(SVKARYOPLOT.out.versions.first())
     }
 
     //
     // Collate and save software versions
     //
-    softwareVersionsToYAML(ch_versions)
+    def topic_versions = Channel.topic("versions")
+        .distinct()
+        .branch { entry ->
+            versions_file: entry instanceof Path
+            versions_tuple: true
+        }
+
+    def topic_versions_string = topic_versions.versions_tuple
+        .map { process, tool, version ->
+            [ process[process.lastIndexOf(':')+1..-1], "  ${tool}: ${version}" ]
+        }
+        .groupTuple(by:0)
+        .map { process, tool_versions ->
+            tool_versions.unique().sort()
+            "${process}:\n${tool_versions.join('\n')}"
+        }
+
+    softwareVersionsToYAML(ch_versions.mix(topic_versions.versions_file))
+        .mix(topic_versions_string)
         .collectFile(
             storeDir: "${params.outdir}/pipeline_info",
             name: 'nanogenome_software_' + 'mqc_' + 'versions.yml',

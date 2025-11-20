@@ -55,16 +55,25 @@ process WAKHAN_HAPCORRECT {
     """
 
     stub:
-    def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    echo ${args}
+    mkdir -p hapcorrect_out
+    touch hapcorrect_out/stub1.txt
+    touch hapcorrect_out/stub2.txt
+    touch hapcorrect_out/stub3.txt
+    mkdir -p hapcorrect_out/rephased
+    echo | gzip > hapcorrect_out/rephased/rephased.vcf.gz
 
-    touch ${prefix}.bam
+    WAKHAN_VERSION=\$(python3 -c "
+    import sys
+    sys.path.insert(0, '/opt/wakhan/Wakhan')
+    from src.__version__ import __version__
+    print(__version__)
+    ")
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        wakhan: \$(wakhan --version)
+        wakhan: \$WAKHAN_VERSION
     END_VERSIONS
     """
 }

@@ -1,0 +1,26 @@
+nextflow_pipeline {
+
+    name "Test germline sv calling only workflow"
+    script "../main.nf"
+    tag "pipeline"
+
+    test("germline sv calling only workflow") {
+        options "-stub"
+
+        when {
+            params {
+                outdir = "$outputDir"
+                germline = true
+                skip_somatic = true
+                skip_phasing = true
+                skip_cna = true
+                input = 'https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/samplesheet_sv_only.csv'
+
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+    }
+}
