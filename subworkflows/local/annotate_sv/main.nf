@@ -48,30 +48,10 @@ workflow ANNOTATE_SV {
     ANNOTATEGENES(tsv_chunks, gene_annotations, oncokb)
     ch_versions = ch_versions.mix(ANNOTATEGENES.out.versions.first())
     // combine the annotated chunks back into single file per sample
+    // ANNOTATEGENES.out.annotated_sv.view()
     CSVTK_CONCAT(ANNOTATEGENES.out.annotated_sv.groupTuple(), "tsv", "tsv")
     // CSVTK_CONCAT.out.csv.view()
     ch_versions = ch_versions.mix(CSVTK_CONCAT.out.versions.first())
-    // annotate sv types
-    // collect raw calls for strand information
-    // sv_ch
-    //     .flatMap { meta, vcfs ->
-    //         vcfs.collect { vcf ->
-    //             tuple(meta, vcf, [])
-    //         }
-    //     }
-    //     .set { caller_ch }
-    // // take raw calls and make into tsv files
-    // BCFTOOLS_QUERY(caller_ch, [], [], [])
-    // ch_versions = ch_versions.mix(BCFTOOLS_QUERY.out.versions.first())
-    // // group by number of callers used
-    // BCFTOOLS_QUERY.out.output
-    //     .groupTuple()
-    //     .join(CSVTK_CONCAT.out.csv)
-    //     .set { calls_ch }
-    // // calls_ch.view()
-    // SVTYPES(calls_ch)
-    // ch_versions = ch_versions.mix(SVTYPES.out.versions.first())
-    println("test with new minda")
 
     emit:
     minda_vcf    = MINDA.out.ensemble_vcf // channel: [ val(meta), [ vcf ] ]
