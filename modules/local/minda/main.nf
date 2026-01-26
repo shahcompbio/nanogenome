@@ -4,7 +4,7 @@ process MINDA {
     label 'process_low'
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
-    container "shahlab_singularity/minda:20251104-3e4881b"
+    container "shahlab_singularity/minda:20260108b-8b6d81c"
 
     input:
     tuple val(meta), path(vcfs, arity: "2..*", stageAs: "?/*")
