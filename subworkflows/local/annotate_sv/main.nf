@@ -10,12 +10,12 @@ include { SVTYPES        } from '../../../modules/local/svtypes/main'
 
 workflow ANNOTATE_SV {
     take:
-    sv_ch            // channel: [ val(meta), path(vcf1), path(vcf2), path(vcf3) ]; meta [id: sample id, min_callers: min number of callers]
-    tolerance        // between breakpoints to consider two SVs the same
-    min_size         // minimum size of SV to consider
+    sv_ch // channel: [ val(meta), path(vcf1), path(vcf2), path(vcf3) ]; meta [id: sample id, min_callers: min number of callers]
+    tolerance // between breakpoints to consider two SVs the same
+    min_size // minimum size of SV to consider
     gene_annotations // gene annotation file
-    oncokb           // oncokb annotation file
-    oncokb_url       // oncokb url to download if oncokb not provided
+    oncokb // oncokb annotation file
+    oncokb_url // oncokb url to download if oncokb not provided
 
     main:
 
@@ -53,28 +53,29 @@ workflow ANNOTATE_SV {
     ch_versions = ch_versions.mix(CSVTK_CONCAT.out.versions.first())
     // annotate sv types
     // collect raw calls for strand information
-    sv_ch
-        .flatMap { meta, vcfs ->
-            vcfs.collect { vcf ->
-                tuple(meta, vcf, [])
-            }
-        }
-        .set { caller_ch }
-    // take raw calls and make into tsv files
-    BCFTOOLS_QUERY(caller_ch, [], [], [])
-    ch_versions = ch_versions.mix(BCFTOOLS_QUERY.out.versions.first())
-    // group by number of callers used
-    BCFTOOLS_QUERY.out.output
-        .groupTuple()
-        .join(CSVTK_CONCAT.out.csv)
-        .set { calls_ch }
-    // calls_ch.view()
-    SVTYPES(calls_ch)
-    ch_versions = ch_versions.mix(SVTYPES.out.versions.first())
+    // sv_ch
+    //     .flatMap { meta, vcfs ->
+    //         vcfs.collect { vcf ->
+    //             tuple(meta, vcf, [])
+    //         }
+    //     }
+    //     .set { caller_ch }
+    // // take raw calls and make into tsv files
+    // BCFTOOLS_QUERY(caller_ch, [], [], [])
+    // ch_versions = ch_versions.mix(BCFTOOLS_QUERY.out.versions.first())
+    // // group by number of callers used
+    // BCFTOOLS_QUERY.out.output
+    //     .groupTuple()
+    //     .join(CSVTK_CONCAT.out.csv)
+    //     .set { calls_ch }
+    // // calls_ch.view()
+    // SVTYPES(calls_ch)
+    // ch_versions = ch_versions.mix(SVTYPES.out.versions.first())
+    println("test with new minda")
 
     emit:
     minda_vcf    = MINDA.out.ensemble_vcf // channel: [ val(meta), [ vcf ] ]
     sv_table     = VCF2TSV.out.sv_table // channel: [ val(meta), path(sv_table) ]
-    annotated_sv = SVTYPES.out.annotated_sv // channel: [ val(meta), path(annotated_sv) ]
+    annotated_sv = CSVTK_CONCAT.out.csv // channel: [ val(meta), path(annotated_sv) ]
     versions     = ch_versions // channel: [ versions.yml ]
 }

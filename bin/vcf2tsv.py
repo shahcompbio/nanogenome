@@ -57,6 +57,29 @@ def get_chrom2_pos2(row, infos):
         pos2 = int(row['POS']) + int(infos['SVLEN'])
     return chrom2, pos2
 
+def infer_svtype(infos):
+    """
+    infer svtype from strand info or SVTYPE field
+
+    :param infos: vcf info field
+    """
+    # if BND, infer from STRANDS
+    if infos['SVTYPE'] == 'BND':
+        assert 'STRANDS' in infos, f'infos does not have STRANDS:\n{infos}'
+        strands = infos['STRANDS']
+        if strands == "+-":
+                sv_type = "DEL"
+        elif strands == "-+":
+            sv_type = "DUP"
+        elif strands == "--" or strands == "++":
+            sv_type = "INV"
+        else:
+            sv_type = "BND"
+    # else, use SVTYPE field
+    else:
+        svtype = infos['SVTYPE']
+    return svtype
+
 
 def get_svlen(infos):
         return int(infos['SVLEN'])
@@ -75,6 +98,7 @@ class MAF:
         self.svlens = []
         self.callers = []
         self.minda_ID = []
+        self.orientation = []
         self.info_keys = {'SVLEN', 'SVTYPE', 'SUPP_VEC'}
         self.tumor_id = tumor_id  # tumor id only
         self.has_normal = False  # does GT include normal
@@ -111,6 +135,7 @@ class MAF:
         remove_sv = False
         chrom2, pos2 = get_chrom2_pos2(row, infos)
         svlen = get_svlen(infos)
+        svtype = infer_svtype(row, infos)
         assert len(self.info_keys & set(infos.keys())) == len(self.info_keys)
         if not remove_sv:
             self.chrom1s.append(row['#CHROM'])
@@ -121,7 +146,8 @@ class MAF:
             self.refs.append(row['REF'])
             self.alts.append(row['ALT'])
             self.filters.append(row['FILTER'])
-            self.svtypes.append(infos['SVTYPE'])
+            self.orientation.append(infos['STRANDS'])
+            self.svtypes.append(svtype)
             self.svlens.append(svlen)
             self.callers.append(infos["SUPP_VEC"])
             # self.rnames.append(rnames)
@@ -137,6 +163,7 @@ class MAF:
             'Alt_Seq': self.alts,
             'SV_Type': self.svtypes,
             'SV_LEN': self.svlens,
+            'orientation': self.orientation,
             'SV_callers': self.callers,
         })
 
