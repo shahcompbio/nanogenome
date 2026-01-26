@@ -57,7 +57,7 @@ def get_chrom2_pos2(row, infos):
         pos2 = int(row['POS']) + int(infos['SVLEN'])
     return chrom2, pos2
 
-def infer_svtype(infos):
+def infer_svtype(row, infos):
     """
     infer svtype from strand info or SVTYPE field
 
@@ -65,7 +65,7 @@ def infer_svtype(infos):
     """
     # if BND, infer from STRANDS
     if infos['SVTYPE'] == 'BND':
-        assert 'STRANDS' in infos, f'infos does not have STRANDS:\n{infos}'
+        assert 'STRANDS' in infos, f'infos does not have STRANDS:\n{row}'
         strands = infos['STRANDS']
         if strands == "+-":
                 sv_type = "DEL"

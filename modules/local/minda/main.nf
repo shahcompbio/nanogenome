@@ -27,7 +27,7 @@ process MINDA {
     def set = meta.min_callers == 1 ? "union" : "consensus"
     def min_support = meta.min_callers
     """
-    /minda/minda.py \\
+    minda \\
         ensemble \\
         ${args} \\
         --vcfs \\
