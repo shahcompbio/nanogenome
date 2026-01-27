@@ -262,6 +262,8 @@ workflow NANOGENOME {
             params.gene_annotations,
             params.oncokb,
             params.oncokb_url,
+            params.skip_annotsv,
+            params.annotsv_dir,
         )
         ch_versions = ch_versions.mix(ANNOTATE_SV.out.versions)
         // plot results
@@ -312,7 +314,8 @@ workflow NANOGENOME {
     //
     // Collate and save software versions
     //
-    def topic_versions = Channel.topic("versions")
+    def topic_versions = Channel
+        .topic("versions")
         .distinct()
         .branch { entry ->
             versions_file: entry instanceof Path
@@ -321,9 +324,9 @@ workflow NANOGENOME {
 
     def topic_versions_string = topic_versions.versions_tuple
         .map { process, tool, version ->
-            [ process[process.lastIndexOf(':')+1..-1], "  ${tool}: ${version}" ]
+            [process[process.lastIndexOf(':') + 1..-1], "  ${tool}: ${version}"]
         }
-        .groupTuple(by:0)
+        .groupTuple(by: 0)
         .map { process, tool_versions ->
             tool_versions.unique().sort()
             "${process}:\n${tool_versions.join('\n')}"

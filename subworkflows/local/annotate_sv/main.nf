@@ -1,12 +1,14 @@
 // merge and annotate structural variants from different callers
-include { MINDA          } from '../../../modules/local/minda/main'
-include { VCF2TSV        } from '../../../modules/local/vcf2tsv/main'
-include { ANNOTATEGENES  } from '../../../modules/local/annotategenes/main'
-include { CSVTK_CONCAT   } from '../../../modules/nf-core/csvtk/concat/main'
-include { WGET           } from '../../../modules/nf-core/wget/main'
-include { BIOMART        } from '../../../modules/local/biomart/main'
-include { BCFTOOLS_QUERY } from '../../../modules/nf-core/bcftools/query/main'
-include { SVTYPES        } from '../../../modules/local/svtypes/main'
+include { MINDA                      } from '../../../modules/local/minda/main'
+include { VCF2TSV                    } from '../../../modules/local/vcf2tsv/main'
+include { ANNOTATEGENES              } from '../../../modules/local/annotategenes/main'
+include { CSVTK_CONCAT               } from '../../../modules/nf-core/csvtk/concat/main'
+include { WGET                       } from '../../../modules/nf-core/wget/main'
+include { BIOMART                    } from '../../../modules/local/biomart/main'
+include { ANNOTSV_INSTALLANNOTATIONS } from '../../../modules/nf-core/annotsv/installannotations/main'
+include { ANNOTSV_ANNOTSV            } from '../../../modules/nf-core/annotsv/annotsv/main'
+include { TSV2BEDPE                  } from '../../../modules/local/tsv2bedpe/main'
+include { SURVIVOR_BEDPETOVCF        } from '../../../modules/nf-core/survivor/bedpetovcf/main'
 
 workflow ANNOTATE_SV {
     take:
@@ -16,6 +18,8 @@ workflow ANNOTATE_SV {
     gene_annotations // gene annotation file
     oncokb // oncokb annotation file
     oncokb_url // oncokb url to download if oncokb not provided
+    skip_annotsv // boolean to run annotsv
+    annotsv_dir // annotsv annotation directory
 
     main:
 
@@ -52,6 +56,32 @@ workflow ANNOTATE_SV {
     CSVTK_CONCAT(ANNOTATEGENES.out.annotated_sv.groupTuple(), "tsv", "tsv")
     // CSVTK_CONCAT.out.csv.view()
     ch_versions = ch_versions.mix(CSVTK_CONCAT.out.versions.first())
+    // run annotsv to annotate sv with additional annotations
+    if (!skip_annotsv) {
+        if (!annotsv_dir) {
+            ANNOTSV_INSTALLANNOTATIONS()
+            ch_annotsv_dir = ANNOTSV_INSTALLANNOTATIONS.out.annotations.map { dir -> [[id: 'annotations'], dir] }
+            ch_versions = ch_versions.mix(ANNOTSV_INSTALLANNOTATIONS.out.versions)
+        }
+        else {
+            ch_annotsv_dir = channel.value([[id: 'annotations'], annotsv_dir])
+        }
+        // run annotsv
+        TSV2BEDPE(CSVTK_CONCAT.out.csv)
+        // TSV2BEDPE.out.bedpe.view()
+        SURVIVOR_BEDPETOVCF(TSV2BEDPE.out.bedpe)
+        ch_versions = ch_versions.mix(SURVIVOR_BEDPETOVCF.out.versions.first())
+        // SURVIVOR_BEDPETOVCF.out.vcf.view()
+        annotsv_in_ch = SURVIVOR_BEDPETOVCF.out.vcf.map { meta, vcf -> [meta, vcf, [], []] }
+        ANNOTSV_ANNOTSV(
+            annotsv_in_ch,
+            ch_annotsv_dir,
+            [[], []],
+            [[], []],
+            [[], []],
+        )
+        ch_versions = ch_versions.mix(ANNOTSV_ANNOTSV.out.versions.first())
+    }
 
     emit:
     minda_vcf    = MINDA.out.ensemble_vcf // channel: [ val(meta), [ vcf ] ]
