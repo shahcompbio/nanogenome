@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-01-27
+
+### Added
+
+- AnnotSV integration for comprehensive structural variant annotation with gene, regulatory, and clinical databases
+- New `--skip_annotsv` parameter to optionally skip AnnotSV annotation
+- New `--annotsv_dir` parameter to specify pre-downloaded AnnotSV annotations directory
+- New `--annotsv_genomebuild` parameter to specify genome build for AnnotSV (default: GRCh38)
+- TSV2BEDPE module for converting annotated SV TSV files to BEDPE format
+- SURVIVOR/BEDPETOVCF module for converting BEDPE to VCF format for AnnotSV input
+- Automatic download of AnnotSV annotations if `--annotsv_dir` is not provided
+
+### Changed
+
+- Updated SV annotation workflow to include AnnotSV annotation step
+- Updated Minda Docker image
+- Modified Wakhan Dockerfile to build from Debian base image for improved compatibility
+- Improved vcf2tsv.py with additional SV type handling
+- Updated nf-core template to version 3.5.1
+
+### Fixed
+
+- Fixed output file naming in annotation workflow
+- Fixed SV type extraction from MINDA output
+
 ## [1.1.0] - 2025-11-19
 
 ### Added
@@ -168,6 +193,7 @@ Initial release of shahcompbio/nanogenome, created with the [nf-core](https://nf
 - BioMart (gene annotation)
 - R and Python dependencies for custom modules
 
-[unreleased]: https://github.com/shahcompbio/nanogenome/compare/1.1.0...HEAD
+[unreleased]: https://github.com/shahcompbio/nanogenome/compare/1.2.0...HEAD
+[1.2.0]: https://github.com/shahcompbio/nanogenome/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/shahcompbio/nanogenome/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/shahcompbio/nanogenome/releases/tag/1.0.0
