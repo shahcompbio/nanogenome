@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated SV annotation workflow to include AnnotSV annotation step
 - Updated Minda Docker image
-- Modified Wakhan Dockerfile to build from Debian base image for improved compatibility
+- Modified Wakhan Dockerfile to build from Debian base image for improved compatibility (@crankycrank)
 - Improved vcf2tsv.py with additional SV type handling
 - Updated nf-core template to version 3.5.1
 
