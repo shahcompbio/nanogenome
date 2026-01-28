@@ -9,7 +9,7 @@ RUN  echo "deb http://deb.debian.org/debian bookworm main contrib non-free non-f
   echo "deb-src http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware" >> /etc/apt/sources.list.d/my-sources.list && \
   apt-get update -y && apt-get upgrade -y \
   && apt-get install -y --no-install-recommends git samtools bcftools \
-  build-essential wget ca-certificates zlib1g zlib1g-dev \
+  build-essential wget ca-certificates zlib1g zlib1g-dev procps \
   libssl-dev libffi-dev libbz2-dev && \
   apt build-dep -y python3 python3-pip
 
