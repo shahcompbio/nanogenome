@@ -68,7 +68,7 @@ def infer_svtype(row, infos):
         assert 'STRANDS' in infos, f'infos does not have STRANDS:\n{row}'
         strands = infos['STRANDS']
         if strands == "+-":
-                sv_type = "DEL"
+            sv_type = "DEL"
         elif strands == "-+":
             sv_type = "DUP"
         elif strands == "--" or strands == "++":
@@ -77,8 +77,8 @@ def infer_svtype(row, infos):
             sv_type = "BND"
     # else, use SVTYPE field
     else:
-        svtype = infos['SVTYPE']
-    return svtype
+        sv_type = infos['SVTYPE']
+    return sv_type
 
 
 def get_svlen(infos):
