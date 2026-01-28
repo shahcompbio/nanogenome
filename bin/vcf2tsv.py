@@ -49,7 +49,9 @@ def infer_svtype(row, infos):
     :param infos: vcf info field
     """
     # if BND, infer from STRANDS
-    if infos['SVTYPE'] == 'BND':
+    if row['#CHROM'] != infos['CHR2']:
+        sv_type = 'TRA'
+    elif infos['SVTYPE'] == 'BND':
         assert 'STRANDS' in infos, f'infos does not have STRANDS:\n{row}'
         strands = infos['STRANDS']
         if strands == "+-":
