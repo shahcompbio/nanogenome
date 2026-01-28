@@ -42,21 +42,6 @@ def proc_samples(row):
     return (has_normal,
             dict(zip(formats, tumor_gts)))
 
-
-def get_chrom2_pos2(row, infos):
-    assert 'SVTYPE' in infos, f'infos does not have SVTYPE:\n{row}'
-    # get for translocation
-    if infos['SVTYPE'] == 'BND' or infos['SVTYPE'] == 'TRA':  # ALT: N]chrX:2212928]
-        pat = re.search('[\[\]](.+):(\d+)', row['ALT'])
-        assert pat
-        chrom2, pos2 = pat.groups()
-    elif infos['SVTYPE'] == 'INS':
-        chrom2, pos2 = row['#CHROM'], row['POS']
-    else:
-        chrom2 = row['#CHROM']
-        pos2 = int(row['POS']) + int(infos['SVLEN'])
-    return chrom2, pos2
-
 def infer_svtype(row, infos):
     """
     infer svtype from strand info or SVTYPE field
@@ -133,15 +118,14 @@ class MAF:
     def add_data(self, row, survivor=False):
         infos = proc_info(row)
         remove_sv = False
-        chrom2, pos2 = get_chrom2_pos2(row, infos)
         svlen = get_svlen(infos)
         svtype = infer_svtype(row, infos)
         assert len(self.info_keys & set(infos.keys())) == len(self.info_keys)
         if not remove_sv:
             self.chrom1s.append(row['#CHROM'])
             self.pos1s.append(int(row['POS']))
-            self.chrom2s.append(chrom2)  # BND?
-            self.pos2s.append(pos2)
+            self.chrom2s.append(infos["CHR2"])
+            self.pos2s.append(infos["END"])
             self.minda_ID.append(row['ID'])
             self.refs.append(row['REF'])
             self.alts.append(row['ALT'])
