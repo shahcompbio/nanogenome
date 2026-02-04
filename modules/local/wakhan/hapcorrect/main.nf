@@ -43,7 +43,7 @@ process WAKHAN_HAPCORRECT {
 
     WAKHAN_VERSION=\$(python3 -c "
     import sys
-    sys.path.insert(0, '/opt/wakhan/Wakhan')
+    sys.path.insert(0, '/opt/Wakhan')
     from src.__version__ import __version__
     print(__version__)
     ")
@@ -66,7 +66,7 @@ process WAKHAN_HAPCORRECT {
 
     WAKHAN_VERSION=\$(python3 -c "
     import sys
-    sys.path.insert(0, '/opt/wakhan/Wakhan')
+    sys.path.insert(0, '/opt/Wakhan')
     from src.__version__ import __version__
     print(__version__)
     ")
