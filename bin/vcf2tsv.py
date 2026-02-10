@@ -42,20 +42,30 @@ def proc_samples(row):
     return (has_normal,
             dict(zip(formats, tumor_gts)))
 
+def infer_svtype(row, infos):
+    """
+    infer svtype from strand info or SVTYPE field
 
-def get_chrom2_pos2(row, infos):
-    assert 'SVTYPE' in infos, f'infos does not have SVTYPE:\n{row}'
-    # get for translocation
-    if infos['SVTYPE'] == 'BND' or infos['SVTYPE'] == 'TRA':  # ALT: N]chrX:2212928]
-        pat = re.search('[\[\]](.+):(\d+)', row['ALT'])
-        assert pat
-        chrom2, pos2 = pat.groups()
-    elif infos['SVTYPE'] == 'INS':
-        chrom2, pos2 = row['#CHROM'], row['POS']
+    :param infos: vcf info field
+    """
+    # if BND, infer from STRANDS
+    if row['#CHROM'] != infos['CHR2']:
+        sv_type = 'TRA'
+    elif infos['SVTYPE'] == 'BND':
+        assert 'STRANDS' in infos, f'infos does not have STRANDS:\n{row}'
+        strands = infos['STRANDS']
+        if strands == "+-":
+            sv_type = "DEL"
+        elif strands == "-+":
+            sv_type = "DUP"
+        elif strands == "--" or strands == "++":
+            sv_type = "INV"
+        else:
+            sv_type = "BND"
+    # else, use SVTYPE field
     else:
-        chrom2 = row['#CHROM']
-        pos2 = int(row['POS']) + int(infos['SVLEN'])
-    return chrom2, pos2
+        sv_type = infos['SVTYPE']
+    return sv_type
 
 
 def get_svlen(infos):
@@ -75,6 +85,7 @@ class MAF:
         self.svlens = []
         self.callers = []
         self.minda_ID = []
+        self.orientation = []
         self.info_keys = {'SVLEN', 'SVTYPE', 'SUPP_VEC'}
         self.tumor_id = tumor_id  # tumor id only
         self.has_normal = False  # does GT include normal
@@ -109,19 +120,20 @@ class MAF:
     def add_data(self, row, survivor=False):
         infos = proc_info(row)
         remove_sv = False
-        chrom2, pos2 = get_chrom2_pos2(row, infos)
         svlen = get_svlen(infos)
+        svtype = infer_svtype(row, infos)
         assert len(self.info_keys & set(infos.keys())) == len(self.info_keys)
         if not remove_sv:
             self.chrom1s.append(row['#CHROM'])
             self.pos1s.append(int(row['POS']))
-            self.chrom2s.append(chrom2)  # BND?
-            self.pos2s.append(pos2)
+            self.chrom2s.append(infos["CHR2"])
+            self.pos2s.append(infos["END"])
             self.minda_ID.append(row['ID'])
             self.refs.append(row['REF'])
             self.alts.append(row['ALT'])
             self.filters.append(row['FILTER'])
-            self.svtypes.append(infos['SVTYPE'])
+            self.orientation.append(infos['STRANDS'])
+            self.svtypes.append(svtype)
             self.svlens.append(svlen)
             self.callers.append(infos["SUPP_VEC"])
             # self.rnames.append(rnames)
@@ -137,6 +149,7 @@ class MAF:
             'Alt_Seq': self.alts,
             'SV_Type': self.svtypes,
             'SV_LEN': self.svlens,
+            'orientation': self.orientation,
             'SV_callers': self.callers,
         })
 

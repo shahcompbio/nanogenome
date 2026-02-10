@@ -358,10 +358,10 @@
                 }
             }
         },
-        "gene_annotation": {
-            "title": "Gene annotation",
+        "sv_annotation": {
+            "title": "SV annotation",
             "type": "object",
-            "description": "parameters for SV gene annotation",
+            "description": "parameters for SV annotation",
             "default": "",
             "properties": {
                 "gene_annotations": {
@@ -381,6 +381,19 @@
                     "type": "string",
                     "default": "hg38",
                     "description": "genome build for biomaRt; options are hg38 or hg19"
+                },
+                "annotsv_dir": {
+                    "type": "string",
+                    "description": "path to local annotsv directory if available"
+                },
+                "annotsv_genomebuild": {
+                    "type": "string",
+                    "default": "GRCh38",
+                    "description": "Genome build used; Values: GRCh38 (default) or GRCh37 or CHM13 or or mm9 or mm10"
+                },
+                "skip_annotsv": {
+                    "type": "boolean",
+                    "description": "skip sv annotation with annotsv"
                 }
             }
         },
@@ -435,7 +448,7 @@
             "$ref": "#/$defs/minda_options"
         },
         {
-            "$ref": "#/$defs/gene_annotation"
+            "$ref": "#/$defs/sv_annotation"
         },
         {
             "$ref": "#/$defs/structural_variant_calling"

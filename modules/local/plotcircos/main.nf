@@ -21,7 +21,8 @@ process PLOTCIRCOS {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: getFilePrefix("${sv_table}")
+    def set = meta.min_callers == 1 ? "union" : "consensus"
+    def prefix = task.ext.prefix ?: "${meta.id}_${meta.condition}.${set}"
     """
     plotcircos.R \\
         ${sv_table} \\
@@ -39,7 +40,8 @@ process PLOTCIRCOS {
     """
 
     stub:
-    def prefix = task.ext.prefix ?: getFilePrefix("${sv_table}")
+    def set = meta.min_callers == 1 ? "union" : "consensus"
+    def prefix = task.ext.prefix ?: "${meta.id}_${meta.condition}.${set}"
     """
     touch ${prefix}.circos.svg
 
@@ -50,9 +52,4 @@ process PLOTCIRCOS {
         dplyr: \$(Rscript -e "library(dplyr); cat(as.character(packageVersion('dplyr')))")
     END_VERSIONS
     """
-}
-// get prefix for output circos
-def getFilePrefix(filename) {
-    def prefix = filename.split(/\.annotated_sv\.tsv/)[0]
-    return prefix
 }

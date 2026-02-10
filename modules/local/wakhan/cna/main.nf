@@ -7,7 +7,7 @@ process WAKHAN_CNA {
 
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
-    container "quay.io/shahlab_singularity/wakhan:94effdd"
+    container "quay.io/shahlab_singularity/wakhan:260128-crankycrank-bc48900"
 
     input:
     tuple val(meta), path(bam), path(bai), path(phased_vcf), path(phased_vcf_tbi), path(severus_vcf), path(wakhanHPOutput)
@@ -50,7 +50,7 @@ process WAKHAN_CNA {
 
     WAKHAN_VERSION=\$(python3 -c "
     import sys
-    sys.path.insert(0, '/opt/wakhan/Wakhan')
+    sys.path.insert(0, '/opt/Wakhan')
     from src.__version__ import __version__
     print(__version__)
     ")
@@ -74,7 +74,7 @@ process WAKHAN_CNA {
 
     WAKHAN_VERSION=\$(python3 -c "
     import sys
-    sys.path.insert(0, '/opt/wakhan/Wakhan')
+    sys.path.insert(0, '/opt/Wakhan')
     from src.__version__ import __version__
     print(__version__)
     ")
