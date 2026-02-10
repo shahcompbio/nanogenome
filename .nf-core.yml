@@ -27,7 +27,7 @@ lint:
     - docs/README.md
   multiqc_config:
     - report_comment
-nf_core_version: 3.5.1
+nf_core_version: 3.5.2
 repository_type: pipeline
 template:
   author: Asher Preska Steinberg
