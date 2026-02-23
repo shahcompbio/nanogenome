@@ -414,6 +414,26 @@
                     "description": "germline structural variant caller options; supply as comma separated string"
                 }
             }
+        },
+        "te_calling_options": {
+            "title": "TE calling options",
+            "type": "object",
+            "description": "transposable element calling options",
+            "default": "",
+            "properties": {
+                "te_calling": {
+                    "type": "boolean",
+                    "description": "run transposable element calling and annotation with annotSV"
+                },
+                "te_ref_fasta": {
+                    "type": "string",
+                    "description": "reference fasta file for transposable elements"
+                },
+                "longcalld_somatic_te": {
+                    "type": "boolean",
+                    "description": "call somatic TEs in addition to germline with longcallD"
+                }
+            }
         }
     },
     "allOf": [
@@ -452,6 +472,9 @@
         },
         {
             "$ref": "#/$defs/structural_variant_calling"
+        },
+        {
+            "$ref": "#/$defs/te_calling_options"
         }
     ],
     "properties": {
@@ -480,6 +503,10 @@
             "type": "string",
             "default": "wakhan,savana",
             "description": "select copy number analysis tools to use"
+        },
+        "longcalld_realign": {
+            "type": "boolean",
+            "description": "output refined read alignments from longcalld"
         }
     }
 }

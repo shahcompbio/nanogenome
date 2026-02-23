@@ -3,18 +3,19 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { PHASING                 } from '../subworkflows/local/phasing/main'
-include { SV_CALLING_SOMATIC      } from '../subworkflows/local/sv_calling_somatic/main'
-include { ANNOTATE_SV             } from '../subworkflows/local/annotate_sv/main'
-include { SV_CALLING_GERMLINE     } from '../subworkflows/local/sv_calling_germline/main'
-include { BAM_CNV_CALLING_SOMATIC } from '../subworkflows/local/bam_cnv_calling_somatic/main'
-include { PLOTCIRCOS              } from '../modules/local/plotcircos/main'
-include { SVKARYOPLOT             } from '../modules/local/svkaryoplot/main'
-include { MULTIQC                 } from '../modules/nf-core/multiqc/main'
-include { paramsSummaryMap        } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc    } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML  } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText  } from '../subworkflows/local/utils_nfcore_nanogenome_pipeline'
+include { PHASING                    } from '../subworkflows/local/phasing/main'
+include { SV_CALLING_SOMATIC         } from '../subworkflows/local/sv_calling_somatic/main'
+include { ANNOTATE_SV as ANNOTATE_SV ; ANNOTATE_SV as ANNOTATE_TE } from '../subworkflows/local/annotate_sv/main'
+include { SV_CALLING_GERMLINE        } from '../subworkflows/local/sv_calling_germline/main'
+include { BAM_CNV_CALLING_SOMATIC    } from '../subworkflows/local/bam_cnv_calling_somatic/main'
+include { PLOTCIRCOS                 } from '../modules/local/plotcircos/main'
+include { SVKARYOPLOT                } from '../modules/local/svkaryoplot/main'
+include { BAM_TE_CALLING             } from '../subworkflows/local/bam_te_calling/main'
+include { MULTIQC                    } from '../modules/nf-core/multiqc/main'
+include { paramsSummaryMap           } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc       } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML     } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText     } from '../subworkflows/local/utils_nfcore_nanogenome_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -264,6 +265,7 @@ workflow NANOGENOME {
             params.oncokb_url,
             params.skip_annotsv,
             params.annotsv_dir,
+            false,
         )
         ch_versions = ch_versions.mix(ANNOTATE_SV.out.versions)
         // plot results
@@ -309,6 +311,44 @@ workflow NANOGENOME {
             params.genome_build,
         )
         ch_versions = ch_versions.mix(SVKARYOPLOT.out.versions.first())
+    }
+    /*
+    * TE-MEDIATED INSERTION CALLING WORKFLOW
+    */
+    if (params.te_calling) {
+        if (params.te_ref_fasta == null) {
+            error("ERROR: --te_ref_fasta is required when --te_calling is true. Please provide a reference fasta file for TE sequences.")
+        }
+        te_ch = ch_samplesheet.branch { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf ->
+            tumor: meta.condition == 'tumor'
+            norm: meta.condition == 'normal'
+        }
+        te_input_ch = Channel.empty()
+        if (params.longcalld_somatic_te) {
+            te_input_ch = te_ch.tumor.map { meta, bam, bai, _snp_vcf, _snp_tbi, _severus_vcf ->
+                tuple(meta, bam, bai)
+            }
+            println("Running longcallD in somatic TE calling mode")
+        }
+        else {
+            te_input_ch = te_ch.norm.map { meta, bam, bai, _snp_vcf, _snp_tbi, _severus_vcf ->
+                tuple(meta, bam, bai)
+            }
+            println("Running longcallD in germline TE calling mode on normal samples")
+        }
+        BAM_TE_CALLING(te_input_ch, params.fasta)
+        // run merge + annotate SV subworkflow
+        ANNOTATE_TE(
+            BAM_TE_CALLING.out.longcalld_vcf,
+            params.tolerance,
+            params.min_size,
+            params.gene_annotations,
+            params.oncokb,
+            params.oncokb_url,
+            false,
+            params.annotsv_dir,
+            true,
+        )
     }
 
     //
