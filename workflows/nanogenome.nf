@@ -37,7 +37,7 @@ workflow NANOGENOME {
     * PHASING WORKFLOW
     */
     // run phasing subworkflow to phase variants and haplotag bams
-    if (params.skip_somatic && !params.germline && params.skip_cna) {
+    if (params.skip_somatic && !params.germline && params.skip_cna && !params.te_calling) {
         println("running phasing workflow only")
     }
     if (!params.skip_phasing) {
@@ -103,8 +103,8 @@ workflow NANOGENOME {
                 norm: meta.condition == 'normal'
             }
     }
-    else {
-        println("run cna only")
+    else if (!params.skip_cna) {
+        println("running copy number analysis")
     }
 
     // make default channels

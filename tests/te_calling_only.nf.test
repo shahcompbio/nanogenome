@@ -18,6 +18,7 @@ nextflow_pipeline {
                 te_calling = true
                 longcalld_somatic_te = true
                 longcalld_realign = true
+                te_ref_fasta = 'https://raw.githubusercontent.com/adamewing/tldr/refs/heads/master/ref/teref.ont.human.fa'
 
             }
         }

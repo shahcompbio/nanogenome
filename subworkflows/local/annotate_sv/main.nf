@@ -24,7 +24,10 @@ workflow ANNOTATE_SV {
 
     main:
 
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
+    ch_minda_vcf = channel.empty()
+    ch_sv_table = channel.empty()
+    ch_annotated_sv = channel.empty()
     // if annotate_te_only is true, skip minda + gene annotation
     // and just run annotsv on longcallD output
     if (!annotate_te_only) {
@@ -60,6 +63,9 @@ workflow ANNOTATE_SV {
         CSVTK_CONCAT(ANNOTATEGENES.out.annotated_sv.groupTuple(), "tsv", "tsv")
         // CSVTK_CONCAT.out.csv.view()
         ch_versions = ch_versions.mix(CSVTK_CONCAT.out.versions.first())
+        ch_minda_vcf = MINDA.out.ensemble_vcf
+        ch_sv_table = VCF2TSV.out.sv_table
+        ch_annotated_sv = CSVTK_CONCAT.out.csv
     }
     else {
         // if we're annotating TE only, we still want to run annotsv, just on longcallD output
@@ -99,8 +105,8 @@ workflow ANNOTATE_SV {
     }
 
     emit:
-    minda_vcf    = MINDA.out.ensemble_vcf // channel: [ val(meta), [ vcf ] ]
-    sv_table     = VCF2TSV.out.sv_table // channel: [ val(meta), path(sv_table) ]
-    annotated_sv = CSVTK_CONCAT.out.csv // channel: [ val(meta), path(annotated_sv) ]
+    minda_vcf    = ch_minda_vcf // channel: [ val(meta), [ vcf ] ]
+    sv_table     = ch_sv_table // channel: [ val(meta), path(sv_table) ]
+    annotated_sv = ch_annotated_sv // channel: [ val(meta), path(annotated_sv) ]
     versions     = ch_versions // channel: [ versions.yml ]
 }
