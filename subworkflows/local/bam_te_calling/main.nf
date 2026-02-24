@@ -21,7 +21,7 @@ workflow BAM_TE_CALLING {
     ch_versions = ch_versions.mix(LONGCALLD.out.versions.first())
     // get phasing stats from longcallD
     WHATSHAP_STATS(LONGCALLD.out.vcf)
-    ch_versions = ch_versions.mix(WHATSHAP_STATS.out.versions)
+    ch_versions = ch_versions.mix(WHATSHAP_STATS.out.versions.first())
     // filter longcallD calls for structural variants
     BCFTOOLS_VIEW(
         LONGCALLD.out.vcf.map { meta, vcf ->
@@ -48,11 +48,9 @@ workflow BAM_TE_CALLING {
         SAMTOOLS_SORT(
             LONGCALLD.out.cram,
             [[id: "ref"], ref_fasta],
-            [],
+            "crai",
         )
-        ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions)
-        SAMTOOLS_INDEX(SAMTOOLS_SORT.out.cram)
-        ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions)
+        channel.topic("versions").view()
     }
 
     emit:
