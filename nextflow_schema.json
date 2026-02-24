@@ -425,13 +425,37 @@
                     "type": "boolean",
                     "description": "run transposable element calling and annotation with annotSV"
                 },
-                "te_ref_fasta": {
-                    "type": "string",
-                    "description": "reference fasta file for transposable elements"
-                },
                 "longcalld_somatic_te": {
                     "type": "boolean",
                     "description": "call somatic TEs in addition to germline with longcallD"
+                },
+                "longcalld_te_fasta": {
+                    "type": "string",
+                    "description": "reference fasta file of TEs for longcalld"
+                },
+                "tldr_min_len": {
+                    "type": "integer",
+                    "default": 50,
+                    "description": "min TE length for tldr"
+                },
+                "tldr_max_len": {
+                    "type": "number",
+                    "default": 100000,
+                    "description": "max TE length for tldr"
+                },
+                "tldr_max_cluster_size": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "max number of clusters to create for MSA"
+                },
+                "te_calling_tools": {
+                    "type": "string",
+                    "default": "longcalld,tldr",
+                    "description": "TE caller options; supply as comma separated string"
+                },
+                "tldr_te_fasta": {
+                    "type": "string",
+                    "description": "reference fasta of TEs for tldr"
                 }
             }
         }

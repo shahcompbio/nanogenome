@@ -316,30 +316,38 @@ workflow NANOGENOME {
     * TE-MEDIATED INSERTION CALLING WORKFLOW
     */
     if (params.te_calling) {
-        if (params.te_ref_fasta == null) {
-            error("ERROR: --te_ref_fasta is required when --te_calling is true. Please provide a reference fasta file for TE sequences.")
-        }
-        te_ch = ch_samplesheet.branch { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf ->
-            tumor: meta.condition == 'tumor'
-            norm: meta.condition == 'normal'
-        }
+        bam_ch = ch_samplesheet
+            .map { meta, bam, bai, _snp_vcf, _snp_tbi, _severus_vcf ->
+                tuple(meta, bam, bai)
+            }
+            .branch { meta, _bam, _bai ->
+                tumor: meta.condition == 'tumor'
+                norm: meta.condition == 'normal'
+            }
         te_input_ch = Channel.empty()
         if (params.longcalld_somatic_te) {
-            te_input_ch = te_ch.tumor.map { meta, bam, bai, _snp_vcf, _snp_tbi, _severus_vcf ->
-                tuple(meta, bam, bai)
-            }
-            println("Running longcallD in somatic TE calling mode")
+
+            // construct somatic sv input channel
+            te_input_ch = bam_ch.tumor
+                .map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }
+                .join(bam_ch.norm.map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }, by: 0)
+                .map { id, _tumor_meta, tumor_bam, tumor_bai, _norm_meta, norm_bam, norm_bai ->
+                    tuple([id: id], tumor_bam, tumor_bai, norm_bam, norm_bai)
+                }
+            println("Running somatic TE calling mode")
         }
         else {
-            te_input_ch = te_ch.norm.map { meta, bam, bai, _snp_vcf, _snp_tbi, _severus_vcf ->
-                tuple(meta, bam, bai)
+            te_input_ch = bam_ch.norm.map { meta, bam, bai ->
+                tuple(meta, bam, bai, [], [])
             }
-            println("Running longcallD in germline TE calling mode on normal samples")
+            println("Running germline TE calling mode on normal samples")
         }
         BAM_TE_CALLING(
             te_input_ch,
             params.fasta,
             params.longcalld_realign,
+            params.te_calling_tools,
+            params.tldr_te_fasta,
         )
         ch_versions = ch_versions.mix(BAM_TE_CALLING.out.versions)
         // add whatshap phasing stats for longcalld to multiqc

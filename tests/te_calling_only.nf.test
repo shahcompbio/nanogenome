@@ -18,7 +18,8 @@ nextflow_pipeline {
                 te_calling = true
                 longcalld_somatic_te = true
                 longcalld_realign = true
-                te_ref_fasta = 'https://raw.githubusercontent.com/yangao07/longcallD/refs/heads/main/anno/AluY_L1_SVA_cons_noPA.fa'
+                longcalld_te_fasta  = 'https://raw.githubusercontent.com/yangao07/longcallD/refs/heads/main/anno/AluY_L1_SVA_cons_noPA.fa'
+                tldr_te_fasta = 'https://raw.githubusercontent.com/adamewing/tldr/refs/heads/master/ref/teref.ont.human.fa'
 
             }
         }
