@@ -336,7 +336,12 @@ workflow NANOGENOME {
             }
             println("Running longcallD in germline TE calling mode on normal samples")
         }
-        BAM_TE_CALLING(te_input_ch, params.fasta)
+        BAM_TE_CALLING(
+            te_input_ch,
+            params.fasta,
+            params.longcalld_realign,
+        )
+        ch_versions = ch_versions.mix(BAM_TE_CALLING.out.versions)
         // run merge + annotate SV subworkflow
         ANNOTATE_TE(
             BAM_TE_CALLING.out.longcalld_vcf,
@@ -349,6 +354,7 @@ workflow NANOGENOME {
             params.annotsv_dir,
             true,
         )
+        ch_versions = ch_versions.mix(ANNOTATE_TE.out.versions)
     }
 
     //

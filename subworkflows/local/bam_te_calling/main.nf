@@ -2,10 +2,12 @@
 include { LONGCALLD         } from '../../../modules/local/longcalld/main'
 include { BCFTOOLS_VIEW     } from '../../../modules/nf-core/bcftools/view/main'
 include { BCFTOOLS_ANNOTATE } from '../../../modules/nf-core/bcftools/annotate/main'
+include { SAMTOOLS_INDEX    } from '../../../modules/nf-core/samtools/index/main'
 workflow BAM_TE_CALLING {
     take:
     bam_ch // channel: [ val(meta), bam, bai ]
     ref_fasta // val: reference fasta file
+    longcalld_realign // boolean: output realigned cram files with longcalld
 
     main:
     ch_versions = channel.empty()
@@ -36,7 +38,13 @@ workflow BAM_TE_CALLING {
     )
     ch_versions = ch_versions.mix(BCFTOOLS_ANNOTATE.out.versions.first())
     ch_longcalld_vcf = BCFTOOLS_ANNOTATE.out.vcf
+    // index realigned bam
+    if (longcalld_realign) {
+        SAMTOOLS_INDEX(LONGCALLD.out.cram)
+        ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions)
+    }
 
     emit:
     longcalld_vcf = ch_longcalld_vcf // channel: [ val(meta), [ longcalld_vcf ] ]
+    versions      = ch_versions // channel: [ val(meta), versions ]
 }
