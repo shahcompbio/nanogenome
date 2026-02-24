@@ -54,6 +54,7 @@ workflow BAM_TE_CALLING {
     }
 
     emit:
-    longcalld_vcf = ch_longcalld_vcf // channel: [ val(meta), [ longcalld_vcf ] ]
-    versions      = ch_versions // channel: [ val(meta), versions ]
+    longcalld_vcf  = ch_longcalld_vcf // channel: [ val(meta), [ longcalld_vcf ] ]
+    whatshap_stats = WHATSHAP_STATS.out.tsv // channel: [ val(meta), [path]]
+    versions       = ch_versions // channel: [ val(meta), versions ]
 }
