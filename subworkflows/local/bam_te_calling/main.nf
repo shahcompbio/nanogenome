@@ -3,6 +3,8 @@ include { LONGCALLD         } from '../../../modules/local/longcalld/main'
 include { BCFTOOLS_VIEW     } from '../../../modules/nf-core/bcftools/view/main'
 include { BCFTOOLS_ANNOTATE } from '../../../modules/nf-core/bcftools/annotate/main'
 include { SAMTOOLS_INDEX    } from '../../../modules/nf-core/samtools/index/main'
+include { SAMTOOLS_SORT     } from '../../../modules/nf-core/samtools/sort/main'
+include { WHATSHAP_STATS    } from '../../../modules/local/whatshap/stats/main'
 workflow BAM_TE_CALLING {
     take:
     bam_ch // channel: [ val(meta), bam, bai ]
@@ -17,6 +19,9 @@ workflow BAM_TE_CALLING {
         [[id: "ref"], ref_fasta],
     )
     ch_versions = ch_versions.mix(LONGCALLD.out.versions.first())
+    // get phasing stats from longcallD
+    WHATSHAP_STATS(LONGCALLD.out.vcf)
+    ch_versions = ch_versions.mix(WHATSHAP_STATS.out.versions)
     // filter longcallD calls for structural variants
     BCFTOOLS_VIEW(
         LONGCALLD.out.vcf.map { meta, vcf ->
@@ -40,7 +45,13 @@ workflow BAM_TE_CALLING {
     ch_longcalld_vcf = BCFTOOLS_ANNOTATE.out.vcf
     // index realigned bam
     if (longcalld_realign) {
-        SAMTOOLS_INDEX(LONGCALLD.out.cram)
+        SAMTOOLS_SORT(
+            LONGCALLD.out.cram,
+            [[id: "ref"], ref_fasta],
+            [],
+        )
+        ch_versions = ch_versions.mix(SAMTOOLS_SORT.out.versions)
+        SAMTOOLS_INDEX(SAMTOOLS_SORT.out.cram)
         ch_versions = ch_versions.mix(SAMTOOLS_INDEX.out.versions)
     }
 
