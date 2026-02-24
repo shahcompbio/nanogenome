@@ -5,8 +5,8 @@ ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 ENV TERM=xterm
 
-RUN  echo "deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware" > /etc/apt/sources.list.d/my-sources.list && \
-  echo "deb-src http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware" >> /etc/apt/sources.list.d/my-sources.list && \
+RUN  echo "deb http://deb.debian.org/debian trixie main contrib non-free non-free-firmware" > /etc/apt/sources.list.d/my-sources.list && \
+  echo "deb-src http://deb.debian.org/debian trixie main contrib non-free non-free-firmware" >> /etc/apt/sources.list.d/my-sources.list && \
   apt-get update -y && apt-get upgrade -y \
   && apt-get install -y --no-install-recommends git samtools bcftools \
   build-essential wget ca-certificates zlib1g zlib1g-dev procps \
@@ -23,10 +23,8 @@ RUN mkdir build && cd build && \
   python3.8 -m pip install --upgrade pip && \
   pip3.8 install setuptools && cd / && rm -fr /build
 RUN cd /opt/ && git clone https://github.com/KolmogorovLab/Wakhan.git && \
-  cd Wakhan && git checkout 5634e4e && \
-  sed -i -e '12 i from src.output.writers import write_df_csv' \
-  src/output/genes.py && pip3.8 install -r requirements.txt
-#RUN pip install . --break-system-packages
+  cd Wakhan && git checkout 33fe60e && \
+  pip3.8 install -r requirements.txt
 
 # default interactive shell
 CMD ["/bin/bash"]
