@@ -23,6 +23,7 @@ workflow BAM_TE_CALLING {
         tldr_in_ch = bam_ch.map { meta, target_bam, target_bai, ref_bam, ref_bai ->
             [meta, [target_bam, ref_bam], [target_bai, ref_bai]]
         }
+        tldr_in_ch.view()
         TLDR(
             tldr_in_ch,
             tldr_te_fasta,
