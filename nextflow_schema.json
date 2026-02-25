@@ -425,9 +425,9 @@
                     "type": "boolean",
                     "description": "run transposable element calling and annotation with annotSV"
                 },
-                "longcalld_somatic_te": {
+                "skip_somatic_te": {
                     "type": "boolean",
-                    "description": "call somatic TEs in addition to germline with longcallD"
+                    "description": "skip somatic TE calling on T/N pairs"
                 },
                 "longcalld_te_fasta": {
                     "type": "string",

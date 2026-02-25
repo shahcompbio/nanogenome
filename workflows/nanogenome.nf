@@ -325,8 +325,7 @@ workflow NANOGENOME {
                 norm: meta.condition == 'normal'
             }
         te_input_ch = Channel.empty()
-        if (params.longcalld_somatic_te) {
-
+        if (!params.skip_somatic_te) {
             // construct somatic sv input channel
             te_input_ch = bam_ch.tumor
                 .map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }

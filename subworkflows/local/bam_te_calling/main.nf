@@ -21,7 +21,9 @@ workflow BAM_TE_CALLING {
     // run tldr
     if (tools.split(',').contains('tldr')) {
         tldr_in_ch = bam_ch.map { meta, target_bam, target_bai, ref_bam, ref_bai ->
-            [meta, [target_bam, ref_bam], [target_bai, ref_bai]]
+            def bams = ref_bam ? [target_bam, ref_bam] : [target_bam]
+            def bais = ref_bai ? [target_bai, ref_bai] : [target_bai]
+            [meta, bams, bais]
         }
         tldr_in_ch.view()
         TLDR(
