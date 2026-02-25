@@ -71,7 +71,6 @@ workflow BAM_TE_CALLING {
                 [[id: "ref"], ref_fasta],
                 "crai",
             )
-            channel.topic("versions").view()
         }
     }
 
