@@ -11,6 +11,7 @@ process TLDR {
     tuple val(meta), path(bams, arity: '1..*'), path(bais, arity: '1..*')
     path te_ref_fasta
     path ref_genome
+    path ref_genome_fai
 
     output:
     // TODO nf-core: Named file extensions MUST be emitted for ALL output channels

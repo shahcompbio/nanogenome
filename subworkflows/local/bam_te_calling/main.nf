@@ -10,6 +10,7 @@ workflow BAM_TE_CALLING {
     take:
     bam_ch // channel: [ val(meta), target_bam, target_bai, ref_bam, ref_bai]
     ref_fasta // val: reference fasta file
+    ref_fai // val: reference fasta index file
     longcalld_realign // boolean: output realigned cram files with longcalld
     tools // val: list of TE callers to use
     tldr_te_fasta // val: fasta file of TE sequences for tldr
@@ -30,6 +31,7 @@ workflow BAM_TE_CALLING {
             tldr_in_ch,
             tldr_te_fasta,
             ref_fasta,
+            ref_fai,
         )
     }
     // run longcallD

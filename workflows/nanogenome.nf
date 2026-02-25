@@ -344,6 +344,7 @@ workflow NANOGENOME {
         BAM_TE_CALLING(
             te_input_ch,
             params.fasta,
+            params.fai,
             params.longcalld_realign,
             params.te_calling_tools,
             params.tldr_te_fasta,
