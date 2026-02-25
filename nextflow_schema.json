@@ -439,7 +439,7 @@
                     "description": "min TE length for tldr"
                 },
                 "tldr_max_len": {
-                    "type": "number",
+                    "type": "integer",
                     "default": 100000,
                     "description": "max TE length for tldr"
                 },
