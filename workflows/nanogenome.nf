@@ -353,20 +353,20 @@ workflow NANOGENOME {
         // add whatshap phasing stats for longcalld to multiqc
         if (params.te_calling_tools.split(',').contains('longcalld')) {
             ch_multiqc_files = ch_multiqc_files.mix(BAM_TE_CALLING.out.whatshap_stats.collect { it[1] })
+            // run merge + annotate SV subworkflow
+            ANNOTATE_TE(
+                BAM_TE_CALLING.out.longcalld_vcf,
+                params.tolerance,
+                params.min_size,
+                params.gene_annotations,
+                params.oncokb,
+                params.oncokb_url,
+                false,
+                params.annotsv_dir,
+                true,
+            )
+            ch_versions = ch_versions.mix(ANNOTATE_TE.out.versions)
         }
-        // run merge + annotate SV subworkflow
-        ANNOTATE_TE(
-            BAM_TE_CALLING.out.longcalld_vcf,
-            params.tolerance,
-            params.min_size,
-            params.gene_annotations,
-            params.oncokb,
-            params.oncokb_url,
-            false,
-            params.annotsv_dir,
-            true,
-        )
-        ch_versions = ch_versions.mix(ANNOTATE_TE.out.versions)
     }
 
     //
