@@ -5,7 +5,7 @@ process LONGCALLD {
 
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
-    container "biocontainers/longcalld:0.0.6--h7d57edc_0"
+    container "biocontainers/longcalld:0.0.8--h7d57edc_0"
 
     input:
     tuple val(meta), path(bam), path(bai)
@@ -14,6 +14,7 @@ process LONGCALLD {
     output:
     // TODO nf-core: Named file extensions MUST be emitted for ALL output channels
     tuple val(meta), path("*.vcf"), emit: vcf
+    tuple val(meta), path("*.cram"), emit: cram, optional: true
     // TODO nf-core: List additional required output channels/values here
     path "versions.yml", emit: versions
 
@@ -22,14 +23,21 @@ process LONGCALLD {
 
     script:
     def args = task.ext.args ?: ''
+    def te_args = task.ext.te_args ?: ''
     def contig_args = task.ext.contig_args ?: '--autosome-XY'
+    def aln_args = task.ext.aln_args ?: ''
+    def somatic_args = task.ext.somatic_args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     longcallD \\
-        call -t ${task.cpus} \\
+        call \\
+        ${somatic_args} \\
+        -t ${task.cpus} \\
         ${fasta} \\
         ${bam} \\
         ${contig_args} \\
+        ${te_args} \\
+        ${aln_args} \\
         ${args} \\
         > ${prefix}.vcf
 
@@ -41,8 +49,12 @@ process LONGCALLD {
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def aln_args = task.ext.aln_args ?: ''
     """
     touch ${prefix}.vcf
+    if [ -n "${aln_args}" ]; then
+        touch ${prefix}_phased_refined.cram
+    fi
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

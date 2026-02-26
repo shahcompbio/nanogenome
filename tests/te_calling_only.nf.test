@@ -1,0 +1,31 @@
+nextflow_pipeline {
+
+    name "Test TE calling only workflow"
+    script "../main.nf"
+    tag "pipeline"
+
+    test("TE calling only workflow") {
+        options "-stub"
+
+        when {
+            params {
+                outdir = "$outputDir"
+                input = 'https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/samplesheet_cna_only.csv'
+                skip_phasing = true
+                germline = false
+                skip_somatic = true
+                skip_cna = true
+                te_calling = true
+                longcalld_somatic_te = true
+                longcalld_realign = true
+                longcalld_te_fasta  = 'https://raw.githubusercontent.com/yangao07/longcallD/refs/heads/main/anno/AluY_L1_SVA_cons_noPA.fa'
+                tldr_te_fasta = 'https://raw.githubusercontent.com/adamewing/tldr/refs/heads/master/ref/teref.ont.human.fa'
+
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+    }
+}

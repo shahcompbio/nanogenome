@@ -414,6 +414,50 @@
                     "description": "germline structural variant caller options; supply as comma separated string"
                 }
             }
+        },
+        "te_calling_options": {
+            "title": "TE calling options",
+            "type": "object",
+            "description": "transposable element calling options",
+            "default": "",
+            "properties": {
+                "te_calling": {
+                    "type": "boolean",
+                    "description": "run transposable element calling and annotation with annotSV"
+                },
+                "skip_somatic_te": {
+                    "type": "boolean",
+                    "description": "skip somatic TE calling on T/N pairs"
+                },
+                "longcalld_te_fasta": {
+                    "type": "string",
+                    "description": "reference fasta file of TEs for longcalld"
+                },
+                "tldr_min_len": {
+                    "type": "integer",
+                    "default": 50,
+                    "description": "min TE length for tldr"
+                },
+                "tldr_max_len": {
+                    "type": "integer",
+                    "default": 100000,
+                    "description": "max TE length for tldr"
+                },
+                "tldr_max_cluster_size": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "max number of clusters to create for MSA"
+                },
+                "te_calling_tools": {
+                    "type": "string",
+                    "default": "longcalld,tldr",
+                    "description": "TE caller options; supply as comma separated string"
+                },
+                "tldr_te_fasta": {
+                    "type": "string",
+                    "description": "reference fasta of TEs for tldr"
+                }
+            }
         }
     },
     "allOf": [
@@ -452,6 +496,9 @@
         },
         {
             "$ref": "#/$defs/structural_variant_calling"
+        },
+        {
+            "$ref": "#/$defs/te_calling_options"
         }
     ],
     "properties": {
@@ -480,6 +527,10 @@
             "type": "string",
             "default": "wakhan,savana",
             "description": "select copy number analysis tools to use"
+        },
+        "longcalld_realign": {
+            "type": "boolean",
+            "description": "output refined read alignments from longcalld"
         }
     }
 }

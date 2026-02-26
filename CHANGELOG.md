@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-02-26
+
+### Added
+
+- Transposable element (TE) calling workflow with support for somatic and germline modes
+- [`tldr`](https://github.com/adamewing/tldr) module for TE detection from long-read data
+- [`LongcallD`](https://github.com/ydLiu-HIT/LongcallD) TE calling mode with `--mosaic` support for somatic TE detection
+- New `BAM_TE_CALLING` subworkflow orchestrating TE caller execution
+- AnnotSV annotation of TE insertions detected by LongcallD
+- New parameters: `--te_calling`, `--te_calling_tools`, `--skip_somatic_te`, `--longcalld_te_fasta`, `--longcalld_realign`, `--tldr_te_fasta`, `--tldr_min_len`, `--tldr_max_len`, `--tldr_max_cluster_size`
+- `samtools/sort` nf-core module for sorting LongcallD CRAM output
+- Docker container for tldr
+- WhatsHap phasing statistics for LongcallD TE calls integrated into MultiQC
+
+### Changed
+
+- Updated LongcallD container from v0.0.6 to v0.0.8
+- Updated Wakhan Dockerfile to new release
+- Refactored `ANNOTATE_SV` subworkflow to support TE-only annotation mode via `annotate_te_only` flag
+- Scoped `BCFTOOLS_ANNOTATE` process selector to `SV_CALLING_GERMLINE` context to avoid conflicts with TE calling
+- Improved workflow branching logic to account for TE calling mode
+- Version bump to 1.3.0
+
 ## [1.2.0] - 2026-01-27
 
 ### Added
@@ -193,7 +216,8 @@ Initial release of shahcompbio/nanogenome, created with the [nf-core](https://nf
 - BioMart (gene annotation)
 - R and Python dependencies for custom modules
 
-[unreleased]: https://github.com/shahcompbio/nanogenome/compare/1.2.0...HEAD
+[unreleased]: https://github.com/shahcompbio/nanogenome/compare/1.3.0...HEAD
+[1.3.0]: https://github.com/shahcompbio/nanogenome/compare/1.2.0...1.3.0
 [1.2.0]: https://github.com/shahcompbio/nanogenome/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/shahcompbio/nanogenome/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/shahcompbio/nanogenome/releases/tag/1.0.0
