@@ -14,7 +14,7 @@
 
 ## Introduction
 
-**shahcompbio/nanogenome** is a bioinformatics pipeline for comprehensive analysis of long-read DNA sequencing data. The pipeline performs variant calling, phasing, structural variant (SV) detection, copy number aberration (CNA) analysis, and gene annotation from Oxford Nanopore Technologies (ONT) sequencing data. It supports both somatic (tumor-normal) and germline analysis workflows with ensemble calling approaches for improved accuracy.
+**shahcompbio/nanogenome** is a bioinformatics pipeline for comprehensive analysis of long-read DNA sequencing data. The pipeline performs variant calling, phasing, structural variant (SV) detection, copy number aberration (CNA) analysis, transposable element (TE) insertion calling, and gene annotation from Oxford Nanopore Technologies (ONT) sequencing data. It supports both somatic (tumor-normal) and germline analysis workflows with ensemble calling approaches for improved accuracy.
 
 The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It uses Docker/Singularity containers making installation trivial and results highly reproducible. The [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html) implementation of this pipeline uses one container per process which makes it much easier to maintain and update software dependencies.
 
@@ -29,9 +29,13 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
    - Individual callers: [`SEVERUS`](https://github.com/KolmogorovLab/Severus), [`Sniffles`](https://github.com/fritzsedlazeck/Sniffles), [`CuteSV`](https://github.com/tjiangHIT/cuteSV), [`LongcallD`](https://github.com/ydLiu-HIT/LongcallD)
    - Consensus calling: [`MINDA`](https://github.com/shahcompbio/minda)
 5. Haplotype-resolved copy number analysis ([`Wakhan`](https://github.com/shahcompbio/wakhan), [`SAVANA`](https://github.com/cortes-ciriano-lab/savana))
-6. SV and CNA annotation ([`BioMart`](https://www.ensembl.org/info/data/biomart/index.html), [`OncoKB`](https://www.oncokb.org/), [`AnnotSV`](https://lbgi.fr/AnnotSV/))
-7. Visualization of SVs and CNAs (Circos for somatic, karyoplot for germline)
-8. Present QC for all workflow stages ([`MultiQC`](http://multiqc.info/))
+6. Transposable element insertion calling (optional)
+   - Individual callers: [`LongcallD`](https://github.com/ydLiu-HIT/LongcallD), [`tldr`](https://github.com/adamewing/tldr)
+   - Somatic (tumor-normal) and germline TE calling modes
+   - AnnotSV annotation of TE insertions
+7. SV and CNA annotation ([`BioMart`](https://www.ensembl.org/info/data/biomart/index.html), [`OncoKB`](https://www.oncokb.org/), [`AnnotSV`](https://lbgi.fr/AnnotSV/))
+8. Visualization of SVs and CNAs (Circos for somatic, karyoplot for germline)
+9. Present QC for all workflow stages ([`MultiQC`](http://multiqc.info/))
 
 ## Usage
 

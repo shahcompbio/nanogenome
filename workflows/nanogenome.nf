@@ -3,18 +3,19 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { PHASING                 } from '../subworkflows/local/phasing/main'
-include { SV_CALLING_SOMATIC      } from '../subworkflows/local/sv_calling_somatic/main'
-include { ANNOTATE_SV             } from '../subworkflows/local/annotate_sv/main'
-include { SV_CALLING_GERMLINE     } from '../subworkflows/local/sv_calling_germline/main'
-include { BAM_CNV_CALLING_SOMATIC } from '../subworkflows/local/bam_cnv_calling_somatic/main'
-include { PLOTCIRCOS              } from '../modules/local/plotcircos/main'
-include { SVKARYOPLOT             } from '../modules/local/svkaryoplot/main'
-include { MULTIQC                 } from '../modules/nf-core/multiqc/main'
-include { paramsSummaryMap        } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc    } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML  } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText  } from '../subworkflows/local/utils_nfcore_nanogenome_pipeline'
+include { PHASING                    } from '../subworkflows/local/phasing/main'
+include { SV_CALLING_SOMATIC         } from '../subworkflows/local/sv_calling_somatic/main'
+include { ANNOTATE_SV as ANNOTATE_SV ; ANNOTATE_SV as ANNOTATE_TE } from '../subworkflows/local/annotate_sv/main'
+include { SV_CALLING_GERMLINE        } from '../subworkflows/local/sv_calling_germline/main'
+include { BAM_CNV_CALLING_SOMATIC    } from '../subworkflows/local/bam_cnv_calling_somatic/main'
+include { PLOTCIRCOS                 } from '../modules/local/plotcircos/main'
+include { SVKARYOPLOT                } from '../modules/local/svkaryoplot/main'
+include { BAM_TE_CALLING             } from '../subworkflows/local/bam_te_calling/main'
+include { MULTIQC                    } from '../modules/nf-core/multiqc/main'
+include { paramsSummaryMap           } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc       } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML     } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText     } from '../subworkflows/local/utils_nfcore_nanogenome_pipeline'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -36,7 +37,7 @@ workflow NANOGENOME {
     * PHASING WORKFLOW
     */
     // run phasing subworkflow to phase variants and haplotag bams
-    if (params.skip_somatic && !params.germline && params.skip_cna) {
+    if (params.skip_somatic && !params.germline && params.skip_cna && !params.te_calling) {
         println("running phasing workflow only")
     }
     if (!params.skip_phasing) {
@@ -102,8 +103,8 @@ workflow NANOGENOME {
                 norm: meta.condition == 'normal'
             }
     }
-    else {
-        println("run cna only")
+    else if (!params.skip_cna) {
+        println("running copy number analysis")
     }
 
     // make default channels
@@ -264,6 +265,7 @@ workflow NANOGENOME {
             params.oncokb_url,
             params.skip_annotsv,
             params.annotsv_dir,
+            false,
         )
         ch_versions = ch_versions.mix(ANNOTATE_SV.out.versions)
         // plot results
@@ -309,6 +311,62 @@ workflow NANOGENOME {
             params.genome_build,
         )
         ch_versions = ch_versions.mix(SVKARYOPLOT.out.versions.first())
+    }
+    /*
+    * TE-MEDIATED INSERTION CALLING WORKFLOW
+    */
+    if (params.te_calling) {
+        bam_ch = ch_samplesheet
+            .map { meta, bam, bai, _snp_vcf, _snp_tbi, _severus_vcf ->
+                tuple(meta, bam, bai)
+            }
+            .branch { meta, _bam, _bai ->
+                tumor: meta.condition == 'tumor'
+                norm: meta.condition == 'normal'
+            }
+        te_input_ch = Channel.empty()
+        if (!params.skip_somatic_te) {
+            // construct somatic sv input channel
+            te_input_ch = bam_ch.tumor
+                .map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }
+                .join(bam_ch.norm.map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }, by: 0)
+                .map { id, _tumor_meta, tumor_bam, tumor_bai, _norm_meta, norm_bam, norm_bai ->
+                    tuple([id: id], tumor_bam, tumor_bai, norm_bam, norm_bai)
+                }
+            println("Running somatic TE calling mode")
+        }
+        else {
+            te_input_ch = bam_ch.norm.map { meta, bam, bai ->
+                tuple(meta, bam, bai, [], [])
+            }
+            println("Running germline TE calling mode on normal samples")
+        }
+        BAM_TE_CALLING(
+            te_input_ch,
+            params.fasta,
+            params.fai,
+            params.longcalld_realign,
+            params.te_calling_tools,
+            params.tldr_te_fasta,
+        )
+        ch_versions = ch_versions.mix(BAM_TE_CALLING.out.versions)
+        // add whatshap phasing stats for longcalld to multiqc
+        if (params.te_calling_tools.split(',').contains('longcalld')) {
+            ch_multiqc_files = ch_multiqc_files.mix(BAM_TE_CALLING.out.whatshap_stats.collect { it[1] })
+            // run merge + annotate SV subworkflow
+            ANNOTATE_TE(
+                BAM_TE_CALLING.out.longcalld_vcf,
+                params.tolerance,
+                params.min_size,
+                params.gene_annotations,
+                params.oncokb,
+                params.oncokb_url,
+                false,
+                params.annotsv_dir,
+                true,
+            )
+            ch_versions = ch_versions.mix(ANNOTATE_TE.out.versions)
+        }
     }
 
     //
