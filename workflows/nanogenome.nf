@@ -3,6 +3,7 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
+include { CLAIRS                     } from '../modules/local/clairs/main'
 include { PHASING                    } from '../subworkflows/local/phasing/main'
 include { SV_CALLING_SOMATIC         } from '../subworkflows/local/sv_calling_somatic/main'
 include { ANNOTATE_SV as ANNOTATE_SV ; ANNOTATE_SV as ANNOTATE_TE } from '../subworkflows/local/annotate_sv/main'
@@ -252,6 +253,24 @@ workflow NANOGENOME {
         ch_versions = ch_versions.mix(BAM_CNV_CALLING_SOMATIC.out.versions)
         hp1_bed_ch = BAM_CNV_CALLING_SOMATIC.out.hp1_bed
         hp2_bed_ch = BAM_CNV_CALLING_SOMATIC.out.hp2_bed
+    }
+    /*
+    * SOMATIC SNV/INDEL CALLING — ClairS
+    */
+    if (params.run_clairs) {
+        clairs_input_ch = bam_ch.tumor
+            .map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }
+            .join(bam_ch.norm.map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }, by: 0)
+            .map { id, tumor_meta, tumor_bam, tumor_bai, _norm_meta, norm_bam, norm_bai ->
+                tuple([id: id], tumor_bam, tumor_bai, norm_bam, norm_bai)
+            }
+        CLAIRS(
+            clairs_input_ch,
+            params.fasta,
+            params.fai,
+            params.clairs_platform,
+        )
+        ch_versions = ch_versions.mix(CLAIRS.out.versions.first())
     }
     // run annotation only if sv calling has been performed
     if (!params.skip_somatic || params.germline) {

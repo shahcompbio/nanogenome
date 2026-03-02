@@ -259,6 +259,24 @@
                 }
             }
         },
+        "clairs_options": {
+            "title": "ClairS options",
+            "type": "object",
+            "description": "Options for ClairS somatic SNV/indel calling",
+            "default": "",
+            "properties": {
+                "run_clairs": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Run ClairS somatic SNV/indel calling on tumor-normal pairs."
+                },
+                "clairs_platform": {
+                    "type": "string",
+                    "default": "ont_r10_guppy",
+                    "description": "ClairS sequencing platform/model (e.g. ont_r10_guppy, ont_r10_dorado_sup_4khz)."
+                }
+            }
+        },
         "longphase_options": {
             "title": "longphase options",
             "type": "object",
@@ -475,6 +493,9 @@
         },
         {
             "$ref": "#/$defs/clair3_options"
+        },
+        {
+            "$ref": "#/$defs/clairs_options"
         },
         {
             "$ref": "#/$defs/longphase_options"
