@@ -272,8 +272,8 @@
                 },
                 "clairs_platform": {
                     "type": "string",
-                    "default": "ont_r10_guppy",
-                    "description": "ClairS sequencing platform/model (e.g. ont_r10_guppy, ont_r10_dorado_sup_4khz)."
+                    "default": "ont_r10_dorado_sup_4khz",
+                    "description": "ClairS sequencing platform/model (e.g. ont_r10_dorado_sup_4khz, ont_r10_dorado_sup_5khz_ssrs, ont_r10_guppy)."
                 }
             }
         },
