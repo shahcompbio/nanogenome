@@ -4,6 +4,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 include { CLAIRS                     } from '../modules/local/clairs/main'
+include { VCF2MAF                    } from '../modules/local/vcf2maf/main'
 include { PHASING                    } from '../subworkflows/local/phasing/main'
 include { SV_CALLING_SOMATIC         } from '../subworkflows/local/sv_calling_somatic/main'
 include { ANNOTATE_SV as ANNOTATE_SV ; ANNOTATE_SV as ANNOTATE_TE } from '../subworkflows/local/annotate_sv/main'
@@ -271,6 +272,23 @@ workflow NANOGENOME {
             params.clairs_platform,
         )
         ch_versions = ch_versions.mix(CLAIRS.out.versions.first())
+
+        vcf2maf_ch = CLAIRS.out.vcf
+            .map { meta, vcf -> tuple(meta.id, meta, vcf) }
+            .join(bam_ch.tumor.map { meta, bam, bai -> tuple(meta.id, bam) })
+            .join(bam_ch.norm.map  { meta, bam, bai -> tuple(meta.id, bam) })
+            .map { id, meta, vcf, tbam, nbam -> tuple(meta, vcf, tbam, nbam) }
+
+        VCF2MAF(
+            vcf2maf_ch,
+            params.fasta,
+            params.vep_cache,
+            params.vep_fasta_suffix,
+            params.ncbi_build,
+            params.vep_cache_version,
+            params.vep_species,
+        )
+        ch_versions = ch_versions.mix(VCF2MAF.out.versions.first())
     }
     // run annotation only if sv calling has been performed
     if (!params.skip_somatic || params.germline) {
