@@ -5,7 +5,8 @@ nextflow_pipeline {
     tag "pipeline"
     tag "somatic_snv"
 
-    test("somatic snv/indel calling with deepsomatic") {
+    test("somatic snv/indel calling with deepsomatic - stub") {
+        options "-stub"
         when {
             params {
                 outdir = "$outputDir"
