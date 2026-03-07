@@ -28,14 +28,15 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 4. Germline structural variant calling (optional)
    - Individual callers: [`SEVERUS`](https://github.com/KolmogorovLab/Severus), [`Sniffles`](https://github.com/fritzsedlazeck/Sniffles), [`CuteSV`](https://github.com/tjiangHIT/cuteSV), [`LongcallD`](https://github.com/ydLiu-HIT/LongcallD)
    - Consensus calling: [`MINDA`](https://github.com/shahcompbio/minda)
-5. Haplotype-resolved copy number analysis ([`Wakhan`](https://github.com/shahcompbio/wakhan), [`SAVANA`](https://github.com/cortes-ciriano-lab/savana))
-6. Transposable element insertion calling (optional)
+5. Somatic SNV/indel calling ([`ClairS`](https://github.com/HKU-BAL/ClairS), [`DeepSomatic`](https://github.com/google/deepsomatic)) with VEP annotation via [`vcf2maf`](https://github.com/mskcc/vcf2maf)
+6. Haplotype-resolved copy number analysis ([`Wakhan`](https://github.com/shahcompbio/wakhan), [`SAVANA`](https://github.com/cortes-ciriano-lab/savana))
+7. Transposable element insertion calling (optional)
    - Individual callers: [`LongcallD`](https://github.com/ydLiu-HIT/LongcallD), [`tldr`](https://github.com/adamewing/tldr)
    - Somatic (tumor-normal) and germline TE calling modes
    - AnnotSV annotation of TE insertions
-7. SV and CNA annotation ([`BioMart`](https://www.ensembl.org/info/data/biomart/index.html), [`OncoKB`](https://www.oncokb.org/), [`AnnotSV`](https://lbgi.fr/AnnotSV/))
-8. Visualization of SVs and CNAs (Circos for somatic, karyoplot for germline)
-9. Present QC for all workflow stages ([`MultiQC`](http://multiqc.info/))
+8. SV and CNA annotation ([`BioMart`](https://www.ensembl.org/info/data/biomart/index.html), [`OncoKB`](https://www.oncokb.org/), [`AnnotSV`](https://lbgi.fr/AnnotSV/))
+9. Visualization of SVs and CNAs (Circos for somatic, karyoplot for germline)
+10. Present QC for all workflow stages ([`MultiQC`](http://multiqc.info/))
 
 ## Usage
 
@@ -81,7 +82,8 @@ shahcompbio/nanogenome was originally written by Asher Preska Steinberg.
 
 We thank the following people for their extensive assistance in the development of this pipeline:
 
-<!-- TODO nf-core: If applicable, make list of people who have also contributed -->
+- [@marcjwilliams1](https://github.com/marcjwilliams1)
+- Claude Code (AI assistant)
 
 ## Contributions and Support
 

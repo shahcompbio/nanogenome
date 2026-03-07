@@ -12,6 +12,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 
 - [Phasing](#phasing) - Variant calling, phasing, and BAM haplotagging
 - [Somatic SV calling](#somatic-sv-calling) - Structural variant detection from tumor-normal pairs
+- [Somatic SNV/indel calling](#somatic-snvindel-calling) - Somatic short variant detection from tumor-normal pairs
 - [Germline SV calling](#germline-sv-calling) - Structural variant detection from normal samples
 - [Consensus SV calling](#consensus-sv-calling) - Merging results from multiple callers with MINDA
 - [Copy number analysis](#copy-number-analysis) - Haplotype-resolved CNA detection
@@ -51,6 +52,20 @@ The phasing workflow calls SNPs/indels using [Clair3](https://github.com/HKU-BAL
 </details>
 
 Somatic SV calling uses an ensemble approach with up to three callers: [Severus](https://github.com/KolmogorovLab/Severus), [SAVANA](https://github.com/cortes-ciriano-lab/savana), and [NanoMonSV](https://github.com/friend1ws/nanomonsv). Callers can be selected with `--somatic_callers` (default: `severus,savana,nanomonsv`).
+
+### Somatic SNV/indel calling
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `vcf2maf/`
+  - `*.snv.maf`: MAF file for somatic SNV calls (ClairS only).
+  - `*.indel.maf`: MAF file for somatic indel calls (ClairS only).
+  - `*.maf`: MAF file for somatic variant calls (DeepSomatic).
+
+</details>
+
+Somatic SNV and indel calling (enabled with `--somatic_snv_calling`) uses either [ClairS](https://github.com/HKU-BAL/ClairS) or [DeepSomatic](https://github.com/google/deepsomatic), selected via `--somatic_snv_caller` (default: `clairs`). ClairS produces separate SNV and indel VCFs, while DeepSomatic produces a single combined VCF. VCF output is converted to MAF format using [vcf2maf](https://github.com/mskcc/vcf2maf) with optional [VEP](https://www.ensembl.org/info/docs/tools/vep/index.html) annotation (disable with `--inhibit_vep`). MAF sample barcodes are corrected to match sample identifiers.
 
 ### Germline SV calling
 
