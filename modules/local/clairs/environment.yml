@@ -7,4 +7,5 @@ dependencies:
   # TODO nf-core: List required Conda package(s).
   #               Software MUST be pinned to channel (i.e. "bioconda"), version (i.e. "1.10").
   #               For Conda, the build (i.e. "h9402c20_2") must be EXCLUDED to support installation on different operating systems.
-  - "bioconda::wakhan=0.4.2"
+  # NOTE: ClairS is not available as a bioconda package. Use the Docker container (hkubal/clairs:v0.4.4).
+  - "YOUR-TOOL-HERE"

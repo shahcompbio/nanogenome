@@ -23,7 +23,7 @@ RUN mkdir build && cd build && \
   python3.8 -m pip install --upgrade pip && \
   pip3.8 install setuptools && cd / && rm -fr /build
 RUN cd /opt/ && git clone https://github.com/KolmogorovLab/Wakhan.git && \
-  cd Wakhan && git checkout 33fe60e && \
+  cd Wakhan && git checkout 0.4.2 && \
   pip3.8 install -r requirements.txt
 
 # default interactive shell

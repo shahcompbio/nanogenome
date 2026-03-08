@@ -8,6 +8,7 @@ include { SV_CALLING_SOMATIC         } from '../subworkflows/local/sv_calling_so
 include { ANNOTATE_SV as ANNOTATE_SV ; ANNOTATE_SV as ANNOTATE_TE } from '../subworkflows/local/annotate_sv/main'
 include { SV_CALLING_GERMLINE        } from '../subworkflows/local/sv_calling_germline/main'
 include { BAM_CNV_CALLING_SOMATIC    } from '../subworkflows/local/bam_cnv_calling_somatic/main'
+include { BAM_SNV_CALLING_SOMATIC    } from '../subworkflows/local/bam_snv_calling_somatic/main'
 include { PLOTCIRCOS                 } from '../modules/local/plotcircos/main'
 include { SVKARYOPLOT                } from '../modules/local/svkaryoplot/main'
 include { BAM_TE_CALLING             } from '../subworkflows/local/bam_te_calling/main'
@@ -37,7 +38,7 @@ workflow NANOGENOME {
     * PHASING WORKFLOW
     */
     // run phasing subworkflow to phase variants and haplotag bams
-    if (params.skip_somatic && !params.germline && params.skip_cna && !params.te_calling) {
+    if (params.skip_somatic && !params.germline && params.skip_cna && !params.te_calling && !params.somatic_snv_calling) {
         println("running phasing workflow only")
     }
     if (!params.skip_phasing) {
@@ -105,6 +106,9 @@ workflow NANOGENOME {
     }
     else if (!params.skip_cna) {
         println("running copy number analysis")
+    }
+    if (params.somatic_snv_calling) {
+        println("running somatic snv/indel calling")
     }
 
     // make default channels
@@ -252,6 +256,38 @@ workflow NANOGENOME {
         ch_versions = ch_versions.mix(BAM_CNV_CALLING_SOMATIC.out.versions)
         hp1_bed_ch = BAM_CNV_CALLING_SOMATIC.out.hp1_bed
         hp2_bed_ch = BAM_CNV_CALLING_SOMATIC.out.hp2_bed
+    }
+    /*
+    * SOMATIC SNV/INDEL CALLING — ClairS
+    */
+    if (params.somatic_snv_calling) {
+        bam_ch = ch_samplesheet
+            .map { meta, bam, bai, _snp_vcf, _snp_tbi, _severus_vcf ->
+                tuple(meta, bam, bai)
+            }
+            .branch { meta, _bam, _bai ->
+                tumor: meta.condition == 'tumor'
+                norm: meta.condition == 'normal'
+            }
+        snv_input_ch = bam_ch.tumor
+            .map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }
+            .join(bam_ch.norm.map { meta, bam, bai -> tuple(meta.id, meta, bam, bai) }, by: 0)
+            .map { id, _tumor_meta, tumor_bam, tumor_bai, _norm_meta, norm_bam, norm_bai ->
+                tuple([id: id], norm_bam, norm_bai, tumor_bam, tumor_bai)
+            }
+
+        BAM_SNV_CALLING_SOMATIC(
+            snv_input_ch,
+            params.fasta,
+            params.fai,
+            params.vep_cache ?: [],
+            params.vep_assembly,
+            params.vep_species,
+            params.vep_cache_version,
+            params.somatic_snv_caller,
+            params.inhibit_vep,
+        )
+        ch_versions = ch_versions.mix(BAM_SNV_CALLING_SOMATIC.out.versions)
     }
     // run annotation only if sv calling has been performed
     if (!params.skip_somatic || params.germline) {
