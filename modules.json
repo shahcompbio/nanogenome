@@ -87,7 +87,7 @@
                     },
                     "severus": {
                         "branch": "master",
-                        "git_sha": "41dfa3f7c0ffabb96a6a813fe321c6d1cc5b6e46",
+                        "git_sha": "d49a407504fec36a24651682b3c15ee81b5a71dd",
                         "installed_by": ["modules"]
                     },
                     "sniffles": {
