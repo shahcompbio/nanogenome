@@ -7,8 +7,8 @@ process NANOMONSV_GET {
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
     container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
-        ? 'https://depot.galaxyproject.org/singularity/nanomonsv:0.8.0--pyhdfd78af_0'
-        : 'biocontainers/nanomonsv:0.8.0--pyhdfd78af_0'}"
+        ? 'https://depot.galaxyproject.org/singularity/nanomonsv:0.9.0--pyhdfd78af_0'
+        : 'biocontainers/nanomonsv:0.9.0--pyhdfd78af_0'}"
 
     input:
     tuple val(meta), path(tumor_bam), path(tumor_bai), path(norm_bam), path(norm_bai), path(nanomonsv_parse)

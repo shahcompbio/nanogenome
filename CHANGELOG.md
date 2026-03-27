@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Refactored monolithic VCF2MAF module into separate GUNZIP, VCF2MAF, and FIXMAFBARCODES processes
 - ClairS container reference uses explicit `docker.io/` prefix to avoid conflicts with global `docker.registry` setting
+- Updated minda container to `260327--1b0377d`
+- Updated nanomonsv container from `0.8.0` to `0.9.0`
+- Updated severus nf-core module from `1.5` to `1.7`
 
 ## [1.3.0] - 2026-02-26
 
