@@ -39,7 +39,6 @@ process NANOMONSV_GET {
         --control_bam ${norm_bam} \\
         --processes ${task.cpus} \\
         --single_bnd \\
-        --use_racon \\
         --max_memory_minimap2 8 \\
         ${args}
 
