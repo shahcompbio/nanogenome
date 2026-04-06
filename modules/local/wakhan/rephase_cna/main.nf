@@ -37,7 +37,7 @@ process WAKHAN_REPHASE_CNA {
     def args3 = task.ext.args3 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    wakhan \\
+    wakhan all \\
         ${args} \\
         ${args1} \\
         ${args2} \\
