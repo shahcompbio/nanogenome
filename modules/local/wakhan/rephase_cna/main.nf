@@ -21,7 +21,7 @@ process WAKHAN_REPHASE_CNA {
     tuple val(meta), path("solution_*", arity: '1..*'), emit: wakhanCNAOutput
     tuple val(meta), path("coverage_plots"), emit: coverage_plots
     tuple val(meta), path("*_ploidy_purity.html"), emit: ploidy_purity_html
-    tuple val(meta), path("*_optimized_peak.html"), emit: optimized_peak_html
+    tuple val(meta), path("*_optimized_peak.html"), emit: optimized_peak_html, optional: true
     tuple val(meta), path("solution_1/**/*_subclonal_segments_HP_1.bed"), emit: HP1_bed
     tuple val(meta), path("solution_1/**/*_subclonal_segments_HP_2.bed"), emit: HP2_bed
 
