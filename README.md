@@ -48,9 +48,9 @@ First, prepare a samplesheet with your input data that looks as follows:
 `samplesheet.csv`:
 
 ```csv
-sample,condition,bam,bai,vcf,tbi
-SAMPLE_TUMOR,tumor,/path/to/tumor.bam,/path/to/tumor.bam.bai,,
-SAMPLE_NORMAL,normal,/path/to/normal.bam,/path/to/normal.bam.bai,,
+sample,condition,bam,bai,snp_vcf,snp_tbi,severus_vcf
+SAMPLE_TUMOR,tumor,/path/to/tumor.bam,/path/to/tumor.bam.bai,,,
+SAMPLE_NORMAL,normal,/path/to/normal.bam,/path/to/normal.bam.bai,,,
 ```
 
 Each row represents a sample with the following columns:
@@ -59,8 +59,9 @@ Each row represents a sample with the following columns:
 - `condition`: Either `tumor` or `normal`
 - `bam`: Full path to aligned BAM file
 - `bai`: Full path to BAM index file
-- `vcf`: (Optional) Path to pre-phased VCF file (required if `--skip_phasing` is used)
-- `tbi`: (Optional) Path to VCF index file
+- `snp_vcf`: (Optional) Path to pre-phased SNP VCF file (required if `--skip_phasing` is used)
+- `snp_tbi`: (Optional) Path to VCF index file
+- `severus_vcf`: (Optional) Path to pre-computed Severus SV VCF
 
 Now, you can run the pipeline using:
 

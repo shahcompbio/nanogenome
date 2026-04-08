@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.4.0dev] - Unreleased
+## [1.4.0] - 2026-04-08
 
 ### Added
 
@@ -24,6 +24,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated minda container to `260327--1b0377d`
 - Updated nanomonsv container from `0.8.0` to `0.9.0`
 - Updated severus nf-core module from `1.5` to `1.7`
+- Updated Wakhan container to latest version
+- Removed `--use_racon` flag from NanoMonSV
+- Removed min SV size limit from AnnotSV to allow insertion annotation
+- Made optimized peak HTML optional in Wakhan rephase_cna
+- Propagated tumor genotyping to vcf2maf output
+
+### Fixed
+
+- Fixed Wakhan rephase_cna to include `all` command
 
 ## [1.3.0] - 2026-02-26
 
@@ -236,7 +245,7 @@ Initial release of shahcompbio/nanogenome, created with the [nf-core](https://nf
 - BioMart (gene annotation)
 - R and Python dependencies for custom modules
 
-[1.4.0dev]: https://github.com/shahcompbio/nanogenome/compare/1.3.0...HEAD
+[1.4.0]: https://github.com/shahcompbio/nanogenome/compare/1.3.0...1.4.0
 [1.3.0]: https://github.com/shahcompbio/nanogenome/compare/1.2.0...1.3.0
 [1.2.0]: https://github.com/shahcompbio/nanogenome/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/shahcompbio/nanogenome/compare/1.0.0...1.1.0
