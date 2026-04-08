@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-04-08
+
+### Added
+
+- Somatic SNV/indel calling subworkflow (`BAM_SNV_CALLING_SOMATIC`) with support for [ClairS](https://github.com/HKU-BAL/ClairS) and [DeepSomatic](https://github.com/google/deepsomatic)
+- [VCF2MAF](https://github.com/mskcc/vcf2maf) module for VEP annotation and MAF conversion of somatic SNV/indel calls
+- `FIXMAFBARCODES` module for correcting MAF sample barcodes
+- New parameters: `--somatic_snv_calling`, `--somatic_snv_caller`, `--inhibit_vep`, `--vep_cache`, `--vep_cache_version`, `--vep_species`, `--vep_assembly`, `--ncbi_build`
+- Automatic VEP cache download via `ensemblvep/download` when cache is not provided
+- nf-test for ClairS somatic SNV/indel calling workflow
+- ClairS emits separate SNV and indel VCFs, tagged with `meta.variant` for independent processing
+
+### Changed
+
+- Refactored monolithic VCF2MAF module into separate GUNZIP, VCF2MAF, and FIXMAFBARCODES processes
+- ClairS container reference uses explicit `docker.io/` prefix to avoid conflicts with global `docker.registry` setting
+- Updated minda container to `260327--1b0377d`
+- Updated nanomonsv container from `0.8.0` to `0.9.0`
+- Updated severus nf-core module from `1.5` to `1.7`
+- Updated Wakhan container to latest version
+- Removed `--use_racon` flag from NanoMonSV
+- Removed min SV size limit from AnnotSV to allow insertion annotation
+- Made optimized peak HTML optional in Wakhan rephase_cna
+- Propagated tumor genotyping to vcf2maf output
+
+### Fixed
+
+- Fixed Wakhan rephase_cna to include `all` command
+
 ## [1.3.0] - 2026-02-26
 
 ### Added
@@ -216,7 +245,7 @@ Initial release of shahcompbio/nanogenome, created with the [nf-core](https://nf
 - BioMart (gene annotation)
 - R and Python dependencies for custom modules
 
-[unreleased]: https://github.com/shahcompbio/nanogenome/compare/1.3.0...HEAD
+[1.4.0]: https://github.com/shahcompbio/nanogenome/compare/1.3.0...1.4.0
 [1.3.0]: https://github.com/shahcompbio/nanogenome/compare/1.2.0...1.3.0
 [1.2.0]: https://github.com/shahcompbio/nanogenome/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/shahcompbio/nanogenome/compare/1.0.0...1.1.0

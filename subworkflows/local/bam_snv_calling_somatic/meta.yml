@@ -1,0 +1,59 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: "bam_snv_calling_somatic"
+description: Somatic SNV/indel calling with ClairS and MAF annotation via VCF2MAF
+keywords:
+  - snv
+  - indel
+  - somatic
+  - clairs
+  - vcf2maf
+components:
+  - clairs
+  - gunzip
+  - vcf2maf
+  - fixmafbarcodes
+  - ensemblvep/download
+input:
+  - snv_input_ch:
+      type: file
+      description: |
+        Channel containing tumor/normal BAM pairs
+        Structure: [ val(meta), path(tumor_bam), path(tumor_bai), path(norm_bam), path(norm_bai) ]
+  - fasta:
+      type: file
+      description: Reference genome FASTA
+  - fai:
+      type: file
+      description: Reference genome FASTA index
+  - vep_cache:
+      type: file
+      description: VEP cache directory (optional, will be downloaded if not provided)
+  - vep_assembly:
+      type: string
+      description: VEP genome assembly (e.g. GRCh38)
+  - vep_species:
+      type: string
+      description: VEP species (e.g. homo_sapiens)
+  - vep_cache_version:
+      type: integer
+      description: VEP cache version
+  - somatic_snv_caller:
+      type: string
+      description: SNV/indel caller to use (e.g. clairs)
+output:
+  - maf:
+      type: file
+      description: |
+        Annotated MAF file with corrected sample barcodes
+        Structure: [ val(meta), path(maf) ]
+      pattern: "*.maf"
+  - versions:
+      type: file
+      description: |
+        File containing software versions
+        Structure: [ path(versions.yml) ]
+      pattern: "versions.yml"
+authors:
+  - "@apsteinberg"
+maintainers:
+  - "@apsteinberg"

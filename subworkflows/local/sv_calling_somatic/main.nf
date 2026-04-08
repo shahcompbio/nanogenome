@@ -23,7 +23,6 @@ workflow SV_CALLING_SOMATIC {
     // run severus if specified
     if (sv_callers.split(',').contains('severus')) {
         SEVERUS(input_sv_ch, [[id: "ref"], vntr_bed])
-        ch_versions = ch_versions.mix(SEVERUS.out.versions.first())
         ch_severus_vcf = SEVERUS.out.somatic_vcf
     }
     // run savana if specified

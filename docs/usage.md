@@ -126,6 +126,40 @@ You can select which TE callers to run (default: `longcalld,tldr`):
 --te_calling --te_calling_tools "longcalld,tldr"
 ```
 
+#### Somatic SNV/indel calling
+
+Enable somatic SNV and indel calling with [ClairS](https://github.com/HKU-BAL/ClairS) or [DeepSomatic](https://github.com/google/deepsomatic):
+
+```bash
+nextflow run shahcompbio/nanogenome \
+   -profile docker \
+   --input samplesheet.csv \
+   --outdir results \
+   --fasta reference.fa \
+   --fai reference.fa.fai \
+   --somatic_snv_calling \
+   --somatic_snv_caller clairs
+```
+
+By default, VCF output is annotated with [VEP](https://www.ensembl.org/info/docs/tools/vep/index.html) via [vcf2maf](https://github.com/mskcc/vcf2maf) and converted to MAF format. To skip VEP annotation (e.g., for testing or when a VEP cache is unavailable):
+
+```bash
+--somatic_snv_calling --inhibit_vep
+```
+
+You can select between callers:
+
+```bash
+--somatic_snv_calling --somatic_snv_caller "clairs"
+--somatic_snv_calling --somatic_snv_caller "deepsomatic"
+```
+
+If you have a local VEP cache, provide it with `--vep_cache`:
+
+```bash
+--somatic_snv_calling --vep_cache /path/to/vep_cache
+```
+
 #### Skip phasing (use pre-phased data)
 
 ```bash
