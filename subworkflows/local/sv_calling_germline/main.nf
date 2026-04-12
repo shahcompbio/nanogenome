@@ -29,7 +29,6 @@ workflow SV_CALLING_GERMLINE {
             },
             [[id: "ref"], vntr_bed],
         )
-        ch_versions = ch_versions.mix(SEVERUS.out.versions.first())
         ch_severus_vcf = SEVERUS.out.all_vcf
     }
     // run cutesv if specified

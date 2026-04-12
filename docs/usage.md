@@ -4,61 +4,173 @@
 
 ## Introduction
 
-<!-- TODO nf-core: Add documentation about anything specific to running your pipeline. For general topics, please point to (and add to) the main nf-core website. -->
+**nanogenome** is a Nextflow pipeline for variant and mobile element analysis from long-read DNA sequencing data. It supports phasing, somatic and germline structural variant calling, copy number aberration analysis, transposable element calling, and comprehensive annotation. The pipeline is designed to work with Oxford Nanopore Technologies (ONT) aligned BAM files.
 
 ## Samplesheet input
 
-You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row as shown in the examples below.
+You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location:
 
 ```bash
 --input '[path to samplesheet file]'
 ```
 
-### Multiple runs of the same sample
+The samplesheet must be a comma-separated file with the following columns:
 
-The `sample` identifiers have to be the same when you have re-sequenced the same sample more than once e.g. to increase sequencing depth. The pipeline will concatenate the raw reads before performing any downstream analysis. Below is an example for the same sample sequenced across 3 lanes:
+| Column        | Description                                                                              | Required |
+| ------------- | ---------------------------------------------------------------------------------------- | -------- |
+| `sample`      | Sample identifier. Must be the same for tumor-normal pairs.                              | Yes      |
+| `condition`   | Either `tumor` or `normal`.                                                              | Yes      |
+| `bam`         | Full path to aligned BAM file.                                                           | Yes      |
+| `bai`         | Full path to BAM index file (.bai).                                                      | Yes      |
+| `snp_vcf`     | Path to pre-phased SNP VCF file (.vcf or .vcf.gz). Required if `--skip_phasing` is used. | No       |
+| `snp_tbi`     | Path to VCF index file (.tbi). Required when `snp_vcf` is provided.                      | No       |
+| `severus_vcf` | Path to pre-computed Severus SV VCF (.vcf or .vcf.gz).                                   | No       |
+
+### Somatic analysis (tumor-normal pairs)
+
+For somatic SV calling, provide paired tumor and normal samples with matching `sample` identifiers:
 
 ```csv title="samplesheet.csv"
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L003_R1_001.fastq.gz,AEG588A1_S1_L003_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L004_R1_001.fastq.gz,AEG588A1_S1_L004_R2_001.fastq.gz
+sample,condition,bam,bai,snp_vcf,snp_tbi,severus_vcf
+SAMPLE1,tumor,/path/to/tumor.bam,/path/to/tumor.bam.bai,,,
+SAMPLE1,normal,/path/to/normal.bam,/path/to/normal.bam.bai,,,
 ```
 
-### Full samplesheet
+### Germline analysis
 
-The pipeline will auto-detect whether a sample is single- or paired-end using the information provided in the samplesheet. The samplesheet can have as many columns as you desire, however, there is a strict requirement for the first 3 columns to match those defined in the table below.
-
-A final samplesheet file consisting of both single- and paired-end data may look something like the one below. This is for 6 samples, where `TREATMENT_REP3` has been sequenced twice.
+For germline-only analysis (using `--germline`), provide normal samples:
 
 ```csv title="samplesheet.csv"
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP2,AEG588A2_S2_L002_R1_001.fastq.gz,AEG588A2_S2_L002_R2_001.fastq.gz
-CONTROL_REP3,AEG588A3_S3_L002_R1_001.fastq.gz,AEG588A3_S3_L002_R2_001.fastq.gz
-TREATMENT_REP1,AEG588A4_S4_L003_R1_001.fastq.gz,
-TREATMENT_REP2,AEG588A5_S5_L003_R1_001.fastq.gz,
-TREATMENT_REP3,AEG588A6_S6_L003_R1_001.fastq.gz,
-TREATMENT_REP3,AEG588A6_S6_L004_R1_001.fastq.gz,
+sample,condition,bam,bai,snp_vcf,snp_tbi,severus_vcf
+SAMPLE1,normal,/path/to/normal.bam,/path/to/normal.bam.bai,,,
 ```
 
-| Column    | Description                                                                                                                                                                            |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sample`  | Custom sample name. This entry will be identical for multiple sequencing libraries/runs from the same sample. Spaces in sample names are automatically converted to underscores (`_`). |
-| `fastq_1` | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
-| `fastq_2` | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
+### Pre-phased input
 
-An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
+If you have already phased your samples and want to skip the phasing step (`--skip_phasing`), provide the phased VCF and its index:
+
+```csv title="samplesheet.csv"
+sample,condition,bam,bai,snp_vcf,snp_tbi,severus_vcf
+SAMPLE1,tumor,/path/to/tumor.bam,/path/to/tumor.bam.bai,/path/to/phased.vcf.gz,/path/to/phased.vcf.gz.tbi,
+SAMPLE1,normal,/path/to/normal.bam,/path/to/normal.bam.bai,/path/to/phased.vcf.gz,/path/to/phased.vcf.gz.tbi,
+```
 
 ## Running the pipeline
 
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run shahcompbio/nanogenome --input ./samplesheet.csv --outdir ./results --genome GRCh37 -profile docker
+nextflow run shahcompbio/nanogenome \
+   -profile docker \
+   --input samplesheet.csv \
+   --outdir <OUTDIR> \
+   --fasta <REFERENCE_FASTA> \
+   --fai <REFERENCE_FAI>
 ```
 
-This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
+This will launch the default somatic analysis pipeline with phasing, SV calling, and CNA analysis.
+
+### Common workflow modes
+
+#### Full somatic analysis (default)
+
+```bash
+nextflow run shahcompbio/nanogenome \
+   -profile docker \
+   --input samplesheet.csv \
+   --outdir results \
+   --fasta reference.fa \
+   --fai reference.fa.fai
+```
+
+#### Germline SV calling
+
+```bash
+nextflow run shahcompbio/nanogenome \
+   -profile docker \
+   --input samplesheet.csv \
+   --outdir results \
+   --fasta reference.fa \
+   --fai reference.fa.fai \
+   --germline \
+   --skip_somatic
+```
+
+#### Transposable element calling
+
+Enable TE calling alongside the standard workflow:
+
+```bash
+nextflow run shahcompbio/nanogenome \
+   -profile docker \
+   --input samplesheet.csv \
+   --outdir results \
+   --fasta reference.fa \
+   --fai reference.fa.fai \
+   --te_calling \
+   --tldr_te_fasta /path/to/te_reference.fa \
+   --longcalld_te_fasta /path/to/te_reference.fa
+```
+
+By default, TE calling runs in somatic mode on tumor-normal pairs. To run germline TE calling on normal samples only:
+
+```bash
+--te_calling --skip_somatic_te
+```
+
+You can select which TE callers to run (default: `longcalld,tldr`):
+
+```bash
+--te_calling --te_calling_tools "longcalld"
+--te_calling --te_calling_tools "tldr"
+--te_calling --te_calling_tools "longcalld,tldr"
+```
+
+#### Somatic SNV/indel calling
+
+Enable somatic SNV and indel calling with [ClairS](https://github.com/HKU-BAL/ClairS) or [DeepSomatic](https://github.com/google/deepsomatic):
+
+```bash
+nextflow run shahcompbio/nanogenome \
+   -profile docker \
+   --input samplesheet.csv \
+   --outdir results \
+   --fasta reference.fa \
+   --fai reference.fa.fai \
+   --somatic_snv_calling \
+   --somatic_snv_caller clairs
+```
+
+By default, VCF output is annotated with [VEP](https://www.ensembl.org/info/docs/tools/vep/index.html) via [vcf2maf](https://github.com/mskcc/vcf2maf) and converted to MAF format. To skip VEP annotation (e.g., for testing or when a VEP cache is unavailable):
+
+```bash
+--somatic_snv_calling --inhibit_vep
+```
+
+You can select between callers:
+
+```bash
+--somatic_snv_calling --somatic_snv_caller "clairs"
+--somatic_snv_calling --somatic_snv_caller "deepsomatic"
+```
+
+If you have a local VEP cache, provide it with `--vep_cache`:
+
+```bash
+--somatic_snv_calling --vep_cache /path/to/vep_cache
+```
+
+#### Skip phasing (use pre-phased data)
+
+```bash
+nextflow run shahcompbio/nanogenome \
+   -profile docker \
+   --input samplesheet.csv \
+   --outdir results \
+   --fasta reference.fa \
+   --fai reference.fa.fai \
+   --skip_phasing
+```
 
 Note that the pipeline will create the following files in your working directory:
 
@@ -85,10 +197,10 @@ nextflow run shahcompbio/nanogenome -profile docker -params-file params.yaml
 with:
 
 ```yaml title="params.yaml"
-input: './samplesheet.csv'
-outdir: './results/'
-genome: 'GRCh37'
-<...>
+input: "./samplesheet.csv"
+outdir: "./results/"
+fasta: "/path/to/reference.fa"
+fai: "/path/to/reference.fa.fai"
 ```
 
 You can also generate such `YAML`/`JSON` files via [nf-core/launch](https://nf-co.re/launch).

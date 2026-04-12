@@ -414,6 +414,101 @@
                     "description": "germline structural variant caller options; supply as comma separated string"
                 }
             }
+        },
+        "te_calling_options": {
+            "title": "TE calling options",
+            "type": "object",
+            "description": "transposable element calling options",
+            "default": "",
+            "properties": {
+                "te_calling": {
+                    "type": "boolean",
+                    "description": "run transposable element calling and annotation with annotSV"
+                },
+                "skip_somatic_te": {
+                    "type": "boolean",
+                    "description": "skip somatic TE calling on T/N pairs"
+                },
+                "longcalld_te_fasta": {
+                    "type": "string",
+                    "description": "reference fasta file of TEs for longcalld"
+                },
+                "tldr_min_len": {
+                    "type": "integer",
+                    "default": 50,
+                    "description": "min TE length for tldr"
+                },
+                "tldr_max_len": {
+                    "type": "integer",
+                    "default": 100000,
+                    "description": "max TE length for tldr"
+                },
+                "tldr_max_cluster_size": {
+                    "type": "integer",
+                    "default": 100,
+                    "description": "max number of clusters to create for MSA"
+                },
+                "te_calling_tools": {
+                    "type": "string",
+                    "default": "longcalld,tldr",
+                    "description": "TE caller options; supply as comma separated string"
+                },
+                "tldr_te_fasta": {
+                    "type": "string",
+                    "description": "reference fasta of TEs for tldr"
+                }
+            }
+        },
+        "somatic_snv_indel_calling_options": {
+            "title": "somatic SNV/indel calling options",
+            "type": "object",
+            "description": "Options for somatic SNV/indel calling",
+            "default": "",
+            "properties": {
+                "somatic_snv_caller": {
+                    "type": "string",
+                    "default": "clairs",
+                    "description": "choose a somatic snv/indel caller (options: 'clairs' or 'deepsomatic')"
+                },
+                "deepsomatic_model": {
+                    "type": "string",
+                    "default": "ONT",
+                    "description": "model type for deepsomatic"
+                },
+                "clairs_platform": {
+                    "type": "string",
+                    "default": "ont_r10_dorado_sup_4khz",
+                    "description": "ClairS sequencing platform/model (e.g. ont_r10_dorado_sup_4khz, ont_r10_dorado_sup_5khz_ssrs, ont_r10_guppy)."
+                },
+                "vep_cache": {
+                    "type": "string",
+                    "description": "path to vep cache (recommended to download before running)"
+                },
+                "vep_cache_version": {
+                    "type": "integer",
+                    "default": 112,
+                    "description": "vep cache version"
+                },
+                "vep_species": {
+                    "type": "string",
+                    "default": "homo_sapiens",
+                    "description": "vep species"
+                },
+                "vep_assembly": {
+                    "type": "string",
+                    "default": "GRCh38",
+                    "description": "vep assembly"
+                },
+                "ncbi_build": {
+                    "type": "string",
+                    "default": "GRCh38",
+                    "description": "ncbi build for vep"
+                },
+                "inhibit_vep": {
+                    "type": "boolean",
+                    "description": "skip VEP but still convert vcf to maf"
+                }
+            }
         }
     },
     "allOf": [
@@ -452,6 +547,12 @@
         },
         {
             "$ref": "#/$defs/structural_variant_calling"
+        },
+        {
+            "$ref": "#/$defs/te_calling_options"
+        },
+        {
+            "$ref": "#/$defs/somatic_snv_indel_calling_options"
         }
     ],
     "properties": {
@@ -480,6 +581,14 @@
             "type": "string",
             "default": "wakhan,savana",
             "description": "select copy number analysis tools to use"
+        },
+        "longcalld_realign": {
+            "type": "boolean",
+            "description": "output refined read alignments from longcalld"
+        },
+        "somatic_snv_calling": {
+            "type": "boolean",
+            "description": "run somatic snv calling (skipped by default)"
         }
     }
 }

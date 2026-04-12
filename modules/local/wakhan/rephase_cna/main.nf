@@ -6,7 +6,7 @@ process WAKHAN_REPHASE_CNA {
     publishDir "${params.outdir}/wakhan/${meta.id}", mode: 'copy', overwrite: true, saveAs: { filename -> filename.startsWith("solution_") ? "cna_solutions/${filename}" : filename }
 
     conda "${moduleDir}/environment.yml"
-    container "quay.io/shahlab_singularity/wakhan:260128-crankycrank-bc48900"
+    container "quay.io/shahlab_singularity/wakhan:20260406-d375abe"
 
     input:
     tuple val(meta), path(bam), path(bai), path(phased_vcf), path(phased_vcf_tbi), path(severus_vcf)
@@ -21,7 +21,7 @@ process WAKHAN_REPHASE_CNA {
     tuple val(meta), path("solution_*", arity: '1..*'), emit: wakhanCNAOutput
     tuple val(meta), path("coverage_plots"), emit: coverage_plots
     tuple val(meta), path("*_ploidy_purity.html"), emit: ploidy_purity_html
-    tuple val(meta), path("*_optimized_peak.html"), emit: optimized_peak_html
+    tuple val(meta), path("*_optimized_peak.html"), emit: optimized_peak_html, optional: true
     tuple val(meta), path("solution_1/**/*_subclonal_segments_HP_1.bed"), emit: HP1_bed
     tuple val(meta), path("solution_1/**/*_subclonal_segments_HP_2.bed"), emit: HP2_bed
 
@@ -37,7 +37,7 @@ process WAKHAN_REPHASE_CNA {
     def args3 = task.ext.args3 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    wakhan \\
+    wakhan all \\
         ${args} \\
         ${args1} \\
         ${args2} \\

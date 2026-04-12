@@ -14,7 +14,7 @@
 
 ## Introduction
 
-**shahcompbio/nanogenome** is a bioinformatics pipeline for comprehensive analysis of long-read DNA sequencing data. The pipeline performs variant calling, phasing, structural variant (SV) detection, copy number aberration (CNA) analysis, and gene annotation from Oxford Nanopore Technologies (ONT) sequencing data. It supports both somatic (tumor-normal) and germline analysis workflows with ensemble calling approaches for improved accuracy.
+**shahcompbio/nanogenome** is a bioinformatics pipeline for comprehensive analysis of long-read DNA sequencing data. The pipeline performs variant calling, phasing, structural variant (SV) detection, copy number aberration (CNA) analysis, transposable element (TE) insertion calling, and gene annotation from Oxford Nanopore Technologies (ONT) sequencing data. It supports both somatic (tumor-normal) and germline analysis workflows with ensemble calling approaches for improved accuracy.
 
 The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It uses Docker/Singularity containers making installation trivial and results highly reproducible. The [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html) implementation of this pipeline uses one container per process which makes it much easier to maintain and update software dependencies.
 
@@ -28,10 +28,15 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 4. Germline structural variant calling (optional)
    - Individual callers: [`SEVERUS`](https://github.com/KolmogorovLab/Severus), [`Sniffles`](https://github.com/fritzsedlazeck/Sniffles), [`CuteSV`](https://github.com/tjiangHIT/cuteSV), [`LongcallD`](https://github.com/ydLiu-HIT/LongcallD)
    - Consensus calling: [`MINDA`](https://github.com/shahcompbio/minda)
-5. Haplotype-resolved copy number analysis ([`Wakhan`](https://github.com/shahcompbio/wakhan), [`SAVANA`](https://github.com/cortes-ciriano-lab/savana))
-6. SV and CNA annotation ([`BioMart`](https://www.ensembl.org/info/data/biomart/index.html), [`OncoKB`](https://www.oncokb.org/), [`AnnotSV`](https://lbgi.fr/AnnotSV/))
-7. Visualization of SVs and CNAs (Circos for somatic, karyoplot for germline)
-8. Present QC for all workflow stages ([`MultiQC`](http://multiqc.info/))
+5. Somatic SNV/indel calling ([`ClairS`](https://github.com/HKU-BAL/ClairS), [`DeepSomatic`](https://github.com/google/deepsomatic)) with VEP annotation via [`vcf2maf`](https://github.com/mskcc/vcf2maf)
+6. Haplotype-resolved copy number analysis ([`Wakhan`](https://github.com/shahcompbio/wakhan), [`SAVANA`](https://github.com/cortes-ciriano-lab/savana))
+7. Transposable element insertion calling (optional)
+   - Individual callers: [`LongcallD`](https://github.com/ydLiu-HIT/LongcallD), [`tldr`](https://github.com/adamewing/tldr)
+   - Somatic (tumor-normal) and germline TE calling modes
+   - AnnotSV annotation of TE insertions
+8. SV and CNA annotation ([`BioMart`](https://www.ensembl.org/info/data/biomart/index.html), [`OncoKB`](https://www.oncokb.org/), [`AnnotSV`](https://lbgi.fr/AnnotSV/))
+9. Visualization of SVs and CNAs (Circos for somatic, karyoplot for germline)
+10. Present QC for all workflow stages ([`MultiQC`](http://multiqc.info/))
 
 ## Usage
 
@@ -43,9 +48,9 @@ First, prepare a samplesheet with your input data that looks as follows:
 `samplesheet.csv`:
 
 ```csv
-sample,condition,bam,bai,vcf,tbi
-SAMPLE_TUMOR,tumor,/path/to/tumor.bam,/path/to/tumor.bam.bai,,
-SAMPLE_NORMAL,normal,/path/to/normal.bam,/path/to/normal.bam.bai,,
+sample,condition,bam,bai,snp_vcf,snp_tbi,severus_vcf
+SAMPLE_TUMOR,tumor,/path/to/tumor.bam,/path/to/tumor.bam.bai,,,
+SAMPLE_NORMAL,normal,/path/to/normal.bam,/path/to/normal.bam.bai,,,
 ```
 
 Each row represents a sample with the following columns:
@@ -54,8 +59,9 @@ Each row represents a sample with the following columns:
 - `condition`: Either `tumor` or `normal`
 - `bam`: Full path to aligned BAM file
 - `bai`: Full path to BAM index file
-- `vcf`: (Optional) Path to pre-phased VCF file (required if `--skip_phasing` is used)
-- `tbi`: (Optional) Path to VCF index file
+- `snp_vcf`: (Optional) Path to pre-phased SNP VCF file (required if `--skip_phasing` is used)
+- `snp_tbi`: (Optional) Path to VCF index file
+- `severus_vcf`: (Optional) Path to pre-computed Severus SV VCF
 
 Now, you can run the pipeline using:
 
@@ -77,7 +83,8 @@ shahcompbio/nanogenome was originally written by Asher Preska Steinberg.
 
 We thank the following people for their extensive assistance in the development of this pipeline:
 
-<!-- TODO nf-core: If applicable, make list of people who have also contributed -->
+- [@marcjwilliams1](https://github.com/marcjwilliams1)
+- Claude Code (AI assistant)
 
 ## Contributions and Support
 
