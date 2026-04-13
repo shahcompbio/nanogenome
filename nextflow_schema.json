@@ -380,7 +380,8 @@
                 "genome_build": {
                     "type": "string",
                     "default": "hg38",
-                    "description": "genome build for biomaRt; options are hg38 or hg19"
+                    "enum": ["hg38", "hg19", "t2t"],
+                    "description": "genome build for gene annotation; options are hg38, hg19, or t2t (T2T-CHM13v2.0)"
                 },
                 "annotsv_dir": {
                     "type": "string",
