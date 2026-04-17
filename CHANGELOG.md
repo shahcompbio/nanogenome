@@ -260,6 +260,7 @@ Initial release of shahcompbio/nanogenome, created with the [nf-core](https://nf
 - BioMart (gene annotation)
 - R and Python dependencies for custom modules
 
+[1.5.0]: https://github.com/shahcompbio/nanogenome/compare/1.4.0...1.5.0
 [1.4.0]: https://github.com/shahcompbio/nanogenome/compare/1.3.0...1.4.0
 [1.3.0]: https://github.com/shahcompbio/nanogenome/compare/1.2.0...1.3.0
 [1.2.0]: https://github.com/shahcompbio/nanogenome/compare/1.1.0...1.2.0
