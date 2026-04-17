@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-04-17
+
+### Added
+
+- T2T-CHM13v2.0 genome build support for SV annotation and karyoplot visualization
+- `T2TGENETABLE` module for generating T2T gene annotation tables via the [BiocT2T](https://bioconductor.org/) R package and `GenomicFeatures`
+- `bioct2t` Docker container with `BiocT2T`, `GenomicFeatures`, and `BSgenome.Hsapiens.NCBI.T2T.CHM13v2.0`
+- `t2t` option for the `--genome_build` parameter (in addition to `hg38` and `hg19`)
+- nf-test profiles `t2t_somatic_sv_only` and `t2t_germline_sv_only` for T2T SV calling + annotation
+
+### Changed
+
+- `ANNOTATE_SV` subworkflow now routes gene annotation through `T2TGENETABLE` when `--genome_build t2t` is set; otherwise falls back to BioMart as before
+- `svkaryoplot.R` now loads `BSgenome.Hsapiens.NCBI.T2T.CHM13v2.0` and maps `t2t` to the karyoploteR-compatible `T2T-CHM13v2.0` genome name
+
 ## [1.4.0] - 2026-04-08
 
 ### Added

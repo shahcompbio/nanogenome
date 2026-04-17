@@ -160,6 +160,22 @@ If you have a local VEP cache, provide it with `--vep_cache`:
 --somatic_snv_calling --vep_cache /path/to/vep_cache
 ```
 
+#### T2T-CHM13v2.0 genome build
+
+The pipeline supports T2T-CHM13v2.0 for SV annotation and karyoplot visualization via `--genome_build t2t`:
+
+```bash
+nextflow run shahcompbio/nanogenome \
+   -profile docker \
+   --input samplesheet.csv \
+   --outdir results \
+   --fasta /path/to/chm13v2.0.fa \
+   --fai /path/to/chm13v2.0.fa.fai \
+   --genome_build t2t
+```
+
+When `--genome_build t2t` is set and `--gene_annotations` is not provided, the pipeline generates a T2T gene annotation table using the `T2TGENETABLE` module (powered by the [BiocT2T](https://bioconductor.org/) R package) instead of querying Ensembl BioMart, which does not support T2T-CHM13. Supported values for `--genome_build` are `hg38` (default), `hg19`, and `t2t`.
+
 #### Skip phasing (use pre-phased data)
 
 ```bash
