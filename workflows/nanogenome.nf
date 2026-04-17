@@ -302,6 +302,7 @@ workflow NANOGENOME {
             params.skip_annotsv,
             params.annotsv_dir,
             false,
+            params.genome_build,
         )
         ch_versions = ch_versions.mix(ANNOTATE_SV.out.versions)
         // plot results
@@ -400,6 +401,7 @@ workflow NANOGENOME {
                 false,
                 params.annotsv_dir,
                 true,
+                params.genome_build,
             )
             ch_versions = ch_versions.mix(ANNOTATE_TE.out.versions)
         }
