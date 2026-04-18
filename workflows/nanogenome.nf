@@ -144,17 +144,18 @@ workflow NANOGENOME {
         ch_versions = ch_versions.mix(SV_CALLING_SOMATIC.out.versions)
         // construct sv channel for annotation subworkflow
         sv_ch = SV_CALLING_SOMATIC.out.savana_vcf
-            .join(SV_CALLING_SOMATIC.out.severus_vcf, by: 0)
-            .join(SV_CALLING_SOMATIC.out.nanomonsv_vcf, by: 0)
+            .mix(SV_CALLING_SOMATIC.out.severus_vcf)
+            .mix(SV_CALLING_SOMATIC.out.nanomonsv_vcf)
+            .groupTuple(by: 0)
             .combine(support_ch)
-            .map { meta, vcf1, vcf2, vcf3, min_callers ->
+            .map { meta, vcfs, min_callers ->
                 [
                     [
                         id: meta.id,
                         condition: "somatic",
                         min_callers: min_callers,
                     ],
-                    [vcf1, vcf2, vcf3],
+                    vcfs,
                 ]
             }
     }
@@ -184,18 +185,19 @@ workflow NANOGENOME {
         ch_versions = ch_versions.mix(SV_CALLING_GERMLINE.out.versions)
         // construct channel of germline calls + mix with sv channel
         germline_ch = SV_CALLING_GERMLINE.out.severus_vcf
-            .join(SV_CALLING_GERMLINE.out.cutesv_vcf, by: 0)
-            .join(SV_CALLING_GERMLINE.out.sniffles_vcf, by: 0)
-            .join(SV_CALLING_GERMLINE.out.longcalld_vcf, by: 0)
+            .mix(SV_CALLING_GERMLINE.out.cutesv_vcf)
+            .mix(SV_CALLING_GERMLINE.out.sniffles_vcf)
+            .mix(SV_CALLING_GERMLINE.out.longcalld_vcf)
+            .groupTuple(by: 0)
             .combine(support_ch)
-            .map { meta, vcf1, vcf2, vcf3, vcf4, min_callers ->
+            .map { meta, vcfs, min_callers ->
                 [
                     [
                         id: meta.id,
                         condition: "germline",
                         min_callers: min_callers,
                     ],
-                    [vcf1, vcf2, vcf3, vcf4],
+                    vcfs,
                 ]
             }
         sv_ch = sv_ch.mix(germline_ch)
