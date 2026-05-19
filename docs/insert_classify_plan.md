@@ -205,6 +205,64 @@ nextflow run shahcompbio/nanogenome \
 
 When running as part of the full pipeline (somatic SV calling enabled), the subworkflow automatically receives its inputs from upstream processes and no extra samplesheet columns are needed.
 
+## Implementation Status (as of 2025-05-19)
+
+All modules, scripts, subworkflow, config, and workflow wiring are **complete**. Summary of what was built:
+
+### Files Created
+
+| File                                             | Description                                             |
+| ------------------------------------------------ | ------------------------------------------------------- |
+| `modules/local/prepinserttable/main.nf`          | PREPINSERTTABLE process                                 |
+| `modules/local/nanomonsv/insertclassify/main.nf` | NANOMONSV_INSERTCLASSIFY process                        |
+| `modules/local/vntrclassify/main.nf`             | VNTRCLASSIFY process                                    |
+| `subworkflows/local/insertclassify/main.nf`      | INSERTCLASSIFY subworkflow (chains the 3 modules)       |
+| `bin/prep_insert_table.py`                       | Extracts INS from union table, resolves `<INS>` alleles |
+| `bin/vntr_classify.py`                           | VNTR intersection + priority classification             |
+| `tests/insert_classify_only.nf.test`             | Stub nf-test for standalone mode                        |
+
+### Files Modified
+
+| File                                            | Changes                                                                                                                       |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `workflows/nanogenome.nf`                       | Added INSERTCLASSIFY import + block gated by `params.classify_inserts`; updated ALL `ch_samplesheet` closures from 6→8 fields |
+| `subworkflows/local/sv_calling_somatic/main.nf` | Emit `nanomonsv_result` channel                                                                                               |
+| `subworkflows/local/phasing/main.nf`            | Updated closures from 6→8 fields                                                                                              |
+| `nextflow.config`                               | Added params: `classify_inserts`, `ref_gtf`, `line1_db`, `famdb_dir`                                                          |
+| `conf/modules.config`                           | Added containerOptions for famdb bind mount + publishDir for all 3 modules                                                    |
+| `assets/schema_input.json`                      | Added optional columns: `severus_vcf`, `annotated_sv_tsv`, `nanomonsv_result_txt`                                             |
+
+### Remaining TODO: Test Data for `tests/insert_classify_only.nf.test`
+
+The nf-test uses `-stub` so files only need to **exist** at the URLs — content doesn't matter. Need to push dummy files to `apsteinberg/test-datasets` on the `nanogenome` branch:
+
+1. **`samplesheet_insert_classify.csv`** — samplesheet with columns:
+
+   ```
+   sample,condition,bam,bai,snp_vcf,snp_tbi,severus_vcf,annotated_sv_tsv,nanomonsv_result_txt
+   COLO829,tumor,https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/bams/COLO829.tumor.haplotagged.chr22.bam,https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/bams/COLO829.tumor.haplotagged.chr22.bam.bai,,,https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/insert_classify/dummy_severus.vcf,https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/insert_classify/dummy_annotated_sv.tsv,https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/insert_classify/dummy_nanomonsv.result.txt
+   COLO829,normal,https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/bams/COLO829.normal.haplotagged.chr22.bam,https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/bams/COLO829.normal.haplotagged.chr22.bam.bai,,,,,,
+   ```
+
+2. **Dummy input files** (in `insert_classify/` directory):
+   - `dummy_severus.vcf` — minimal VCF header + 1 dummy INS record
+   - `dummy_annotated_sv.tsv` — TSV with correct column headers + 1 dummy row
+   - `dummy_nanomonsv.result.txt` — nanomonsv result header + 1 dummy row
+
+3. **Dummy reference files** (only if not already present):
+   - `reference/gencode.v45.chr22.annotation.gtf` — minimal GTF (header line only is fine for stub)
+   - `reference/LINE1.hg38.chr22.bed.gz` — gzipped empty/minimal BED
+
+   **Already exist in repo:** `reference/GRCh38_chr22.fa`, `reference/GRCh38_chr22.fa.fai`, `reference/human_GRCh38_no_alt_analysis_set.trf.bed`
+
+4. **Local clone location:** `/Users/preskaa/VSCodeProjects/test-datasets` (currently on `proteomegenerator3` branch — switch to `nanogenome`)
+
+### Other Notes
+
+- The `_` prefix convention on unused closure params triggers Nextflow linting warnings but is functionally correct
+- Deprecated `Channel` → `channel` warnings are pre-existing throughout the codebase (not introduced by this work)
+- `meta.yml` files for the new modules have placeholder content from `nf-core modules create` scaffold
+
 ## Future Work
 
 - Classify single-end breakpoints (`sbnd.result.txt`) using nanomonsv's breakpoint classification modules

@@ -1,0 +1,32 @@
+nextflow_pipeline {
+
+    name "Test insert classification only workflow"
+    script "../main.nf"
+    tag "pipeline"
+
+    test("insert classification standalone workflow") {
+        options "-stub"
+
+        when {
+            params {
+                outdir = "$outputDir"
+                input = 'https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/samplesheet_insert_classify.csv'
+                skip_phasing = true
+                skip_somatic = true
+                skip_cna = true
+                germline = false
+                classify_inserts = true
+                ref_gtf = 'https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/reference/gencode.v45.chr22.annotation.gtf'
+                line1_db = 'https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/reference/LINE1.hg38.chr22.bed.gz'
+                vntr_bed = 'https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/reference/human_GRCh38_no_alt_analysis_set.trf.bed'
+                fasta = 'https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/reference/GRCh38_chr22.fa'
+                fai = 'https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/reference/GRCh38_chr22.fa.fai'
+            }
+        }
+
+        then {
+            assert workflow.success
+            assert path("${outputDir}/insert_classify").exists()
+        }
+    }
+}
