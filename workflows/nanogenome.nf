@@ -409,7 +409,7 @@ workflow NANOGENOME {
             insert_classify_nanomonsv_ch,
             insert_classify_severus_ch,
             params.fasta,
-            Channel.fromPath(["${params.bwa_index}/*.amb", "${params.bwa_index}/*.ann", "${params.bwa_index}/*.bwt", "${params.bwa_index}/*.pac", "${params.bwa_index}/*.sa"]).collect(),
+            params.bwa_index,
             params.ref_gtf,
             params.line1_db,
             "${params.line1_db}.tbi",

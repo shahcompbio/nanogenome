@@ -2,6 +2,7 @@
 process NANOMONSV_ANNOTATESBND {
     tag "$meta.id"
     label 'process_high'
+    stageInMode 'copy'
 
     // No pre-built container exists for this tool combination (nanomonsv + bwa + repeatmasker).
     // Requires Wave (wave { enabled = true }) to build the container from environment.yml at runtime.

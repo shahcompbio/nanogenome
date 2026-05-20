@@ -21,6 +21,7 @@ nextflow_pipeline {
                 vntr_bed = 'https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/reference/human_GRCh38_no_alt_analysis_set.trf.bed'
                 fasta = 'https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/reference/GRCh38_chr22.fa'
                 fai = 'https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/reference/GRCh38_chr22.fa.fai'
+                bwa_index = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/genome/chr21/sequence'
             }
         }
 

@@ -2,6 +2,7 @@
 process NANOMONSV_INSERTCLASSIFY {
     tag "${meta.id}"
     label 'process_medium'
+    stageInMode 'copy'
 
     conda "${moduleDir}/environment.yml"
     container "${workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container
@@ -11,7 +12,7 @@ process NANOMONSV_INSERTCLASSIFY {
     input:
     tuple val(meta), path(inserts_tsv)
     path ref_fasta
-    path bwa_fasta_index // BWA index files (.amb, .ann, .bwt, .pac, .sa) staged alongside ref_fasta
+    path bwa_index, stageAs: 'bwa_index' // BWA index directory; copy-staged to avoid concurrent access issues
     path ref_gtf
     path line1_db
     path line1_db_tbi // tabix index staged alongside line1_db
@@ -27,6 +28,7 @@ process NANOMONSV_INSERTCLASSIFY {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
+    ln -sf bwa_index/${ref_fasta.baseName}.* .
     nanomonsv insert_classify \\
         ${inserts_tsv} \\
         ${prefix}_somatic_inserts.classified.tsv \\
