@@ -4,12 +4,9 @@ process NANOMONSV_ANNOTATESBND {
     label 'process_high'
     stageInMode 'copy'
 
-    // No pre-built container exists for this tool combination (nanomonsv + bwa + repeatmasker).
-    // Requires Wave (wave { enabled = true }) to build the container from environment.yml at runtime.
+    // Container built with Wave from environment.yml and pushed to quay.io/shahlab_singularity.
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-nanomonsv-bwa-repeatmasker:0.9.0':
-        'quay.io/biocontainers/mulled-v2-nanomonsv-bwa-repeatmasker:0.9.0' }"
+    container 'quay.io/shahlab_singularity/nanomonsv-annotatesbnd:nanomonsv-0.9.0_bwa-0.7.18_repeatmasker-4.1.7_pysam-0.22.1--e4220aa301415d2a'
 
     input:
     tuple val(meta), path(sbnd_result_txt)

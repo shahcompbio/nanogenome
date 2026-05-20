@@ -3,12 +3,9 @@ process NANOMONSV_VISUALIZESBND {
     tag "$meta.id"
     label 'process_low'
 
-    // r-ggrepel 0.9.6 has no pre-built quay.io/biocontainers image.
-    // Requires Wave (wave { enabled = true }) to build the container from environment.yml at runtime.
+    // Container built with Wave from environment.yml and pushed to quay.io/shahlab_singularity.
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/r-ggrepel:0.9.6--r44hf9963bf_0':
-        'quay.io/biocontainers/r-ggrepel:0.9.6--r44hf9963bf_0' }"
+    container 'quay.io/shahlab_singularity/nanomonsv-visualizesbnd:r-tidyverse-2.0.0_r-ggrepel-0.9.6--293b10b22ffcfa3f'
 
     input:
     tuple val(meta), path(bwa_txt), path(rmsk_txt)
