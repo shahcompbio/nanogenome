@@ -370,6 +370,9 @@ workflow NANOGENOME {
         if (!params.vntr_bed) {
             error("ERROR: --vntr_bed is required when --classify_inserts is enabled. Please provide a VNTR BED file.")
         }
+        if (!params.bwa_index) {
+            error("ERROR: --bwa_index is required when --classify_inserts is enabled. Please provide the directory containing BWA index files for the reference genome.")
+        }
         if (!params.skip_somatic) {
             // Pipeline-integrated mode: use outputs from upstream processes
             insert_classify_sv_ch = annot_sv_ch.somatic.map { _id, meta, sv -> [meta, sv] }
@@ -405,6 +408,7 @@ workflow NANOGENOME {
             insert_classify_nanomonsv_ch,
             insert_classify_severus_ch,
             params.fasta,
+            Channel.fromPath("${params.bwa_index}/*").collect(),
             params.ref_gtf,
             params.line1_db,
             params.vntr_bed,

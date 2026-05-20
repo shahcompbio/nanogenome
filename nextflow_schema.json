@@ -520,6 +520,10 @@
                 "famdb_dir": {
                     "type": "string",
                     "description": "RepeatMasker famdb directory path (bind-mounted into container)"
+                },
+                "bwa_index": {
+                    "type": "string",
+                    "description": "Directory containing BWA index files (.amb, .ann, .bwt, .pac, .sa) for the reference genome"
                 }
             }
         }

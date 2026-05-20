@@ -11,6 +11,7 @@ process NANOMONSV_INSERTCLASSIFY {
     input:
     tuple val(meta), path(inserts_tsv)
     path ref_fasta
+    path bwa_fasta_index // BWA index files (.amb, .ann, .bwt, .pac, .sa) staged alongside ref_fasta
     path ref_gtf
     path line1_db
 

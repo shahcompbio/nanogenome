@@ -5,13 +5,14 @@ include { VNTRCLASSIFY             } from '../../../modules/local/vntrclassify/m
 
 workflow INSERTCLASSIFY {
     take:
-    annotated_sv_ch // channel: [ val(meta), path(annotated_sv_tsv) ]
+    annotated_sv_ch  // channel: [ val(meta), path(annotated_sv_tsv) ]
     nanomonsv_result // channel: [ val(meta), path(nanomonsv_result_txt) ]
-    severus_vcf // channel: [ val(meta), path(severus_vcf) ]
-    ref_fasta // path: reference genome FASTA
-    ref_gtf // path: gene annotation GTF
-    line1_db // path: LINE1 database BED
-    vntr_bed // path: VNTR BED file
+    severus_vcf      // channel: [ val(meta), path(severus_vcf) ]
+    ref_fasta        // path: reference genome FASTA
+    bwa_fasta_index  // path: BWA index files (.amb, .ann, .bwt, .pac, .sa) co-located with ref_fasta
+    ref_gtf          // path: gene annotation GTF
+    line1_db         // path: LINE1 database BED
+    vntr_bed         // path: VNTR BED file
 
     main:
 
@@ -40,6 +41,7 @@ workflow INSERTCLASSIFY {
     NANOMONSV_INSERTCLASSIFY(
         PREPINSERTTABLE.out.inserts_tsv,
         ref_fasta,
+        bwa_fasta_index,
         ref_gtf,
         line1_db,
     )
