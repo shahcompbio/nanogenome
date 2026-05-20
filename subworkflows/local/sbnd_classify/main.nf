@@ -2,6 +2,7 @@
 include { NANOMONSV_ANNOTATESBND  } from '../../../modules/local/nanomonsv/annotatesbnd/main'
 include { NANOMONSV_CLASSIFYSBND  } from '../../../modules/local/nanomonsv/classifysbnd/main'
 include { NANOMONSV_VISUALIZESBND } from '../../../modules/local/nanomonsv/visualizesbnd/main'
+include { NANOMONSV_MERGESBNDPDFS } from '../../../modules/local/nanomonsv/mergesbndpdfs/main'
 
 workflow SBND_CLASSIFY {
     take:
@@ -31,12 +32,14 @@ workflow SBND_CLASSIFY {
 
     NANOMONSV_CLASSIFYSBND(classify_input_ch)
 
-    // Step 3: Visualize (default on; skipped with --skip_sbnd_vis)
+    // Step 3: Visualize and merge PDFs (default on; skipped with --skip_sbnd_vis)
     if (!params.skip_sbnd_vis) {
         NANOMONSV_VISUALIZESBND(NANOMONSV_ANNOTATESBND.out.annotations)
+        NANOMONSV_MERGESBNDPDFS(NANOMONSV_VISUALIZESBND.out.vis_dir)
     }
 
     emit:
     sbnd_classes = NANOMONSV_CLASSIFYSBND.out.class_txt // channel: [ val(meta), path(class_txt) ]
     sbnd_vis     = params.skip_sbnd_vis ? Channel.empty() : NANOMONSV_VISUALIZESBND.out.vis_dir // channel: [ val(meta), path(vis_dir) ]
+    sbnd_pdf     = params.skip_sbnd_vis ? Channel.empty() : NANOMONSV_MERGESBNDPDFS.out.merged_pdf // channel: [ val(meta), path(merged_pdf) ]
 }
