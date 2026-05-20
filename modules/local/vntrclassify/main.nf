@@ -5,8 +5,8 @@ process VNTRCLASSIFY {
 
     conda "${moduleDir}/environment.yml"
     container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
-        ? 'https://wave.seqera.io/wt/f210a535e75c/wave/build:pandas-2.2.0_python-3.12_pybedtools-0.10.0_bedtools-2.31.1--6b7ae1455b54e090'
-        : 'wave.seqera.io/wt/f210a535e75c/wave/build:pandas-2.2.0_python-3.12_pybedtools-0.10.0_bedtools-2.31.1--6b7ae1455b54e090'}"
+        ? 'https://quay.io/shahlab_singularity/vntrclassify:pybedtools-0.10.0_bedtools-2.31.1'
+        : 'quay.io/shahlab_singularity/vntrclassify:pybedtools-0.10.0_bedtools-2.31.1'}"
 
     input:
     tuple val(meta), path(classified_tsv)

@@ -5,8 +5,8 @@ process PREPINSERTTABLE {
 
     conda "${moduleDir}/environment.yml"
     container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
-        ? 'https://wave.seqera.io/wt/77d023807b85/wave/build:pandas-2.2.0_python-3.12--d0a73f3ae04afe9b'
-        : 'wave.seqera.io/wt/77d023807b85/wave/build:pandas-2.2.0_python-3.12--d0a73f3ae04afe9b'}"
+        ? 'https://quay.io/shahlab_singularity/prepinserttable:pandas-2.2.0_python-3.12'
+        : 'quay.io/shahlab_singularity/prepinserttable:pandas-2.2.0_python-3.12'}"
 
     input:
     tuple val(meta), path(annotated_sv_tsv), path(nanomonsv_result), path(severus_vcf)
