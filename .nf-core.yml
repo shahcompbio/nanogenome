@@ -3,6 +3,7 @@ lint:
   files_exist: false
   actions_ci: false
   files_unchanged:
+    - .gitignore
     - .github/workflows/ci.yml
     - .github/workflows/nf-test.yml
     - .github/workflows/linting.yml
