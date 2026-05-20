@@ -14,6 +14,7 @@ process NANOMONSV_INSERTCLASSIFY {
     path bwa_fasta_index // BWA index files (.amb, .ann, .bwt, .pac, .sa) staged alongside ref_fasta
     path ref_gtf
     path line1_db
+    path line1_db_tbi // tabix index staged alongside line1_db
 
     output:
     tuple val(meta), path("${meta.id}_somatic_inserts.classified.tsv"), emit: classified_tsv

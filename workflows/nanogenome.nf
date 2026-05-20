@@ -411,6 +411,7 @@ workflow NANOGENOME {
             Channel.fromPath(["${params.bwa_index}/*.amb", "${params.bwa_index}/*.ann", "${params.bwa_index}/*.bwt", "${params.bwa_index}/*.pac", "${params.bwa_index}/*.sa"]).collect(),
             params.ref_gtf,
             params.line1_db,
+            "${params.line1_db}.tbi",
             params.vntr_bed,
         )
         ch_versions = ch_versions.mix(INSERTCLASSIFY.out.versions)

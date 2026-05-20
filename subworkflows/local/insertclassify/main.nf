@@ -11,7 +11,8 @@ workflow INSERTCLASSIFY {
     ref_fasta        // path: reference genome FASTA
     bwa_fasta_index  // path: BWA index files (.amb, .ann, .bwt, .pac, .sa) co-located with ref_fasta
     ref_gtf          // path: gene annotation GTF
-    line1_db         // path: LINE1 database BED
+    line1_db         // path: LINE1 database BED (bgzipped)
+    line1_db_tbi     // path: tabix index for line1_db, staged alongside it
     vntr_bed         // path: VNTR BED file
 
     main:
@@ -44,6 +45,7 @@ workflow INSERTCLASSIFY {
         bwa_fasta_index,
         ref_gtf,
         line1_db,
+        line1_db_tbi,
     )
     ch_versions = ch_versions.mix(NANOMONSV_INSERTCLASSIFY.out.versions.first())
 
