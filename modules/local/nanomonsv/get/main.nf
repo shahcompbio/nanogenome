@@ -2,7 +2,6 @@
 process NANOMONSV_GET {
     tag "${meta.id}"
     label 'process_high'
-    publishDir "${params.outdir}/nanomonsv/${meta.id}", mode: 'copy', overwrite: true
 
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"
