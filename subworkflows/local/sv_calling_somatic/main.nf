@@ -20,6 +20,7 @@ workflow SV_CALLING_SOMATIC {
     ch_savana_vcf = Channel.empty()
     ch_nanomonsv_vcf = Channel.empty()
     ch_nanomonsv_result = Channel.empty()
+    ch_nanomonsv_sbnd   = Channel.empty()
 
     // run severus if specified
     if (sv_callers.split(',').contains('severus')) {
@@ -63,6 +64,7 @@ workflow SV_CALLING_SOMATIC {
         ch_versions = ch_versions.mix(NANOMONSV_GET.out.versions.first())
         ch_nanomonsv_vcf = NANOMONSV_GET.out.somatic_vcf
         ch_nanomonsv_result = NANOMONSV_GET.out.result_table
+        ch_nanomonsv_sbnd   = NANOMONSV_GET.out.sbnd_table
     }
 
     emit:
@@ -70,5 +72,6 @@ workflow SV_CALLING_SOMATIC {
     savana_vcf       = ch_savana_vcf // channel: [ val(meta), [ somatic_vcf ] ]
     nanomonsv_vcf    = ch_nanomonsv_vcf // channel: [ val(meta), [ somatic_vcf ] ]
     nanomonsv_result = ch_nanomonsv_result // channel: [ val(meta), [ result_txt ] ]
+    nanomonsv_sbnd   = ch_nanomonsv_sbnd   // channel: [ val(meta), [ sbnd_result_txt ] ]
     versions         = ch_versions // channel: [ versions.yml ]
 }
