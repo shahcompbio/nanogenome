@@ -4,7 +4,9 @@ process VNTRCLASSIFY {
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"
-    container "preskaa/annotate_genes:v240817"
+    container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
+        ? 'https://wave.seqera.io/wt/f210a535e75c/wave/build:pandas-2.2.0_python-3.12_pybedtools-0.10.0_bedtools-2.31.1--6b7ae1455b54e090'
+        : 'wave.seqera.io/wt/f210a535e75c/wave/build:pandas-2.2.0_python-3.12_pybedtools-0.10.0_bedtools-2.31.1--6b7ae1455b54e090'}"
 
     input:
     tuple val(meta), path(classified_tsv)

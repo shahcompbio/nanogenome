@@ -4,7 +4,9 @@ process PREPINSERTTABLE {
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"
-    container "preskaa/annotate_genes:v240817"
+    container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
+        ? 'https://wave.seqera.io/wt/77d023807b85/wave/build:pandas-2.2.0_python-3.12--d0a73f3ae04afe9b'
+        : 'wave.seqera.io/wt/77d023807b85/wave/build:pandas-2.2.0_python-3.12--d0a73f3ae04afe9b'}"
 
     input:
     tuple val(meta), path(annotated_sv_tsv), path(nanomonsv_result), path(severus_vcf)
