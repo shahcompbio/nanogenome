@@ -21,7 +21,7 @@ workflow PHASING {
     ch_versions = Channel.empty()
     // split ch_samplesheet into a tumor and normal channel
     ch_samplesheet
-        .map { meta, bam, bai, _snp_vcf, _snp_tbi, _sv_vcf, _annotated_sv_tsv, _nanomonsv_result_txt ->
+        .map { meta, bam, bai, _snp_vcf, _snp_tbi, _sv_vcf, _annotated_sv_tsv, _nanomonsv_result_txt, _sbnd_result_txt ->
             tuple(meta, bam, bai)
         }
         .branch { meta, bam, bai ->
@@ -51,7 +51,7 @@ workflow PHASING {
     ch_versions = ch_versions.mix(WHATSHAP_STATS.out.versions)
     // run whatshap haplotag to tag both tumor and normal bams
     hap_input_ch = ch_samplesheet
-        .map { meta, bam, bai, _snp_vcf, _snp_tbi, _sv_vcf, _annotated_sv_tsv, _nanomonsv_result_txt ->
+        .map { meta, bam, bai, _snp_vcf, _snp_tbi, _sv_vcf, _annotated_sv_tsv, _nanomonsv_result_txt, _sbnd_result_txt ->
             tuple(meta.id, meta, bam, bai)
         }
         .combine(
