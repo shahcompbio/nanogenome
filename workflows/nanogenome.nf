@@ -390,10 +390,10 @@ workflow NANOGENOME {
                     [[id: meta.id, condition: "somatic"], annotated_sv_tsv]
                 }
             insert_classify_nanomonsv_ch = ch_samplesheet
-                .filter { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf, _annotated_sv_tsv, nanomonsv_result_txt ->
+                .filter { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf, _annotated_sv_tsv, nanomonsv_result_txt, _sbnd_result_txt ->
                     nanomonsv_result_txt
                 }
-                .map { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf, _annotated_sv_tsv, nanomonsv_result_txt ->
+                .map { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf, _annotated_sv_tsv, nanomonsv_result_txt, _sbnd_result_txt ->
                     [[id: meta.id], nanomonsv_result_txt]
                 }
             insert_classify_severus_ch = ch_samplesheet
