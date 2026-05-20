@@ -523,7 +523,7 @@
                 },
                 "bwa_index": {
                     "type": "string",
-"description": "Path to pre-built BWA index directory required for SBND classification"
+                    "description": "Path to pre-built BWA index directory required for SBND classification"
                 },
                 "skip_sbnd_vis": {
                     "type": "boolean",
