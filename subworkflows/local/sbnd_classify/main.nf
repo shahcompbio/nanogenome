@@ -7,16 +7,12 @@ include { NANOMONSV_MERGESBNDPDFS } from '../../../modules/local/nanomonsv/merge
 workflow SBND_CLASSIFY {
     take:
     sbnd_result_ch // channel: [ val(meta), path(sbnd_result_txt) ]
-    ref_fasta // path: reference genome FASTA
-    ref_fai // path: reference genome FAI index
     bwa_index // path: pre-built BWA index directory (--bwa_index param)
 
     main:
     // Step 1: Align contigs with BWA, annotate with RepeatMasker
     NANOMONSV_ANNOTATESBND(
         sbnd_result_ch,
-        ref_fasta,
-        ref_fai,
         bwa_index,
     )
 

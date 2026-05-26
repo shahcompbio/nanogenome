@@ -1,6 +1,6 @@
 // Annotate single-breakend SV contig sequences with BWA mem and RepeatMasker
 process NANOMONSV_ANNOTATESBND {
-    tag "$meta.id"
+    tag "${meta.id}"
     label 'process_high'
     stageInMode 'copy'
 
@@ -10,26 +10,25 @@ process NANOMONSV_ANNOTATESBND {
 
     input:
     tuple val(meta), path(sbnd_result_txt)
-    path ref_fasta
-    path ref_fai
     path bwa_index
 
     output:
     tuple val(meta), path("${meta.id}.nanomonsv.bwa.txt"), path("${meta.id}.nanomonsv.rmsk.txt"), emit: annotations
-    tuple val("${task.process}"), val('bwa'),          eval('bwa 2>&1 | grep -m1 Version | sed "s/Version: //"'),            topic: versions, emit: versions_bwa
+    tuple val("${task.process}"), val('bwa'), eval('bwa 2>&1 | grep -m1 Version | sed "s/Version: //"'), topic: versions, emit: versions_bwa
     tuple val("${task.process}"), val('repeatmasker'), eval('RepeatMasker -v 2>&1 | head -1 | sed "s/RepeatMasker version //"'), topic: versions, emit: versions_repeatmasker
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
-    def args             = task.ext.args ?: ''
-    def prefix           = task.ext.prefix ?: "${meta.id}"
-    def bwa_index_prefix = "${bwa_index}/${ref_fasta.baseName}"
+    def args = task.ext.args ?: ''
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
+    INDEX=`find -L ${bwa_index} -name "*.amb" | sed 's/\\.amb\$//'`
+
     annotate_sbnd_contigs.py \\
         ${sbnd_result_txt} \\
-        ${bwa_index_prefix} \\
+        \${INDEX} \\
         ${prefix} \\
         ${args}
     """

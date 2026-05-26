@@ -126,6 +126,26 @@ You can select which TE callers to run (default: `longcalld,tldr`):
 --te_calling --te_calling_tools "longcalld,tldr"
 ```
 
+#### Insertion classification
+
+Classify somatic insertions (L1, Alu, SVA, processed pseudogene, VNTR) using `nanomonsv insert_classify`:
+
+```bash
+nextflow run shahcompbio/nanogenome \
+   -profile docker \
+   --input samplesheet.csv \
+   --outdir results \
+   --fasta reference.fa \
+   --fai reference.fa.fai \
+   --classify_inserts \
+   --ref_gtf /path/to/gencode.annotation.gtf \
+   --line1_db /path/to/LINE1.hg38.bed.gz \
+   --vntr_bed /path/to/human_GRCh38_no_alt_analysis_set.trf.bed \
+   --bwa_index /path/to/bwa_index_dir
+```
+
+> **Note:** Only insertions called by nanomonsv or severus are classified, because these callers provide resolved consensus insertion sequences. SAVANA insertions are excluded because as of SAVANA v1.3.7, it emits multiple per-read supporting sequences rather than a single consensus insertion sequence, which is incompatible with the `nanomonsv insert_classify` input format.
+
 #### Somatic SNV/indel calling
 
 Enable somatic SNV and indel calling with [ClairS](https://github.com/HKU-BAL/ClairS) or [DeepSomatic](https://github.com/google/deepsomatic):

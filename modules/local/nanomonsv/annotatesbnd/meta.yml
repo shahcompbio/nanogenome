@@ -1,77 +1,56 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
-# # TODO nf-core: Add a description of the module and list keywords
 name: "nanomonsv_annotatesbnd"
-description: write your description here
+description: Annotate single-breakend SV contigs from nanomonsv with BWA alignment and RepeatMasker annotations
 keywords:
-  - sort
-  - example
-  - genomics
+  - nanomonsv
+  - single-breakend
+  - structural-variant
+  - bwa
+  - repeatmasker
 tools:
-  ## TODO nf-core: Add a description and other details for the software below
   - "nanomonsv":
-      description: "Python tools for detecting structural variation from nanopore sequence
-        data."
-      homepage: "None"
-      documentation: "None"
+      description: "Python tools for detecting structural variation from nanopore sequence data."
+      documentation: "https://github.com/friend1ws/nanomonsv"
       tool_dev_url: "https://github.com/friend1ws/nanomonsv"
-      doi: ""
       licence: ["GPL v3-or-later"]
-      identifier: null
+  - "bwa":
+      description: "Burrows-Wheeler Aligner for short sequence reads"
+      documentation: "http://bio-bwa.sourceforge.net/"
+      licence: ["GPL v3"]
+  - "repeatmasker":
+      description: "Screen DNA sequences for interspersed repeats and low complexity DNA sequences"
+      documentation: "http://www.repeatmasker.org/"
 
 input:
-  ### TODO nf-core: Add a description of all of the variables used as input
   - - meta:
         type: map
         description: |
           Groovy Map containing sample information
           e.g. `[ id:'sample1' ]`
-    - bam:
+    - sbnd_result_txt:
         type: file
-        description: Sorted BAM/CRAM/SAM file
-        pattern: "*.{bam,cram,sam}"
-        ontologies:
-          - edam: "http://edamontology.org/format_2572" # BAM
-          - edam: "http://edamontology.org/format_2573" # CRAM
-          - edam: "http://edamontology.org/format_3462" # SAM
+        description: NanoMonSV single-breakend result file (.sbnd.result.txt)
+        pattern: "*.sbnd.result.txt"
+  - - bwa_index:
+        type: directory
+        description: |
+          Directory containing pre-built BWA index files (*.amb, *.ann, *.bwt, *.pac, *.sa)
+          relative to the reference genome fasta basename
 
 output:
-  ### TODO nf-core: Add a description of all of the variables used as output
-  bam:
+  annotations:
     - - meta:
           type: map
           description: |
             Groovy Map containing sample information
             e.g. `[ id:'sample1' ]`
-      - "*.bam":
+      - "*.nanomonsv.bwa.txt":
           type: file
-          description: Sorted BAM/CRAM/SAM file
-          pattern: "*.{bam,cram,sam}"
-          ontologies:
-            - edam: "http://edamontology.org/format_2572" # BAM
-            - edam: "http://edamontology.org/format_2573" # CRAM
-            - edam: "http://edamontology.org/format_3462" # SAM
-  versions_nanomonsv:
-    - - "${task.process}":
-          type: string
-          description: The name of the process
-      - "nanomonsv":
-          type: string
-          description: The name of the tool
-      - "nanomonsv --version":
-          type: eval
-          description: The expression to obtain the version of the tool
+          description: BWA alignment annotations for contigs
+      - "*.nanomonsv.rmsk.txt":
+          type: file
+          description: RepeatMasker annotations for contigs
 
-topics:
-  versions:
-    - - ${task.process}:
-          type: string
-          description: The name of the process
-      - nanomonsv:
-          type: string
-          description: The name of the tool
-      - nanomonsv --version:
-          type: eval
-          description: The expression to obtain the version of the tool
 authors:
   - "@apsteinberg"
 maintainers:

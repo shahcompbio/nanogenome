@@ -435,8 +435,6 @@ workflow NANOGENOME {
         }
         SBND_CLASSIFY(
             sbnd_classify_ch,
-            params.fasta,
-            params.fai,
             params.bwa_index,
         )
     }

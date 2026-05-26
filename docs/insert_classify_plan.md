@@ -267,3 +267,7 @@ The nf-test uses `-stub` so files only need to **exist** at the URLs — content
 
 - Classify single-end breakpoints (`sbnd.result.txt`) using nanomonsv's breakpoint classification modules
 - Extend to germline insertions if needed
+
+## Design Decisions
+
+- **SAVANA insertions excluded from classification:** As of SAVANA v1.3.7, the `inserted_sequences.fa` output contains multiple per-read supporting sequences for each insertion variant rather than a single consensus sequence. The `nanomonsv insert_classify` tool expects a single resolved insertion sequence per variant, so SAVANA-only insertions cannot be classified with the current approach. Insertions called by both SAVANA and another caller (nanomonsv or severus) are still included, since the sequence is resolved from the other caller.
