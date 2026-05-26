@@ -426,10 +426,10 @@ workflow NANOGENOME {
         }
         else {
             sbnd_classify_ch = ch_samplesheet
-                .filter { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf, _annotated_sv_tsv, _nanomonsv_result_txt, sbnd_result_txt ->
+                .filter { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf, _annotated_sv_tsv, sbnd_result_txt, _nanomonsv_result_txt ->
                     sbnd_result_txt
                 }
-                .map { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf, _annotated_sv_tsv, _nanomonsv_result_txt, sbnd_result_txt ->
+                .map { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf, _annotated_sv_tsv, sbnd_result_txt, _nanomonsv_result_txt ->
                     [[id: meta.id], sbnd_result_txt]
                 }
         }
