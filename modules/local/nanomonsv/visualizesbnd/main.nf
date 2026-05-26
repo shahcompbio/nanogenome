@@ -1,6 +1,6 @@
 // Visualize single-breakend SV contig annotations with BWA and RepeatMasker tracks
 process NANOMONSV_VISUALIZESBND {
-    tag "$meta.id"
+    tag "${meta.id}"
     label 'process_low'
 
     // Container built with Wave from environment.yml and pushed to quay.io/shahlab_singularity.
@@ -18,10 +18,10 @@ process NANOMONSV_VISUALIZESBND {
     task.ext.when == null || task.ext.when
 
     script:
-    def args   = task.ext.args ?: ''
+    def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    Rscript plot_sbnd_contigs.R \\
+    plot_sbnd_contigs.R \\
         ${prefix} \\
         ${prefix}.nanomonsv.sbnd_vis \\
         ${args}
