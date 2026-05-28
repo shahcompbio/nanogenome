@@ -7,9 +7,16 @@ Adapted from nanomonsv/misc/subscript_sbnd/annotate_contig.py
 
 import csv, os, shutil, subprocess, sys
 import pysam
-import sys
 
-csv.field_size_limit(sys.maxsize)
+# Set CSV field size limit to maximum safe value (handles OverflowError on
+# platforms where C long is smaller than sys.maxsize)
+maxInt = sys.maxsize
+while True:
+    try:
+        csv.field_size_limit(maxInt)
+        break
+    except OverflowError:
+        maxInt = int(maxInt / 10)
 
 
 def proc_rmsk(input_file, output_file):
