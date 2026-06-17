@@ -20,6 +20,18 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 ## Pipeline summary
 
+### Somatic workflow
+
+<p align="center">
+    <img src="docs/images/metromap_somatic.svg" alt="NanoGenome somatic metro map" width="100%">
+</p>
+
+### Germline workflow
+
+<p align="center">
+    <img src="docs/images/metromap_germline.svg" alt="NanoGenome germline metro map" width="100%">
+</p>
+
 1. Variant calling and phasing ([`Clair3`](https://github.com/HKU-BAL/Clair3), [`LongPhase`](https://github.com/twolinin/LongPhase))
 2. BAM haplotagging ([`WhatsHap`](https://whatshap.readthedocs.io/))
 3. Somatic structural variant calling with ensemble approach

@@ -1,0 +1,90 @@
+%%metro title: NanoGenome — Somatic
+%%metro style: dark
+%%metro files: bam_in | Tumor/Normal BAM
+%%metro file: report_out | MultiQC Report
+%%metro file: annotsv_out | AnnotSV Output
+%%metro file: wakhan_out | Wakhan CNV
+%%metro file: savana_cna_out | SAVANA CNA
+%%metro line: sv | Structural Variant | #2196F3
+%%metro legend: none
+
+%%metro grid: phasing | 0,0
+%%metro grid: sv_calling | 1,0
+%%metro grid: annotation | 2,0
+%%metro grid: viz_qc | 3,0
+%%metro grid: cnv | 1,1
+
+graph LR
+
+    subgraph phasing [Phasing & Haplotagging]
+        %%metro exit: right | sv
+        bam_in[ ]
+        clair3[CLAIR3]
+        longphase[LONGPHASE]
+        tabix[TABIX]
+        whatshap[WHATSHAP\nHAPLOTAG]
+        samtools_idx[SAMTOOLS\nINDEX]
+
+        bam_in -->|sv| clair3
+        clair3 -->|sv| longphase
+        longphase -->|sv| tabix
+        tabix -->|sv| whatshap
+        whatshap -->|sv| samtools_idx
+    end
+
+    subgraph sv_calling [Somatic SV Calling]
+        %%metro entry: left | sv
+        %%metro exit: right | sv
+        severus[SEVERUS]
+        savana[SAVANA]
+        nanomonsv[NANOMONSV]
+    end
+
+    subgraph cnv [Copy Number Calling]
+        %%metro entry: top | sv
+        wakhan[WAKHAN]
+        savana_cna[SAVANA CNA]
+        wakhan_out[ ]
+        savana_cna_out[ ]
+
+        wakhan -->|sv| wakhan_out
+        savana_cna -->|sv| savana_cna_out
+    end
+
+    subgraph annotation [SV Merge & Annotation]
+        %%metro entry: left | sv
+        %%metro exit: right | sv
+        minda[MINDA]
+        vcf2tsv[VCF2TSV]
+        annotategenes[ANNOTATE\nGENES]
+        insertclassify[INSERT\nCLASSIFY]
+        annotsv[ANNOTSV]
+        annotsv_out[ ]
+
+        minda -->|sv| vcf2tsv
+        vcf2tsv -->|sv| annotategenes
+        annotategenes -->|sv| insertclassify
+        minda -->|sv| annotsv
+        annotsv -->|sv| annotsv_out
+    end
+
+    subgraph viz_qc [Visualization & QC]
+        %%metro entry: left | sv
+        circos[PLOTCIRCOS]
+        multiqc[MULTIQC]
+        report_out[ ]
+
+        circos -->|sv| multiqc
+        multiqc -->|sv| report_out
+    end
+
+    %% Inter-section edges
+    samtools_idx -->|sv| severus
+    samtools_idx -->|sv| savana
+    samtools_idx -->|sv| nanomonsv
+    severus -->|sv| minda
+    savana -->|sv| minda
+    nanomonsv -->|sv| minda
+    severus -->|sv| wakhan
+    savana -->|sv| savana_cna
+    insertclassify -->|sv| circos
