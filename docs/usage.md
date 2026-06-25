@@ -16,18 +16,18 @@ You will need to create a samplesheet with information about the samples you wou
 
 The samplesheet must be a comma-separated file with the following columns:
 
-| Column        | Description                                                                              | Required |
-| ------------- | ---------------------------------------------------------------------------------------- | -------- |
-| `sample`      | Sample identifier. Must be the same for tumor-normal pairs.                              | Yes      |
-| `condition`   | Either `tumor` or `normal`.                                                              | Yes      |
-| `bam`         | Full path to aligned BAM file.                                                           | Yes      |
-| `bai`         | Full path to BAM index file (.bai).                                                      | Yes      |
-| `snp_vcf`     | Path to pre-phased SNP VCF file (.vcf or .vcf.gz). Required if `--skip_phasing` is used. | No       |
-| `snp_tbi`     | Path to VCF index file (.tbi). Required when `snp_vcf` is provided.                      | No       |
-| `severus_vcf` | Path to pre-computed Severus SV VCF (.vcf or .vcf.gz).                                   | No       |
-| `annotated_sv_tsv` | Path to a pre-computed annotated SV table (.tsv). Required for standalone insertion classification (`--classify_inserts --skip_somatic`). | No |
-| `nanomonsv_result_txt` | Path to a pre-computed NanoMonSV result table (.txt). Required for standalone insertion classification. | No |
-| `sbnd_result_txt` | Path to a pre-computed NanoMonSV single-breakend result file (.txt). Required for standalone single-breakend classification. | No |
+| Column                 | Description                                                                                                                               | Required |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `sample`               | Sample identifier. Must be the same for tumor-normal pairs.                                                                               | Yes      |
+| `condition`            | Either `tumor` or `normal`.                                                                                                               | Yes      |
+| `bam`                  | Full path to aligned BAM file.                                                                                                            | Yes      |
+| `bai`                  | Full path to BAM index file (.bai).                                                                                                       | Yes      |
+| `snp_vcf`              | Path to pre-phased SNP VCF file (.vcf or .vcf.gz). Required if `--skip_phasing` is used.                                                  | No       |
+| `snp_tbi`              | Path to VCF index file (.tbi). Required when `snp_vcf` is provided.                                                                       | No       |
+| `severus_vcf`          | Path to pre-computed Severus SV VCF (.vcf or .vcf.gz).                                                                                    | No       |
+| `annotated_sv_tsv`     | Path to a pre-computed annotated SV table (.tsv). Required for standalone insertion classification (`--classify_inserts --skip_somatic`). | No       |
+| `nanomonsv_result_txt` | Path to a pre-computed NanoMonSV result table (.txt). Required for standalone insertion classification.                                   | No       |
+| `sbnd_result_txt`      | Path to a pre-computed NanoMonSV single-breakend result file (.txt). Required for standalone single-breakend classification.              | No       |
 
 ### Somatic analysis (tumor-normal pairs)
 
