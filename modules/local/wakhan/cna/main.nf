@@ -3,7 +3,6 @@ process WAKHAN_CNA {
     tag "${meta.id}"
     label 'process_high'
     stageInMode 'copy'
-    publishDir "${params.outdir}/wakhan/${meta.id}", mode: 'copy', overwrite: true, saveAs: { filename -> filename.startsWith("solution_") ? "cna_solutions/${filename}" : filename }
 
     // TODO nf-core: See section in main README for further information regarding finding and adding container addresses to the section below.
     conda "${moduleDir}/environment.yml"

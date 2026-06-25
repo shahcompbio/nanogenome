@@ -3,7 +3,6 @@ process WAKHAN_REPHASE_CNA {
     tag "${meta.id}"
     label 'process_high'
     stageInMode 'copy'
-    publishDir "${params.outdir}/wakhan/${meta.id}", mode: 'copy', overwrite: true, saveAs: { filename -> filename.startsWith("solution_") ? "cna_solutions/${filename}" : filename }
 
     conda "${moduleDir}/environment.yml"
     container "quay.io/shahlab_singularity/wakhan:20260406-d375abe"

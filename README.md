@@ -20,6 +20,18 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 ## Pipeline summary
 
+### Somatic workflow
+
+<p align="center">
+    <img src="docs/images/metromap_somatic.svg" alt="NanoGenome somatic metro map" width="100%">
+</p>
+
+### Germline workflow
+
+<p align="center">
+    <img src="docs/images/metromap_germline.svg" alt="NanoGenome germline metro map" width="100%">
+</p>
+
 1. Variant calling and phasing ([`Clair3`](https://github.com/HKU-BAL/Clair3), [`LongPhase`](https://github.com/twolinin/LongPhase))
 2. BAM haplotagging ([`WhatsHap`](https://whatshap.readthedocs.io/))
 3. Somatic structural variant calling with ensemble approach
@@ -34,9 +46,12 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
    - Individual callers: [`LongcallD`](https://github.com/ydLiu-HIT/LongcallD), [`tldr`](https://github.com/adamewing/tldr)
    - Somatic (tumor-normal) and germline TE calling modes
    - AnnotSV annotation of TE insertions
-8. SV and CNA annotation ([`BioMart`](https://www.ensembl.org/info/data/biomart/index.html), [`OncoKB`](https://www.oncokb.org/), [`AnnotSV`](https://lbgi.fr/AnnotSV/))
-9. Visualization of SVs and CNAs (Circos for somatic, karyoplot for germline)
-10. Present QC for all workflow stages ([`MultiQC`](http://multiqc.info/))
+8. Mobile element classification of somatic insertions and single breakends (optional, `--classify_inserts`)
+   - Insertion classification (L1, Alu, SVA, processed pseudogene, VNTR) with [`nanomonsv insert_classify`](https://github.com/friend1ws/nanomonsv)
+   - Single-breakend classification with BWA and RepeatMasker annotation
+9. SV and CNA annotation ([`BioMart`](https://www.ensembl.org/info/data/biomart/index.html), [`OncoKB`](https://www.oncokb.org/), [`AnnotSV`](https://lbgi.fr/AnnotSV/))
+10. Visualization of SVs and CNAs (Circos for somatic, karyoplot for germline)
+11. Present QC for all workflow stages ([`MultiQC`](http://multiqc.info/))
 
 ## Usage
 
@@ -62,6 +77,7 @@ Each row represents a sample with the following columns:
 - `snp_vcf`: (Optional) Path to pre-phased SNP VCF file (required if `--skip_phasing` is used)
 - `snp_tbi`: (Optional) Path to VCF index file
 - `severus_vcf`: (Optional) Path to pre-computed Severus SV VCF
+- `annotated_sv_tsv`, `nanomonsv_result_txt`, `sbnd_result_txt`: (Optional) Pre-computed inputs for standalone classification with `--classify_inserts --skip_somatic`; see [usage docs](docs/usage.md#samplesheet-input)
 
 Now, you can run the pipeline using:
 

@@ -502,6 +502,35 @@
                     "description": "skip VEP but still convert vcf to maf"
                 }
             }
+        },
+        "nanomonsv_insertion_classify": {
+            "title": "Nanomonsv insertion classify",
+            "type": "object",
+            "description": "Classify insertions called by nanomonsv/severus",
+            "default": "",
+            "properties": {
+                "ref_gtf": {
+                    "type": "string",
+                    "description": "Gene annotation GTF file for nanomonsv insert_classify (e.g., GENCODE v45)"
+                },
+                "line1_db": {
+                    "type": "string",
+                    "description": "LINE1 database BED file for nanomonsv insert_classify"
+                },
+                "famdb_dir": {
+                    "type": "string",
+                    "description": "RepeatMasker famdb directory path (bind-mounted into container)"
+                },
+                "bwa_index": {
+                    "type": "string",
+                    "description": "Path to pre-built BWA index directory required for SBND classification"
+                },
+                "skip_sbnd_vis": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip per-contig PDF visualization of single-breakend SVs"
+                }
+            }
         }
     },
     "allOf": [
@@ -546,6 +575,9 @@
         },
         {
             "$ref": "#/$defs/somatic_snv_indel_calling_options"
+        },
+        {
+            "$ref": "#/$defs/nanomonsv_insertion_classify"
         }
     ],
     "properties": {
@@ -556,6 +588,10 @@
         "skip_somatic": {
             "type": "boolean",
             "description": "Skip default somatic structural variant calling workflow"
+        },
+        "somatic_snv_calling": {
+            "type": "boolean",
+            "description": "run somatic snv calling (skipped by default)"
         },
         "longcalld_platform": {
             "type": "string",
@@ -579,9 +615,9 @@
             "type": "boolean",
             "description": "output refined read alignments from longcalld"
         },
-        "somatic_snv_calling": {
+        "classify_inserts": {
             "type": "boolean",
-            "description": "run somatic snv calling (skipped by default)"
+            "description": "Enable somatic insertion classification with nanomonsv insert_classify"
         }
     }
 }

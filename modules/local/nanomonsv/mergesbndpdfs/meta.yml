@@ -1,0 +1,37 @@
+name: "nanomonsv_mergesbndpdfs"
+description: Merge per-contig SBND visualization PDFs into a single combined PDF using pdfunite
+keywords:
+  - sv
+  - single-breakend
+  - pdf
+  - visualization
+  - merge
+tools:
+  - pdfunite:
+      description: PDF merging utility from the poppler suite
+      homepage: https://poppler.freedesktop.org/
+      licence: ["GPL-2.0-or-later"]
+input:
+  - - meta:
+        type: map
+        description: Groovy Map containing sample information e.g. [ id:'sample1' ]
+    - vis_dir:
+        type: directory
+        description: Directory of per-contig SBND visualization PDFs (output of NANOMONSV_VISUALIZESBND)
+        pattern: "*.nanomonsv.sbnd_vis"
+output:
+  - merged_pdf:
+      - meta:
+          type: map
+          description: Groovy Map containing sample information
+      - "*.nanomonsv.sbnd.pdf":
+          type: file
+          description: Single combined PDF with all per-contig visualizations
+          pattern: "*.nanomonsv.sbnd.pdf"
+  - versions:
+      - versions.yml:
+          type: file
+          description: File containing software versions
+          pattern: "versions.yml"
+authors:
+  - "@apsteinberg"

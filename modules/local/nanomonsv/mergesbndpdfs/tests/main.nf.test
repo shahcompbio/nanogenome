@@ -1,0 +1,28 @@
+nextflow_process {
+
+    name "Test Process NANOMONSV_MERGESBNDPDFS"
+    script "../main.nf"
+    process "NANOMONSV_MERGESBNDPDFS"
+
+    test("stub") {
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id: 'test_sample' ],
+                    file('test_sample.nanomonsv.sbnd_vis')
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert process.out.merged_pdf.size() == 1 }
+            )
+        }
+    }
+}

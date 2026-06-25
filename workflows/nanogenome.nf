@@ -12,6 +12,8 @@ include { BAM_SNV_CALLING_SOMATIC    } from '../subworkflows/local/bam_snv_calli
 include { PLOTCIRCOS                 } from '../modules/local/plotcircos/main'
 include { SVKARYOPLOT                } from '../modules/local/svkaryoplot/main'
 include { BAM_TE_CALLING             } from '../subworkflows/local/bam_te_calling/main'
+include { INSERTCLASSIFY             } from '../subworkflows/local/insertclassify/main'
+include { SBND_CLASSIFY              } from '../subworkflows/local/sbnd_classify/main'
 include { MULTIQC                    } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap           } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc       } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -76,7 +78,7 @@ workflow NANOGENOME {
         // split samplesheet into tumor/normal
         // ch_samplesheet.view()
         bam_ch = ch_samplesheet
-            .map { meta, bam, bai, _snp_vcf, _snp_tbi, _sv_vcf ->
+            .map { meta, bam, bai, _snp_vcf, _snp_tbi, _sv_vcf, _annotated_sv_tsv, _nanomonsv_result_txt, _sbnd_result_txt ->
                 tuple(meta, bam, bai)
             }
             .branch { meta, _bam, _bai ->
@@ -85,7 +87,7 @@ workflow NANOGENOME {
             }
         // construct snps channel
         snps_ch = ch_samplesheet
-            .map { meta, _bam, _bai, snp_vcf, snp_tbi, _sv_vcf ->
+            .map { meta, _bam, _bai, snp_vcf, snp_tbi, _sv_vcf, _annotated_sv_tsv, _nanomonsv_result_txt, _sbnd_result_txt ->
                 tuple(meta, snp_vcf, snp_tbi)
             }
             .filter { _meta, snp_vcf, _snp_tbi ->
@@ -95,7 +97,7 @@ workflow NANOGENOME {
         // also construct bam/snps channel for wakhan
         // ch_samplesheet.view()
         bam_snps_ch = ch_samplesheet
-            .map { meta, bam, bai, _snp_vcf, _snp_tbi, _sv_vcf -> tuple(meta.id, meta, bam, bai) }
+            .map { meta, bam, bai, _snp_vcf, _snp_tbi, _sv_vcf, _annotated_sv_tsv, _nanomonsv_result_txt, _sbnd_result_txt -> tuple(meta.id, meta, bam, bai) }
             .combine(
                 snps_ch.map { meta, snp_vcf, snp_tbi -> tuple(meta.id, snp_vcf, snp_tbi) },
                 by: 0
@@ -232,17 +234,17 @@ workflow NANOGENOME {
         }
         else {
             // branch the samplesheet
-            cna_ch = ch_samplesheet.branch { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf ->
+            cna_ch = ch_samplesheet.branch { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf, _annotated_sv_tsv, _nanomonsv_result_txt, _sbnd_result_txt ->
                 tumor: meta.condition == 'tumor'
                 norm: meta.condition == 'normal'
             }
             // contruct cna input ch
             cna_input_ch = cna_ch.tumor
-                .map { meta, bam, bai, _snp_vcf, _snp_tbi, sv_vcf ->
+                .map { meta, bam, bai, _snp_vcf, _snp_tbi, sv_vcf, _annotated_sv_tsv, _nanomonsv_result_txt, _sbnd_result_txt ->
                     tuple(meta.id, bam, bai, sv_vcf)
                 }
                 .join(
-                    cna_ch.norm.map { meta, bam, bai, snp_vcf, snp_tbi, _sv_vcf ->
+                    cna_ch.norm.map { meta, bam, bai, snp_vcf, snp_tbi, _sv_vcf, _annotated_sv_tsv, _nanomonsv_result_txt, _sbnd_result_txt ->
                         tuple(meta.id, bam, bai, snp_vcf, snp_tbi)
                     },
                     by: 0
@@ -268,7 +270,7 @@ workflow NANOGENOME {
     */
     if (params.somatic_snv_calling) {
         bam_ch = ch_samplesheet
-            .map { meta, bam, bai, _snp_vcf, _snp_tbi, _severus_vcf ->
+            .map { meta, bam, bai, _snp_vcf, _snp_tbi, _severus_vcf, _annotated_sv_tsv, _nanomonsv_result_txt, _sbnd_result_txt ->
                 tuple(meta, bam, bai)
             }
             .branch { meta, _bam, _bai ->
@@ -356,11 +358,93 @@ workflow NANOGENOME {
         ch_versions = ch_versions.mix(SVKARYOPLOT.out.versions.first())
     }
     /*
+    * INSERTION CLASSIFICATION WORKFLOW
+    */
+    if (params.classify_inserts) {
+        // validate required parameters
+        if (!params.ref_gtf) {
+            error("ERROR: --ref_gtf is required when --classify_inserts is enabled. Please provide a gene annotation GTF file.")
+        }
+        if (!params.line1_db) {
+            error("ERROR: --line1_db is required when --classify_inserts is enabled. Please provide a LINE1 database BED file.")
+        }
+        if (!params.vntr_bed) {
+            error("ERROR: --vntr_bed is required when --classify_inserts is enabled. Please provide a VNTR BED file.")
+        }
+        if (!params.bwa_index) {
+            error("ERROR: --bwa_index is required when --classify_inserts is enabled. Please provide the directory containing BWA index files for the reference genome.")
+        }
+        if (!params.skip_somatic) {
+            // Pipeline-integrated mode: use outputs from upstream processes
+            insert_classify_sv_ch = annot_sv_ch.somatic.map { _id, meta, sv -> [meta, sv] }
+            insert_classify_nanomonsv_ch = SV_CALLING_SOMATIC.out.nanomonsv_result
+            insert_classify_severus_ch = SV_CALLING_SOMATIC.out.severus_vcf
+        }
+        else {
+            // Standalone mode: read pre-computed inputs from samplesheet
+            insert_classify_sv_ch = ch_samplesheet
+                .filter { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf, annotated_sv_tsv, _sbnd_result_txt, _nanomonsv_result_txt ->
+                    annotated_sv_tsv
+                }
+                .map { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf, annotated_sv_tsv, _sbnd_result_txt, _nanomonsv_result_txt ->
+                    [[id: meta.id, condition: "somatic"], annotated_sv_tsv]
+                }
+            insert_classify_nanomonsv_ch = ch_samplesheet
+                .filter { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf, _annotated_sv_tsv, _sbnd_result_txt, nanomonsv_result_txt ->
+                    nanomonsv_result_txt
+                }
+                .map { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf, _annotated_sv_tsv, _sbnd_result_txt, nanomonsv_result_txt ->
+                    [[id: meta.id], nanomonsv_result_txt]
+                }
+
+            insert_classify_severus_ch = ch_samplesheet
+                .filter { meta, _bam, _bai, _snp_vcf, _snp_tbi, severus_vcf, _annotated_sv_tsv, _sbnd_result_txt, _nanomonsv_result_txt ->
+                    severus_vcf
+                }
+                .map { meta, _bam, _bai, _snp_vcf, _snp_tbi, severus_vcf, _annotated_sv_tsv, _sbnd_result_txt, _nanomonsv_result_txt ->
+                    [[id: meta.id], severus_vcf]
+                }
+        }
+        INSERTCLASSIFY(
+            insert_classify_sv_ch,
+            insert_classify_nanomonsv_ch,
+            insert_classify_severus_ch,
+            params.fasta,
+            params.bwa_index,
+            params.ref_gtf,
+            params.line1_db,
+            "${params.line1_db}.tbi",
+            params.vntr_bed,
+        )
+        ch_versions = ch_versions.mix(INSERTCLASSIFY.out.versions)
+
+        // SBND classification (runs alongside insert classification)
+        if (!params.bwa_index) {
+            error("ERROR: --bwa_index is required when --classify_inserts is enabled. Please provide a pre-built BWA index directory.")
+        }
+        if (!params.skip_somatic) {
+            sbnd_classify_ch = SV_CALLING_SOMATIC.out.nanomonsv_sbnd
+        }
+        else {
+            sbnd_classify_ch = ch_samplesheet
+                .filter { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf, _annotated_sv_tsv, sbnd_result_txt, _nanomonsv_result_txt ->
+                    sbnd_result_txt
+                }
+                .map { meta, _bam, _bai, _snp_vcf, _snp_tbi, _severus_vcf, _annotated_sv_tsv, sbnd_result_txt, _nanomonsv_result_txt ->
+                    [[id: meta.id], sbnd_result_txt]
+                }
+        }
+        SBND_CLASSIFY(
+            sbnd_classify_ch,
+            params.bwa_index,
+        )
+    }
+    /*
     * TE-MEDIATED INSERTION CALLING WORKFLOW
     */
     if (params.te_calling) {
         bam_ch = ch_samplesheet
-            .map { meta, bam, bai, _snp_vcf, _snp_tbi, _severus_vcf ->
+            .map { meta, bam, bai, _snp_vcf, _snp_tbi, _severus_vcf, _annotated_sv_tsv, _nanomonsv_result_txt, _sbnd_result_txt ->
                 tuple(meta, bam, bai)
             }
             .branch { meta, _bam, _bai ->

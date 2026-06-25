@@ -17,6 +17,8 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 - [Consensus SV calling](#consensus-sv-calling) - Merging results from multiple callers with MINDA
 - [Copy number analysis](#copy-number-analysis) - Haplotype-resolved CNA detection
 - [TE calling](#te-calling) - Transposable element insertion detection
+- [Insertion classification](#insertion-classification) - Mobile element classification of somatic insertions
+- [Single-breakend classification](#single-breakend-classification) - Mobile element classification of single-breakend SVs
 - [SV annotation](#sv-annotation) - Gene and clinical annotation of SVs
 - [Visualization](#visualization) - Circos plots and karyoplots
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
@@ -125,6 +127,36 @@ Haplotype-resolved copy number analysis is performed by [Wakhan](https://github.
 </details>
 
 Transposable element calling (enabled with `--te_calling`) detects TE-mediated insertions using [LongcallD](https://github.com/ydLiu-HIT/LongcallD) and/or [tldr](https://github.com/adamewing/tldr). LongcallD calls are annotated with [AnnotSV](https://lbgi.fr/AnnotSV/) for comprehensive TE annotation. The workflow supports both somatic (tumor-normal with `--mosaic` mode) and germline calling modes (via `--skip_somatic_te`). Callers can be selected with `--te_calling_tools` (default: `longcalld,tldr`).
+
+### Insertion classification
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `insert_classify/<sample>/`
+  - `*_somatic_inserts.tsv`: Insertion table reformatted from the annotated SV table, NanoMonSV result table, and Severus VCF, with `<INS>` symbolic alleles resolved to sequences.
+  - `*_somatic_inserts.classified.tsv`: Insertions classified by `nanomonsv insert_classify` as L1, Alu, SVA, processed pseudogene (PSD), or unclassified.
+  - `*_somatic_inserts.final_classified.tsv`: Final classified insertion table, with remaining unclassified insertions labeled as VNTR expansions where they overlap the `--vntr_bed` regions.
+
+</details>
+
+Somatic insertions called by NanoMonSV and Severus (enabled with `--classify_inserts`) are classified by mobile element type using [`nanomonsv insert_classify`](https://github.com/friend1ws/nanomonsv), with additional VNTR expansion labeling for insertions that remain unclassified. SAVANA insertions are not included, since SAVANA does not provide a single consensus insertion sequence per call.
+
+### Single-breakend classification
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `sbnd_classify/<sample>/`
+  - `*.nanomonsv.bwa.txt`: BWA alignment results for single-breakend contig sequences.
+  - `*.nanomonsv.rmsk.txt`: RepeatMasker annotation of single-breakend contig sequences.
+  - `*.class.txt`: Single-breakend classification calls.
+  - `*.nanomonsv.sbnd_vis/`: Per-contig PDF visualizations of BWA and RepeatMasker annotation tracks (skipped with `--skip_sbnd_vis`).
+  - `*.nanomonsv.sbnd.pdf`: Combined PDF of all per-contig visualizations (skipped with `--skip_sbnd_vis`).
+
+</details>
+
+Single-breakend (SBND) structural variants from NanoMonSV are aligned with BWA and annotated with RepeatMasker to classify mobile-element-derived single breakends. This runs automatically alongside insertion classification when `--classify_inserts` is set.
 
 ### SV annotation
 

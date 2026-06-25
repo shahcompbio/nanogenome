@@ -1,0 +1,75 @@
+%%metro title: NanoGenome — Germline
+%%metro style: dark
+%%metro files: bam_in | Normal BAM
+%%metro file: report_out | MultiQC Report
+%%metro file: annotsv_out | AnnotSV Output
+%%metro line: sv | Structural Variant | #2db572
+%%metro legend: none
+
+%%metro grid: phasing | 0,0
+%%metro grid: sv_calling | 1,0
+%%metro grid: annotation | 2,0
+%%metro grid: viz_qc | 3,0
+
+graph LR
+
+    subgraph phasing [Phasing & Haplotagging]
+        %%metro exit: right | sv
+        bam_in[ ]
+        clair3[CLAIR3]
+        longphase[LONGPHASE]
+        tabix[TABIX]
+        whatshap[WHATSHAP\nHAPLOTAG]
+        samtools_idx[SAMTOOLS\nINDEX]
+
+        bam_in -->|sv| clair3
+        clair3 -->|sv| longphase
+        longphase -->|sv| tabix
+        tabix -->|sv| whatshap
+        whatshap -->|sv| samtools_idx
+    end
+
+    subgraph sv_calling [Germline SV Calling]
+        %%metro entry: left | sv
+        %%metro exit: right | sv
+        severus[SEVERUS]
+        cutesv[CUTESV]
+        sniffles[SNIFFLES]
+        longcalld[LONGCALLD]
+    end
+
+    subgraph annotation [SV Merge & Annotation]
+        %%metro entry: left | sv
+        %%metro exit: right | sv
+        minda[MINDA]
+        vcf2tsv[VCF2TSV]
+        annotategenes[ANNOTATE\nGENES]
+        annotsv[ANNOTSV]
+        annotsv_out[ ]
+
+        minda -->|sv| vcf2tsv
+        vcf2tsv -->|sv| annotategenes
+        minda -->|sv| annotsv
+        annotsv -->|sv| annotsv_out
+    end
+
+    subgraph viz_qc [Visualization & QC]
+        %%metro entry: left | sv
+        karyoplot[SVKARYOPLOT]
+        multiqc[MULTIQC]
+        report_out[ ]
+
+        karyoplot -->|sv| multiqc
+        multiqc -->|sv| report_out
+    end
+
+    %% Inter-section edges
+    samtools_idx -->|sv| severus
+    samtools_idx -->|sv| cutesv
+    samtools_idx -->|sv| sniffles
+    samtools_idx -->|sv| longcalld
+    severus -->|sv| minda
+    cutesv -->|sv| minda
+    sniffles -->|sv| minda
+    longcalld -->|sv| minda
+    annotategenes -->|sv| karyoplot
