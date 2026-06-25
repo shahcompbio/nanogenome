@@ -14,11 +14,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `bioct2t` Docker container with `BiocT2T`, `GenomicFeatures`, and `BSgenome.Hsapiens.NCBI.T2T.CHM13v2.0`
 - `t2t` option for the `--genome_build` parameter (in addition to `hg38` and `hg19`)
 - nf-test profiles `t2t_somatic_sv_only` and `t2t_germline_sv_only` for T2T SV calling + annotation
+- Insertion classification subworkflow (`INSERTCLASSIFY`) classifying somatic insertions from NanoMonSV and Severus as L1, Alu, SVA, processed pseudogene, or VNTR expansion via [`nanomonsv insert_classify`](https://github.com/friend1ws/nanomonsv) and VNTR BED intersection
+- Single-breakend (SBND) classification subworkflow (`SBND_CLASSIFY`) annotating and classifying NanoMonSV single-breakend contigs using BWA alignment and RepeatMasker, with per-contig PDF visualization
+- New local modules: `PREPINSERTTABLE`, `NANOMONSV_INSERTCLASSIFY`, `VNTRCLASSIFY`, `NANOMONSV_ANNOTATESBND`, `NANOMONSV_CLASSIFYSBND`, `NANOMONSV_VISUALIZESBND`, `NANOMONSV_MERGESBNDPDFS`
+- New parameters: `--classify_inserts`, `--ref_gtf`, `--line1_db`, `--famdb_dir`, `--bwa_index`, `--skip_sbnd_vis`
+- Standalone classification mode: when `--classify_inserts` is combined with `--skip_somatic`, classification inputs are read from new optional samplesheet columns (`annotated_sv_tsv`, `nanomonsv_result_txt`, `sbnd_result_txt`) instead of upstream pipeline outputs
+- Pipeline metro map diagrams (`docs/images/metromap_somatic.svg`, `docs/images/metromap_germline.svg`) embedded in the README
+- nf-test `tests/insert_classify_only.nf.test` for the standalone insertion classification workflow
 
 ### Changed
 
 - `ANNOTATE_SV` subworkflow now routes gene annotation through `T2TGENETABLE` when `--genome_build t2t` is set; otherwise falls back to BioMart as before
 - `svkaryoplot.R` now loads `BSgenome.Hsapiens.NCBI.T2T.CHM13v2.0` and maps `t2t` to the karyoploteR-compatible `T2T-CHM13v2.0` genome name
+- `samplesheet` schema no longer requires `bam`/`bai` columns, to support standalone classification-only runs
+- Refactored samplesheet channel destructuring throughout `workflows/nanogenome.nf` to account for the new optional columns
 
 ## [1.4.0] - 2026-04-08
 

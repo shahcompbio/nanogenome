@@ -25,6 +25,9 @@ The samplesheet must be a comma-separated file with the following columns:
 | `snp_vcf`     | Path to pre-phased SNP VCF file (.vcf or .vcf.gz). Required if `--skip_phasing` is used. | No       |
 | `snp_tbi`     | Path to VCF index file (.tbi). Required when `snp_vcf` is provided.                      | No       |
 | `severus_vcf` | Path to pre-computed Severus SV VCF (.vcf or .vcf.gz).                                   | No       |
+| `annotated_sv_tsv` | Path to a pre-computed annotated SV table (.tsv). Required for standalone insertion classification (`--classify_inserts --skip_somatic`). | No |
+| `nanomonsv_result_txt` | Path to a pre-computed NanoMonSV result table (.txt). Required for standalone insertion classification. | No |
+| `sbnd_result_txt` | Path to a pre-computed NanoMonSV single-breakend result file (.txt). Required for standalone single-breakend classification. | No |
 
 ### Somatic analysis (tumor-normal pairs)
 
@@ -145,6 +148,19 @@ nextflow run shahcompbio/nanogenome \
 ```
 
 > **Note:** Only insertions called by nanomonsv or severus are classified, because these callers provide resolved consensus insertion sequences. SAVANA insertions are excluded because as of SAVANA v1.3.7, it emits multiple per-read supporting sequences rather than a single consensus insertion sequence, which is incompatible with the `nanomonsv insert_classify` input format.
+
+Setting `--classify_inserts` also runs single-breakend (SBND) classification automatically alongside insertion classification. NanoMonSV single-breakend contigs are aligned with BWA, annotated with RepeatMasker, and classified to identify mobile-element-derived single breakends. Per-contig PDF visualizations are generated and merged by default; disable with `--skip_sbnd_vis`.
+
+##### Standalone classification (`--skip_somatic`)
+
+If you already have somatic SV calling results and only want to run classification, set `--skip_somatic` alongside `--classify_inserts` and provide the pre-computed inputs via the samplesheet:
+
+```csv title="samplesheet.csv"
+sample,condition,bam,bai,snp_vcf,snp_tbi,severus_vcf,annotated_sv_tsv,nanomonsv_result_txt,sbnd_result_txt
+SAMPLE1,tumor,/path/to/tumor.bam,/path/to/tumor.bam.bai,,,,/path/to/annotated_sv.tsv,/path/to/nanomonsv_result.txt,/path/to/sbnd_result.txt
+```
+
+`annotated_sv_tsv` and `nanomonsv_result_txt` are required for insertion classification; `sbnd_result_txt` is required for single-breakend classification. Either can be omitted if you only want to run the other.
 
 #### Somatic SNV/indel calling
 
