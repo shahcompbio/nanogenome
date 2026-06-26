@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: "nanomonsv_annotatesbnd"
+description: Annotate single-breakend SV contigs from nanomonsv with BWA alignment and RepeatMasker annotations
+keywords:
+  - nanomonsv
+  - single-breakend
+  - structural-variant
+  - bwa
+  - repeatmasker
+tools:
+  - "nanomonsv":
+      description: "Python tools for detecting structural variation from nanopore sequence data."
+      documentation: "https://github.com/friend1ws/nanomonsv"
+      tool_dev_url: "https://github.com/friend1ws/nanomonsv"
+      licence: ["GPL v3-or-later"]
+  - "bwa":
+      description: "Burrows-Wheeler Aligner for short sequence reads"
+      documentation: "http://bio-bwa.sourceforge.net/"
+      licence: ["GPL v3"]
+  - "repeatmasker":
+      description: "Screen DNA sequences for interspersed repeats and low complexity DNA sequences"
+      documentation: "http://www.repeatmasker.org/"
+
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. `[ id:'sample1' ]`
+    - sbnd_result_txt:
+        type: file
+        description: NanoMonSV single-breakend result file (.sbnd.result.txt)
+        pattern: "*.sbnd.result.txt"
+  - - bwa_index:
+        type: directory
+        description: |
+          Directory containing pre-built BWA index files (*.amb, *.ann, *.bwt, *.pac, *.sa)
+          relative to the reference genome fasta basename
+
+output:
+  annotations:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. `[ id:'sample1' ]`
+      - "*.nanomonsv.bwa.txt":
+          type: file
+          description: BWA alignment annotations for contigs
+      - "*.nanomonsv.rmsk.txt":
+          type: file
+          description: RepeatMasker annotations for contigs
+
+authors:
+  - "@apsteinberg"
+maintainers:
+  - "@apsteinberg"

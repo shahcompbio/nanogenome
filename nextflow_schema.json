@@ -78,7 +78,6 @@
                 },
                 "igenomes_base": {
                     "type": "string",
-                    "format": "directory-path",
                     "description": "The base path to the igenomes reference files",
                     "fa_icon": "fas fa-ban",
                     "hidden": true,
@@ -182,13 +181,6 @@
                     "type": "boolean",
                     "description": "Do not use coloured log outputs.",
                     "fa_icon": "fas fa-palette",
-                    "hidden": true
-                },
-                "hook_url": {
-                    "type": "string",
-                    "description": "Incoming hook URL for messaging service",
-                    "fa_icon": "fas fa-people-group",
-                    "help_text": "Incoming hook URL for messaging service. Currently, MS Teams and Slack are supported.",
                     "hidden": true
                 },
                 "multiqc_config": {
@@ -380,7 +372,8 @@
                 "genome_build": {
                     "type": "string",
                     "default": "hg38",
-                    "description": "genome build for biomaRt; options are hg38 or hg19"
+                    "enum": ["hg38", "hg19", "t2t"],
+                    "description": "genome build for gene annotation; options are hg38, hg19, or t2t (T2T-CHM13v2.0)"
                 },
                 "annotsv_dir": {
                     "type": "string",
@@ -509,6 +502,35 @@
                     "description": "skip VEP but still convert vcf to maf"
                 }
             }
+        },
+        "nanomonsv_insertion_classify": {
+            "title": "Nanomonsv insertion classify",
+            "type": "object",
+            "description": "Classify insertions called by nanomonsv/severus",
+            "default": "",
+            "properties": {
+                "ref_gtf": {
+                    "type": "string",
+                    "description": "Gene annotation GTF file for nanomonsv insert_classify (e.g., GENCODE v45)"
+                },
+                "line1_db": {
+                    "type": "string",
+                    "description": "LINE1 database BED file for nanomonsv insert_classify"
+                },
+                "famdb_dir": {
+                    "type": "string",
+                    "description": "RepeatMasker famdb directory path (bind-mounted into container)"
+                },
+                "bwa_index": {
+                    "type": "string",
+                    "description": "Path to pre-built BWA index directory required for SBND classification"
+                },
+                "skip_sbnd_vis": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip per-contig PDF visualization of single-breakend SVs"
+                }
+            }
         }
     },
     "allOf": [
@@ -553,6 +575,9 @@
         },
         {
             "$ref": "#/$defs/somatic_snv_indel_calling_options"
+        },
+        {
+            "$ref": "#/$defs/nanomonsv_insertion_classify"
         }
     ],
     "properties": {
@@ -563,6 +588,10 @@
         "skip_somatic": {
             "type": "boolean",
             "description": "Skip default somatic structural variant calling workflow"
+        },
+        "somatic_snv_calling": {
+            "type": "boolean",
+            "description": "run somatic snv calling (skipped by default)"
         },
         "longcalld_platform": {
             "type": "string",
@@ -586,9 +615,9 @@
             "type": "boolean",
             "description": "output refined read alignments from longcalld"
         },
-        "somatic_snv_calling": {
+        "classify_inserts": {
             "type": "boolean",
-            "description": "run somatic snv calling (skipped by default)"
+            "description": "Enable somatic insertion classification with nanomonsv insert_classify"
         }
     }
 }

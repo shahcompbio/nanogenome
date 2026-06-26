@@ -5,8 +5,8 @@
 [![GitHub Actions Linting Status](https://github.com/shahcompbio/nanogenome/actions/workflows/linting.yml/badge.svg)](https://github.com/shahcompbio/nanogenome/actions/workflows/linting.yml)[![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.XXXXXXX-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.XXXXXXX)
 [![nf-test](https://img.shields.io/badge/unit_tests-nf--test-337ab7.svg)](https://www.nf-test.com)
 
-[![Nextflow](https://img.shields.io/badge/version-%E2%89%A525.04.0-green?style=flat&logo=nextflow&logoColor=white&color=%230DC09D&link=https%3A%2F%2Fnextflow.io)](https://www.nextflow.io/)
-[![nf-core template version](https://img.shields.io/badge/nf--core_template-3.5.2-green?style=flat&logo=nfcore&logoColor=white&color=%2324B064&link=https%3A%2F%2Fnf-co.re)](https://github.com/nf-core/tools/releases/tag/3.5.2)
+[![Nextflow](https://img.shields.io/badge/version-%E2%89%A525.10.4-green?style=flat&logo=nextflow&logoColor=white&color=%230DC09D&link=https%3A%2F%2Fnextflow.io)](https://www.nextflow.io/)
+[![nf-core template version](https://img.shields.io/badge/nf--core_template-4.0.2-green?style=flat&logo=nfcore&logoColor=white&color=%2324B064&link=https%3A%2F%2Fnf-co.re)](https://github.com/nf-core/tools/releases/tag/4.0.2)
 [![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
 [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
@@ -19,6 +19,18 @@
 The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It uses Docker/Singularity containers making installation trivial and results highly reproducible. The [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html) implementation of this pipeline uses one container per process which makes it much easier to maintain and update software dependencies.
 
 ## Pipeline summary
+
+### Somatic workflow
+
+<p align="center">
+    <img src="docs/images/metromap_somatic.svg" alt="NanoGenome somatic metro map" width="100%">
+</p>
+
+### Germline workflow
+
+<p align="center">
+    <img src="docs/images/metromap_germline.svg" alt="NanoGenome germline metro map" width="100%">
+</p>
 
 1. Variant calling and phasing ([`Clair3`](https://github.com/HKU-BAL/Clair3), [`LongPhase`](https://github.com/twolinin/LongPhase))
 2. BAM haplotagging ([`WhatsHap`](https://whatshap.readthedocs.io/))
@@ -34,14 +46,17 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
    - Individual callers: [`LongcallD`](https://github.com/ydLiu-HIT/LongcallD), [`tldr`](https://github.com/adamewing/tldr)
    - Somatic (tumor-normal) and germline TE calling modes
    - AnnotSV annotation of TE insertions
-8. SV and CNA annotation ([`BioMart`](https://www.ensembl.org/info/data/biomart/index.html), [`OncoKB`](https://www.oncokb.org/), [`AnnotSV`](https://lbgi.fr/AnnotSV/))
-9. Visualization of SVs and CNAs (Circos for somatic, karyoplot for germline)
-10. Present QC for all workflow stages ([`MultiQC`](http://multiqc.info/))
+8. Mobile element classification of somatic insertions and single breakends (optional, `--classify_inserts`)
+   - Insertion classification (L1, Alu, SVA, processed pseudogene, VNTR) with [`nanomonsv insert_classify`](https://github.com/friend1ws/nanomonsv)
+   - Single-breakend classification with BWA and RepeatMasker annotation
+9. SV and CNA annotation ([`BioMart`](https://www.ensembl.org/info/data/biomart/index.html), [`OncoKB`](https://www.oncokb.org/), [`AnnotSV`](https://lbgi.fr/AnnotSV/))
+10. Visualization of SVs and CNAs (Circos for somatic, karyoplot for germline)
+11. Present QC for all workflow stages ([`MultiQC`](http://multiqc.info/))
 
 ## Usage
 
 > [!NOTE]
-> If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline) with `-profile test` before running the workflow on actual data.
+> If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/get_started/environment_setup/overview) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/get_started/run-your-first-pipeline) with `-profile test` before running the workflow on actual data.
 
 First, prepare a samplesheet with your input data that looks as follows:
 
@@ -62,6 +77,7 @@ Each row represents a sample with the following columns:
 - `snp_vcf`: (Optional) Path to pre-phased SNP VCF file (required if `--skip_phasing` is used)
 - `snp_tbi`: (Optional) Path to VCF index file
 - `severus_vcf`: (Optional) Path to pre-computed Severus SV VCF
+- `annotated_sv_tsv`, `nanomonsv_result_txt`, `sbnd_result_txt`: (Optional) Pre-computed inputs for standalone classification with `--classify_inserts --skip_somatic`; see [usage docs](docs/usage.md#samplesheet-input)
 
 Now, you can run the pipeline using:
 
@@ -75,7 +91,7 @@ nextflow run shahcompbio/nanogenome \
 ```
 
 > [!WARNING]
-> Please provide pipeline parameters via the CLI or Nextflow `-params-file` option. Custom config files including those provided by the `-c` Nextflow option can be used to provide any configuration _**except for parameters**_; see [docs](https://nf-co.re/docs/usage/getting_started/configuration#custom-configuration-files).
+> Please provide pipeline parameters via the CLI or Nextflow `-params-file` option. Custom config files including those provided by the `-c` Nextflow option can be used to provide any configuration _**except for parameters**_; see [docs](https://nf-co.re/docs/running/run-pipelines#using-parameter-files).
 
 ## Credits
 
@@ -88,7 +104,7 @@ We thank the following people for their extensive assistance in the development 
 
 ## Contributions and Support
 
-If you would like to contribute to this pipeline, please see the [contributing guidelines](.github/CONTRIBUTING.md).
+If you would like to contribute to this pipeline, please see the [contributing guidelines](docs/CONTRIBUTING.md).
 
 ## Citations
 

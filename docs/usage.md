@@ -16,15 +16,18 @@ You will need to create a samplesheet with information about the samples you wou
 
 The samplesheet must be a comma-separated file with the following columns:
 
-| Column        | Description                                                                              | Required |
-| ------------- | ---------------------------------------------------------------------------------------- | -------- |
-| `sample`      | Sample identifier. Must be the same for tumor-normal pairs.                              | Yes      |
-| `condition`   | Either `tumor` or `normal`.                                                              | Yes      |
-| `bam`         | Full path to aligned BAM file.                                                           | Yes      |
-| `bai`         | Full path to BAM index file (.bai).                                                      | Yes      |
-| `snp_vcf`     | Path to pre-phased SNP VCF file (.vcf or .vcf.gz). Required if `--skip_phasing` is used. | No       |
-| `snp_tbi`     | Path to VCF index file (.tbi). Required when `snp_vcf` is provided.                      | No       |
-| `severus_vcf` | Path to pre-computed Severus SV VCF (.vcf or .vcf.gz).                                   | No       |
+| Column                 | Description                                                                                                                               | Required |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `sample`               | Sample identifier. Must be the same for tumor-normal pairs.                                                                               | Yes      |
+| `condition`            | Either `tumor` or `normal`.                                                                                                               | Yes      |
+| `bam`                  | Full path to aligned BAM file.                                                                                                            | Yes      |
+| `bai`                  | Full path to BAM index file (.bai).                                                                                                       | Yes      |
+| `snp_vcf`              | Path to pre-phased SNP VCF file (.vcf or .vcf.gz). Required if `--skip_phasing` is used.                                                  | No       |
+| `snp_tbi`              | Path to VCF index file (.tbi). Required when `snp_vcf` is provided.                                                                       | No       |
+| `severus_vcf`          | Path to pre-computed Severus SV VCF (.vcf or .vcf.gz).                                                                                    | No       |
+| `annotated_sv_tsv`     | Path to a pre-computed annotated SV table (.tsv). Required for standalone insertion classification (`--classify_inserts --skip_somatic`). | No       |
+| `nanomonsv_result_txt` | Path to a pre-computed NanoMonSV result table (.txt). Required for standalone insertion classification.                                   | No       |
+| `sbnd_result_txt`      | Path to a pre-computed NanoMonSV single-breakend result file (.txt). Required for standalone single-breakend classification.              | No       |
 
 ### Somatic analysis (tumor-normal pairs)
 
@@ -126,6 +129,39 @@ You can select which TE callers to run (default: `longcalld,tldr`):
 --te_calling --te_calling_tools "longcalld,tldr"
 ```
 
+#### Insertion classification
+
+Classify somatic insertions (L1, Alu, SVA, processed pseudogene, VNTR) using `nanomonsv insert_classify`:
+
+```bash
+nextflow run shahcompbio/nanogenome \
+   -profile docker \
+   --input samplesheet.csv \
+   --outdir results \
+   --fasta reference.fa \
+   --fai reference.fa.fai \
+   --classify_inserts \
+   --ref_gtf /path/to/gencode.annotation.gtf \
+   --line1_db /path/to/LINE1.hg38.bed.gz \
+   --vntr_bed /path/to/human_GRCh38_no_alt_analysis_set.trf.bed \
+   --bwa_index /path/to/bwa_index_dir
+```
+
+> **Note:** Only insertions called by nanomonsv or severus are classified, because these callers provide resolved consensus insertion sequences. SAVANA insertions are excluded because as of SAVANA v1.3.7, it emits multiple per-read supporting sequences rather than a single consensus insertion sequence, which is incompatible with the `nanomonsv insert_classify` input format.
+
+Setting `--classify_inserts` also runs single-breakend (SBND) classification automatically alongside insertion classification. NanoMonSV single-breakend contigs are aligned with BWA, annotated with RepeatMasker, and classified to identify mobile-element-derived single breakends. Per-contig PDF visualizations are generated and merged by default; disable with `--skip_sbnd_vis`.
+
+##### Standalone classification (`--skip_somatic`)
+
+If you already have somatic SV calling results and only want to run classification, set `--skip_somatic` alongside `--classify_inserts` and provide the pre-computed inputs via the samplesheet:
+
+```csv title="samplesheet.csv"
+sample,condition,bam,bai,snp_vcf,snp_tbi,severus_vcf,annotated_sv_tsv,nanomonsv_result_txt,sbnd_result_txt
+SAMPLE1,tumor,/path/to/tumor.bam,/path/to/tumor.bam.bai,,,,/path/to/annotated_sv.tsv,/path/to/nanomonsv_result.txt,/path/to/sbnd_result.txt
+```
+
+`annotated_sv_tsv` and `nanomonsv_result_txt` are required for insertion classification; `sbnd_result_txt` is required for single-breakend classification. Either can be omitted if you only want to run the other.
+
 #### Somatic SNV/indel calling
 
 Enable somatic SNV and indel calling with [ClairS](https://github.com/HKU-BAL/ClairS) or [DeepSomatic](https://github.com/google/deepsomatic):
@@ -160,6 +196,22 @@ If you have a local VEP cache, provide it with `--vep_cache`:
 --somatic_snv_calling --vep_cache /path/to/vep_cache
 ```
 
+#### T2T-CHM13v2.0 genome build
+
+The pipeline supports T2T-CHM13v2.0 for SV annotation and karyoplot visualization via `--genome_build t2t`:
+
+```bash
+nextflow run shahcompbio/nanogenome \
+   -profile docker \
+   --input samplesheet.csv \
+   --outdir results \
+   --fasta /path/to/chm13v2.0.fa \
+   --fai /path/to/chm13v2.0.fa.fai \
+   --genome_build t2t
+```
+
+When `--genome_build t2t` is set and `--gene_annotations` is not provided, the pipeline generates a T2T gene annotation table using the `T2TGENETABLE` module (powered by the [BiocT2T](https://bioconductor.org/) R package) instead of querying Ensembl BioMart, which does not support T2T-CHM13. Supported values for `--genome_build` are `hg38` (default), `hg19`, and `t2t`.
+
 #### Skip phasing (use pre-phased data)
 
 ```bash
@@ -186,7 +238,7 @@ If you wish to repeatedly use the same parameters for multiple runs, rather than
 Pipeline settings can be provided in a `yaml` or `json` file via `-params-file <file>`.
 
 > [!WARNING]
-> Do not use `-c <file>` to specify parameters as this will result in errors. Custom config files specified with `-c` must only be used for [tuning process resource specifications](https://nf-co.re/docs/usage/configuration#tuning-workflow-resources), other infrastructural tweaks (such as output directories), or module arguments (args).
+> Do not use `-c <file>` to specify parameters as this will result in errors. Custom config files specified with `-c` must only be used for [tuning process resource specifications](https://nf-co.re/docs/running/run-pipelines#configuring-pipelines), other infrastructural tweaks (such as output directories), or module arguments (args).
 
 The above pipeline run specified with a params file in yaml format:
 
@@ -283,19 +335,19 @@ Specify the path to a specific config file (this is a core Nextflow command). Se
 
 Whilst the default requirements set within the pipeline will hopefully work for most people and with most input data, you may find that you want to customise the compute resources that the pipeline requests. Each step in the pipeline has a default set of requirements for number of CPUs, memory and time. For most of the pipeline steps, if the job exits with any of the error codes specified [here](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/conf/base.config#L18) it will automatically be resubmitted with higher resources request (2 x original, then 3 x original). If it still fails after the third attempt then the pipeline execution is stopped.
 
-To change the resource requests, please see the [max resources](https://nf-co.re/docs/usage/configuration#max-resources) and [tuning workflow resources](https://nf-co.re/docs/usage/configuration#tuning-workflow-resources) section of the nf-core website.
+To change the resource requests, please see the [max resources](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#set-max-resources) and [customise process resources](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#customize-process-resources) section of the nf-core website.
 
 ### Custom Containers
 
 In some cases, you may wish to change the container or conda environment used by a pipeline steps for a particular tool. By default, nf-core pipelines use containers and software from the [biocontainers](https://biocontainers.pro/) or [bioconda](https://bioconda.github.io/) projects. However, in some cases the pipeline specified version maybe out of date.
 
-To use a different container from the default container or conda environment specified in a pipeline, please see the [updating tool versions](https://nf-co.re/docs/usage/configuration#updating-tool-versions) section of the nf-core website.
+To use a different container from the default container or conda environment specified in a pipeline, please see the [updating tool versions](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#update-tool-versions) section of the nf-core website.
 
 ### Custom Tool Arguments
 
 A pipeline might not always support every possible argument or option of a particular tool used in pipeline. Fortunately, nf-core pipelines provide some freedom to users to insert additional parameters that the pipeline does not include by default.
 
-To learn how to provide additional arguments to a particular tool of the pipeline, please see the [customising tool arguments](https://nf-co.re/docs/usage/configuration#customising-tool-arguments) section of the nf-core website.
+To learn how to provide additional arguments to a particular tool of the pipeline, please see the [customising tool arguments](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#modifying-tool-arguments) section of the nf-core website.
 
 ### nf-core/configs
 

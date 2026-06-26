@@ -5,6 +5,7 @@ include { ANNOTATEGENES              } from '../../../modules/local/annotategene
 include { CSVTK_CONCAT               } from '../../../modules/nf-core/csvtk/concat/main'
 include { WGET                       } from '../../../modules/nf-core/wget/main'
 include { BIOMART                    } from '../../../modules/local/biomart/main'
+include { T2TGENETABLE               } from '../../../modules/local/t2tgenetable/main'
 include { ANNOTSV_INSTALLANNOTATIONS } from '../../../modules/nf-core/annotsv/installannotations/main'
 include { ANNOTSV_ANNOTSV            } from '../../../modules/nf-core/annotsv/annotsv/main'
 include { TSV2BEDPE                  } from '../../../modules/local/tsv2bedpe/main'
@@ -21,6 +22,7 @@ workflow ANNOTATE_SV {
     skip_annotsv // boolean to run annotsv
     annotsv_dir // annotsv annotation directory
     annotate_te_only // boolean to run TE annotation only
+    genome_build // genome build (hg38, hg19, or t2t)
 
     main:
 
@@ -51,9 +53,16 @@ workflow ANNOTATE_SV {
         }
         // build gene annotation table if not provided
         if (!gene_annotations) {
-            BIOMART()
-            gene_annotations = BIOMART.out.gene_annotation
-            ch_versions = ch_versions.mix(BIOMART.out.versions)
+            if (genome_build == 't2t') {
+                T2TGENETABLE()
+                gene_annotations = T2TGENETABLE.out.gene_annotation
+                ch_versions = ch_versions.mix(T2TGENETABLE.out.versions)
+            }
+            else {
+                BIOMART()
+                gene_annotations = BIOMART.out.gene_annotation
+                ch_versions = ch_versions.mix(BIOMART.out.versions)
+            }
         }
         // annotate genes
         ANNOTATEGENES(tsv_chunks, gene_annotations, oncokb)

@@ -53,8 +53,30 @@
                 "exists": true,
                 "pattern": "^\\S+\\.(vcf|vcf\\.gz)$",
                 "errorMessage": "severus sv vcf (optional); cannot contain spaces and must have extension '.vcf' or '.vcf.gz'"
+            },
+            "annotated_sv_tsv": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^\\S+\\.tsv$",
+                "errorMessage": "annotated SV table (optional, for standalone insert classification); cannot contain spaces and must have extension '.tsv'"
+            },
+            "sbnd_result_txt": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^\\S+\\.txt$",
+                "description": "Path to nanomonsv sbnd result file for standalone sbnd_classify mode.",
+                "help_text": "Only required when --classify_inserts and --skip_somatic are both set."
+            },
+            "nanomonsv_result_txt": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^\\S+\\.txt$",
+                "errorMessage": "nanomonsv result table (optional, for standalone insert classification); cannot contain spaces and must have extension '.txt'"
             }
         },
-        "required": ["sample", "bam", "bai", "condition"]
+        "required": ["sample", "condition"]
     }
 }

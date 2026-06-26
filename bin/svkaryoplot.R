@@ -6,6 +6,11 @@ args <- commandArgs(trailingOnly = TRUE)
 sv.data.path <- args[1]
 out.file <- args[2]
 genome.version <- args[3]
+# map genome build to karyoploteR-compatible genome name
+if (genome.version == "t2t") {
+    library(BSgenome.Hsapiens.NCBI.T2T.CHM13v2.0)
+    genome.version <- "T2T-CHM13v2.0"
+}
 dd <- read.table(sv.data.path, sep="\t", header=TRUE, stringsAsFactors = FALSE)
 # filter to ensure only things on same chromosome are shown
 dd.filtered <- dd %>% filter(chrom1 == chrom2)
