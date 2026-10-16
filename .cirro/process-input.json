@@ -1,0 +1,25 @@
+{
+    "outdir": "$.params.dataset.s3|/data/",
+    "multiqc_title": "$.params.dataset.name",
+
+    "fasta": "$.params.dataset.paramJson.reference.fasta",
+    "genome_build": "$.params.dataset.paramJson.reference.genome_build",
+    "contigs": "$.params.dataset.paramJson.reference.contigs",
+
+    "analysis_mode": "$.params.dataset.paramJson.analysis.analysis_mode",
+    "somatic_snv_calling": "$.params.dataset.paramJson.analysis.somatic_snv_calling",
+    "somatic_snv_caller": "$.params.dataset.paramJson.analysis.somatic_snv_caller",
+    "skip_cna": "$.params.dataset.paramJson.analysis.skip_cna",
+    "te_calling": "$.params.dataset.paramJson.analysis.te_calling",
+    "classify_inserts": "$.params.dataset.paramJson.analysis.classify_inserts",
+    "skip_annotsv": "$.params.dataset.paramJson.analysis.skip_annotsv",
+
+    "clair3_model": "$.params.dataset.paramJson.models.clair3_model",
+    "clairs_platform": "$.params.dataset.paramJson.models.clairs_platform",
+
+    "somatic_callers": "$.params.dataset.paramJson.sv_consensus.somatic_callers",
+    "germline_callers": "$.params.dataset.paramJson.sv_consensus.germline_callers",
+    "min_callers": "$.params.dataset.paramJson.sv_consensus.min_callers",
+    "min_size": "$.params.dataset.paramJson.sv_consensus.min_size",
+    "tolerance": "$.params.dataset.paramJson.sv_consensus.tolerance"
+}
