@@ -103,13 +103,17 @@ def set_mode_params(ds: PreprocessDataset) -> bool:
 def set_reference_params(ds: PreprocessDataset):
     fasta = ds.params.get("fasta")
     if not fasta:
-        raise ValueError("A reference FASTA must be selected.")
+        raise ValueError(
+            "No reference FASTA received (params.fasta is empty). "
+            "Enter an s3:// path in the 'Genome FASTA' form field."
+        )
     if not ds.params.get("fai"):
         ds.add_param("fai", f"{fasta}.fai", overwrite=True)
 
 
 if __name__ == "__main__":
     ds = PreprocessDataset.from_running()
+    ds.logger.info(f"Params received from form: {ds.params}")
 
     somatic = set_mode_params(ds)
     set_reference_params(ds)

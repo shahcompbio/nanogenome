@@ -7,13 +7,13 @@
             "reference": {
                 "title": "Reference genome",
                 "type": "object",
+                "required": ["fasta"],
                 "properties": {
                     "fasta": {
-                        "title": "Genome FASTA",
-                        "description": "Reference FASTA the BAMs were aligned to. A .fai must sit next to it (FASTA path + '.fai').",
+                        "title": "Genome FASTA (S3 path)",
+                        "description": "s3:// path to the FASTA the BAMs were aligned to. A .fai must sit next to it (FASTA path + '.fai').",
                         "type": "string",
-                        "pathType": "references",
-                        "file": "**/genome.fasta"
+                        "pattern": "^s3://\\S+\\.(fa|fasta|fna)(\\.gz)?$"
                     },
                     "genome_build": {
                         "title": "Genome build (gene annotation)",
