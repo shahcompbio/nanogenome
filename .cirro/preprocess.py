@@ -162,6 +162,26 @@ def drop_helper_and_empty_params(ds: PreprocessDataset):
             ds.remove_param(k, force=True)
 
 
+def check_optional_step_refs(ds: PreprocessDataset):
+    """Fail before launch, listing every missing file, instead of one Nextflow error per run."""
+    have = lambda k: bool(str(ds.params.get(k) or "").strip())
+    problems = []
+    if ds.params.get("classify_inserts"):
+        miss = [k for k in ("ref_gtf", "line1_db", "bwa_index", "vntr_bed") if not have(k)]
+        if miss:
+            problems.append(f"'Classify somatic insertions' needs: {', '.join(miss)}")
+    if ds.params.get("te_calling"):
+        tools = str(ds.params.get("te_calling_tools") or "longcalld,tldr").split(",")
+        if "tldr" in tools and not have("tldr_te_fasta"):
+            problems.append("'Transposable element calling' (tldr) needs: tldr_te_fasta")
+    if problems:
+        raise ValueError(
+            "Missing reference files for enabled optional steps. Either fill these in "
+            "under 'Optional reference files' or turn the step off:\n  - "
+            + "\n  - ".join(problems)
+        )
+
+
 def set_reference_params(ds: PreprocessDataset):
     fasta = ds.params.get("fasta")
     if not fasta:
@@ -179,6 +199,7 @@ if __name__ == "__main__":
 
     somatic = set_mode_params(ds)
     set_reference_params(ds)
+    check_optional_step_refs(ds)
 
     sheet = build_samplesheet(ds)
     check_pairs(ds, sheet, somatic)
