@@ -89,6 +89,12 @@
                             "deepsomatic"
                         ]
                     },
+                    "inhibit_vep": {
+                        "title": "Skip VEP annotation of somatic SNVs/indels",
+                        "description": "Still writes a MAF, without VEP consequences. Without a VEP cache URL, VEP downloads a ~20 GB cache on every run.",
+                        "type": "boolean",
+                        "default": false
+                    },
                     "skip_cna": {
                         "title": "Skip copy number (Wakhan/SAVANA)",
                         "type": "boolean",

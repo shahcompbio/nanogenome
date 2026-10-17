@@ -30,5 +30,6 @@
     "tldr_te_fasta": "$.params.dataset.paramJson.optional_references.tldr_te_fasta",
     "ref_gtf": "$.params.dataset.paramJson.optional_references.ref_gtf",
     "line1_db": "$.params.dataset.paramJson.optional_references.line1_db",
-    "bwa_index": "$.params.dataset.paramJson.optional_references.bwa_index"
+    "bwa_index": "$.params.dataset.paramJson.optional_references.bwa_index",
+    "inhibit_vep": "$.params.dataset.paramJson.analysis.inhibit_vep"
 }
