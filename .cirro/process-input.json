@@ -1,11 +1,9 @@
 {
     "outdir": "$.params.dataset.s3|/data/",
     "multiqc_title": "$.params.dataset.name",
-
     "fasta": "$.params.dataset.paramJson.reference.fasta",
     "genome_build": "$.params.dataset.paramJson.reference.genome_build",
     "contigs": "$.params.dataset.paramJson.reference.contigs",
-
     "analysis_mode": "$.params.dataset.paramJson.analysis.analysis_mode",
     "somatic_snv_calling": "$.params.dataset.paramJson.analysis.somatic_snv_calling",
     "somatic_snv_caller": "$.params.dataset.paramJson.analysis.somatic_snv_caller",
@@ -13,13 +11,24 @@
     "te_calling": "$.params.dataset.paramJson.analysis.te_calling",
     "classify_inserts": "$.params.dataset.paramJson.analysis.classify_inserts",
     "skip_annotsv": "$.params.dataset.paramJson.analysis.skip_annotsv",
-
     "clair3_model": "$.params.dataset.paramJson.models.clair3_model",
     "clairs_platform": "$.params.dataset.paramJson.models.clairs_platform",
-
     "somatic_callers": "$.params.dataset.paramJson.sv_consensus.somatic_callers",
     "germline_callers": "$.params.dataset.paramJson.sv_consensus.germline_callers",
     "min_callers": "$.params.dataset.paramJson.sv_consensus.min_callers",
     "min_size": "$.params.dataset.paramJson.sv_consensus.min_size",
-    "tolerance": "$.params.dataset.paramJson.sv_consensus.tolerance"
+    "tolerance": "$.params.dataset.paramJson.sv_consensus.tolerance",
+    "tumor_sample": "$.params.dataset.paramJson.samples.tumor_sample",
+    "normal_sample": "$.params.dataset.paramJson.samples.normal_sample",
+    "patient_id": "$.params.dataset.paramJson.samples.patient_id",
+    "vntr_bed": "$.params.dataset.paramJson.optional_references.vntr_bed",
+    "oncokb": "$.params.dataset.paramJson.optional_references.oncokb",
+    "gene_annotations": "$.params.dataset.paramJson.optional_references.gene_annotations",
+    "annotsv_dir": "$.params.dataset.paramJson.optional_references.annotsv_dir",
+    "vep_cache": "$.params.dataset.paramJson.optional_references.vep_cache",
+    "longcalld_te_fasta": "$.params.dataset.paramJson.optional_references.longcalld_te_fasta",
+    "tldr_te_fasta": "$.params.dataset.paramJson.optional_references.tldr_te_fasta",
+    "ref_gtf": "$.params.dataset.paramJson.optional_references.ref_gtf",
+    "line1_db": "$.params.dataset.paramJson.optional_references.line1_db",
+    "bwa_index": "$.params.dataset.paramJson.optional_references.bwa_index"
 }

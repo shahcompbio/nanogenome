@@ -4,6 +4,27 @@
         "title": "NanoGenome (ONT long-read WGS)",
         "type": "object",
         "properties": {
+            "samples": {
+                "title": "Tumor / normal samples",
+                "type": "object",
+                "description": "Name the tumor and normal samples (exact Cirro sample name or a unique part of it). Leave blank to use 'condition'/'patient' sample metadata, or for germline-only runs.",
+                "properties": {
+                    "tumor_sample": {
+                        "title": "Tumor sample",
+                        "type": "string"
+                    },
+                    "normal_sample": {
+                        "title": "Normal sample",
+                        "type": "string"
+                    },
+                    "patient_id": {
+                        "title": "Patient / pair ID (optional)",
+                        "type": "string",
+                        "pattern": "^\\S*$",
+                        "description": "Used as the sample ID in outputs. Defaults to the tumor sample name."
+                    }
+                }
+            },
             "reference": {
                 "title": "Reference genome",
                 "type": "object",
@@ -141,6 +162,53 @@
                         "title": "Breakpoint tolerance (bp)",
                         "type": "integer",
                         "default": 100
+                    }
+                }
+            },
+            "optional_references": {
+                "title": "Optional reference files (s3:// or https:// URLs)",
+                "type": "object",
+                "properties": {
+                    "vntr_bed": {
+                        "title": "VNTR/tandem-repeat BED (required for Severus)",
+                        "type": "string",
+                        "default": "https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/reference/human_GRCh38_no_alt_analysis_set.trf.bed"
+                    },
+                    "oncokb": {
+                        "title": "OncoKB cancer gene list (downloaded if blank)",
+                        "type": "string"
+                    },
+                    "gene_annotations": {
+                        "title": "Gene annotation table (built via BioMart if blank)",
+                        "type": "string"
+                    },
+                    "annotsv_dir": {
+                        "title": "AnnotSV annotations directory (installed if blank)",
+                        "type": "string"
+                    },
+                    "vep_cache": {
+                        "title": "VEP cache directory",
+                        "type": "string"
+                    },
+                    "longcalld_te_fasta": {
+                        "title": "TE FASTA for longcallD (TE calling)",
+                        "type": "string"
+                    },
+                    "tldr_te_fasta": {
+                        "title": "TE FASTA for tldr (TE calling)",
+                        "type": "string"
+                    },
+                    "ref_gtf": {
+                        "title": "Gene GTF (insert classification)",
+                        "type": "string"
+                    },
+                    "line1_db": {
+                        "title": "LINE1 database BED.gz, .tbi alongside (insert classification)",
+                        "type": "string"
+                    },
+                    "bwa_index": {
+                        "title": "BWA index directory (insert classification)",
+                        "type": "string"
                     }
                 }
             }

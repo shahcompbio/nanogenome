@@ -5,14 +5,83 @@ Cirro preprocess for shahcompbio/nanogenome.
 Cirro model:  one Cirro sample  = one BAM (+ its BAI)
 nanogenome:   one samplesheet `sample` = one patient; tumor and normal rows share it
 
-So each Cirro sample needs two metadata columns:
-  - condition : 'tumor' or 'normal'
-  - patient   : pair ID shared by a tumor and its matched normal
-                (falls back to the Cirro sample name, which suits germline-only runs)
+Tumor/normal assignment, in order of precedence:
+  1. Form fields `tumor_sample` / `normal_sample` (one pair per run; exact sample
+     name or a unique substring of it). Optional `patient_id` names the pair.
+  2. Sample metadata columns `condition` (tumor/normal) and `patient` (pair ID),
+     for multi-pair runs.
+  3. Germline-only mode with no metadata: every sample is treated as normal.
+
+Input may come from one or several Cirro datasets; samples are pooled.
 """
 
 import pandas as pd
 from cirro.helpers.preprocess_dataset import PreprocessDataset
+
+
+def _match(name: str, samples: list, label: str) -> str:
+    name = name.strip()
+    if name in samples:
+        return name
+    hits = [x for x in samples if name in x]
+    if len(hits) == 1:
+        return hits[0]
+    raise ValueError(
+        f"{label} '{name}' matched {len(hits)} samples; expected exactly one. "
+        f"Available samples: {samples}"
+    )
+
+
+def assign_conditions(ds: PreprocessDataset, samples: list) -> pd.DataFrame:
+    """Return DataFrame[sample, patient, condition] for the samples to run."""
+    tumor = (ds.params.get("tumor_sample") or "").strip()
+    normal = (ds.params.get("normal_sample") or "").strip()
+    patient = (ds.params.get("patient_id") or "").strip()
+    germline_only = ds.params.get("skip_somatic", False)
+
+    # 1. Form fields
+    if tumor or normal:
+        rows = []
+        if tumor:
+            rows.append((_match(tumor, samples, "Tumor sample"), "tumor"))
+        if normal:
+            rows.append((_match(normal, samples, "Normal sample"), "normal"))
+        if len({r[0] for r in rows}) != len(rows):
+            raise ValueError("Tumor and normal sample fields matched the same sample.")
+        pair_id = patient or rows[0][0]
+        unused = sorted(set(samples) - {r[0] for r in rows})
+        if unused:
+            ds.logger.warning(f"Samples not assigned tumor/normal and skipped: {unused}")
+        return pd.DataFrame(
+            [{"sample": smp, "patient": pair_id, "condition": cond} for smp, cond in rows]
+        )
+
+    # 2. Sample metadata
+    meta = ds.samplesheet.copy()
+    meta.columns = [c.strip() for c in meta.columns]
+    if "condition" in meta.columns:
+        meta = meta[meta["sample"].isin(samples)].copy()
+        if "patient" not in meta.columns:
+            meta["patient"] = meta["sample"]
+        meta["patient"] = meta["patient"].fillna(meta["sample"]).astype(str).str.strip()
+        meta["condition"] = meta["condition"].astype(str).str.strip().str.lower()
+        bad = meta[~meta["condition"].isin(["tumor", "normal"])]
+        if len(bad):
+            raise ValueError("'condition' must be 'tumor' or 'normal':\n" + bad.to_string())
+        missing = sorted(set(samples) - set(meta["sample"]))
+        if missing:
+            raise ValueError(f"No 'condition' metadata for samples: {missing}")
+        return meta[["sample", "patient", "condition"]]
+
+    # 3. Germline-only: everything is a normal
+    if germline_only:
+        return pd.DataFrame({"sample": samples, "patient": samples, "condition": "normal"})
+
+    raise ValueError(
+        "Can't tell which sample is tumor and which is normal. Fill in the "
+        "'Tumor sample' and 'Normal sample' form fields (sample names: "
+        f"{samples}), or add 'condition'/'patient' columns to the sample metadata."
+    )
 
 
 def build_samplesheet(ds: PreprocessDataset) -> pd.DataFrame:
@@ -47,28 +116,12 @@ def build_samplesheet(ds: PreprocessDataset) -> pd.DataFrame:
             "Every sample needs both a .bam and a .bai. Missing for:\n" + missing.to_string()
         )
 
-    meta = ds.samplesheet.copy()
-    meta.columns = [c.strip() for c in meta.columns]
-    if "condition" not in meta.columns:
-        raise ValueError("Sample metadata must include a 'condition' column (tumor/normal).")
-    if "patient" not in meta.columns:
-        meta["patient"] = meta["sample"]
-    meta["patient"] = meta["patient"].fillna(meta["sample"]).astype(str).str.strip()
-    meta["condition"] = meta["condition"].astype(str).str.strip().str.lower()
-
-    bad = meta[~meta["condition"].isin(["tumor", "normal"])]
-    if len(bad):
-        raise ValueError("'condition' must be 'tumor' or 'normal':\n" + bad.to_string())
-
-    sheet = wide.merge(meta[["sample", "patient", "condition"]], on="sample", how="left")
-    if sheet["condition"].isna().any():
-        raise ValueError(
-            "No metadata for samples: " + ", ".join(sheet.loc[sheet["condition"].isna(), "sample"])
-        )
+    meta = assign_conditions(ds, list(wide["sample"]))
+    sheet = wide.merge(meta, on="sample", how="inner")
 
     # nanogenome's `sample` column is the pair ID
     sheet = sheet.rename(columns={"sample": "cirro_sample"})
-    sheet["sample"] = sheet["patient"].str.replace(r"\s+", "_", regex=True)
+    sheet["sample"] = sheet["patient"].astype(str).str.replace(r"\s+", "_", regex=True)
     # Optional columns (snp_vcf, snp_tbi, severus_vcf, ...) are left out entirely
     return sheet[["sample", "condition", "bam", "bai"]].sort_values(["sample", "condition"])
 
@@ -100,6 +153,15 @@ def set_mode_params(ds: PreprocessDataset) -> bool:
     return somatic
 
 
+def drop_helper_and_empty_params(ds: PreprocessDataset):
+    """Remove form-only keys and blank optional fields so nextflow sees null, not ''."""
+    for k in ("tumor_sample", "normal_sample", "patient_id"):
+        ds.remove_param(k, force=True)
+    for k, v in list(ds.params.items()):
+        if isinstance(v, str) and not v.strip():
+            ds.remove_param(k, force=True)
+
+
 def set_reference_params(ds: PreprocessDataset):
     fasta = ds.params.get("fasta")
     if not fasta:
@@ -120,6 +182,7 @@ if __name__ == "__main__":
 
     sheet = build_samplesheet(ds)
     check_pairs(ds, sheet, somatic)
+    drop_helper_and_empty_params(ds)
     sheet.to_csv("samplesheet.csv", index=False)
     ds.logger.info(f"samplesheet.csv:\n{sheet.to_csv(index=False)}")
 
