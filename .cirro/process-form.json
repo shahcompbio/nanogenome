@@ -7,19 +7,25 @@
             "reference": {
                 "title": "Reference genome",
                 "type": "object",
-                "required": ["fasta"],
+                "required": [
+                    "fasta"
+                ],
                 "properties": {
                     "fasta": {
-                        "title": "Genome FASTA (S3 path)",
-                        "description": "s3:// path to the FASTA the BAMs were aligned to. A .fai must sit next to it (FASTA path + '.fai').",
+                        "title": "Genome FASTA (s3:// or https:// URL)",
+                        "description": "URL of the FASTA the BAMs were aligned to (s3:// or https://). A .fai must exist at the same URL + '.fai'.",
                         "type": "string",
-                        "pattern": "^s3://\\S+\\.(fa|fasta|fna)(\\.gz)?$"
+                        "pattern": "^(s3|https?)://\\S+\\.(fa|fasta|fna)(\\.gz)?$"
                     },
                     "genome_build": {
                         "title": "Genome build (gene annotation)",
                         "type": "string",
                         "default": "hg38",
-                        "enum": ["hg38", "hg19", "t2t"]
+                        "enum": [
+                            "hg38",
+                            "hg19",
+                            "t2t"
+                        ]
                     },
                     "contigs": {
                         "title": "Contigs for CNA (Wakhan)",
@@ -37,8 +43,16 @@
                         "description": "Somatic requires a tumor and a normal BAM sharing the same 'patient' metadata value.",
                         "type": "string",
                         "default": "somatic",
-                        "enum": ["somatic", "germline", "somatic_and_germline"],
-                        "enumNames": ["Somatic (tumor-normal)", "Germline only", "Somatic + germline"]
+                        "enum": [
+                            "somatic",
+                            "germline",
+                            "somatic_and_germline"
+                        ],
+                        "enumNames": [
+                            "Somatic (tumor-normal)",
+                            "Germline only",
+                            "Somatic + germline"
+                        ]
                     },
                     "somatic_snv_calling": {
                         "title": "Somatic SNV/indel calling",
@@ -49,7 +63,10 @@
                         "title": "Somatic SNV/indel caller",
                         "type": "string",
                         "default": "clairs",
-                        "enum": ["clairs", "deepsomatic"]
+                        "enum": [
+                            "clairs",
+                            "deepsomatic"
+                        ]
                     },
                     "skip_cna": {
                         "title": "Skip copy number (Wakhan/SAVANA)",

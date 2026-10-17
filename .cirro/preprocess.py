@@ -105,7 +105,7 @@ def set_reference_params(ds: PreprocessDataset):
     if not fasta:
         raise ValueError(
             "No reference FASTA received (params.fasta is empty). "
-            "Enter an s3:// path in the 'Genome FASTA' form field."
+            "Enter an s3:// or https:// URL in the 'Genome FASTA' form field."
         )
     if not ds.params.get("fai"):
         ds.add_param("fai", f"{fasta}.fai", overwrite=True)
