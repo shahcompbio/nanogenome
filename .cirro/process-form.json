@@ -1,0 +1,239 @@
+{
+    "ui": {},
+    "form": {
+        "title": "NanoGenome (ONT long-read WGS)",
+        "type": "object",
+        "properties": {
+            "samples": {
+                "title": "Tumor / normal samples",
+                "type": "object",
+                "description": "Name the tumor and normal samples (exact Cirro sample name or a unique part of it). Leave blank to use 'condition'/'patient' sample metadata, or for germline-only runs.",
+                "properties": {
+                    "tumor_sample": {
+                        "title": "Tumor sample",
+                        "type": "string"
+                    },
+                    "normal_sample": {
+                        "title": "Normal sample",
+                        "type": "string"
+                    },
+                    "patient_id": {
+                        "title": "Patient / pair ID (optional)",
+                        "type": "string",
+                        "pattern": "^\\S*$",
+                        "description": "Used as the sample ID in outputs. Defaults to the tumor sample name."
+                    }
+                }
+            },
+            "reference": {
+                "title": "Reference genome",
+                "type": "object",
+                "required": [
+                    "fasta"
+                ],
+                "properties": {
+                    "fasta": {
+                        "title": "Genome FASTA (s3:// or https:// URL)",
+                        "description": "URL of the FASTA the BAMs were aligned to (s3:// or https://). A .fai must exist at the same URL + '.fai'.",
+                        "type": "string",
+                        "pattern": "^(s3|https?)://\\S+\\.(fa|fasta|fna)(\\.gz)?$"
+                    },
+                    "genome_build": {
+                        "title": "Genome build (gene annotation)",
+                        "type": "string",
+                        "default": "hg38",
+                        "enum": [
+                            "hg38",
+                            "hg19",
+                            "t2t"
+                        ]
+                    },
+                    "contigs": {
+                        "title": "Contigs for CNA (Wakhan)",
+                        "type": "string",
+                        "default": "chr1-22,chrX,chrY"
+                    }
+                }
+            },
+            "analysis": {
+                "title": "Analysis",
+                "type": "object",
+                "properties": {
+                    "analysis_mode": {
+                        "title": "Analysis mode",
+                        "description": "Somatic requires a tumor and a normal BAM sharing the same 'patient' metadata value.",
+                        "type": "string",
+                        "default": "somatic",
+                        "enum": [
+                            "somatic",
+                            "germline",
+                            "somatic_and_germline"
+                        ],
+                        "enumNames": [
+                            "Somatic (tumor-normal)",
+                            "Germline only",
+                            "Somatic + germline"
+                        ]
+                    },
+                    "somatic_snv_calling": {
+                        "title": "Somatic SNV/indel calling",
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "somatic_snv_caller": {
+                        "title": "Somatic SNV/indel caller",
+                        "type": "string",
+                        "default": "clairs",
+                        "enum": [
+                            "clairs",
+                            "deepsomatic"
+                        ]
+                    },
+                    "inhibit_vep": {
+                        "title": "Skip VEP annotation of somatic SNVs/indels",
+                        "description": "Still writes a MAF, without VEP consequences. Without a VEP cache URL, VEP downloads a ~20 GB cache on every run.",
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "skip_cna": {
+                        "title": "Skip copy number (Wakhan/SAVANA)",
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "cna_tools": {
+                        "title": "CNA tools",
+                        "type": "string",
+                        "default": "wakhan,savana",
+                        "enum": [
+                            "wakhan,savana",
+                            "wakhan",
+                            "savana"
+                        ],
+                        "enumNames": [
+                            "Wakhan + SAVANA",
+                            "Wakhan only",
+                            "SAVANA only"
+                        ],
+                        "description": "SAVANA CNA ignores the contigs setting and expects whole-genome references; use Wakhan only for single-chromosome test references."
+                    },
+                    "te_calling": {
+                        "title": "Transposable element calling",
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "classify_inserts": {
+                        "title": "Classify somatic insertions / single breakends",
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "skip_annotsv": {
+                        "title": "Skip AnnotSV",
+                        "type": "boolean",
+                        "default": false
+                    }
+                }
+            },
+            "models": {
+                "title": "Basecalling-dependent models",
+                "type": "object",
+                "properties": {
+                    "clair3_model": {
+                        "title": "Clair3 model",
+                        "type": "string",
+                        "default": "r1041_e82_400bps_sup_v500"
+                    },
+                    "clairs_platform": {
+                        "title": "ClairS platform",
+                        "type": "string",
+                        "default": "ont_r10_dorado_sup_4khz",
+                        "enum": [
+                            "ont_r10_dorado_sup_4khz",
+                            "ont_r10_dorado_sup_5khz",
+                            "ont_r10_dorado_sup_5khz_ssrs",
+                            "ont_r10_dorado_hac_4khz"
+                        ]
+                    }
+                }
+            },
+            "sv_consensus": {
+                "title": "SV consensus (MINDA)",
+                "type": "object",
+                "properties": {
+                    "somatic_callers": {
+                        "title": "Somatic SV callers",
+                        "type": "string",
+                        "default": "severus,savana,nanomonsv"
+                    },
+                    "germline_callers": {
+                        "title": "Germline SV callers",
+                        "type": "string",
+                        "default": "severus,longcallD,cutesv,sniffles"
+                    },
+                    "min_callers": {
+                        "title": "Min callers supporting a consensus SV",
+                        "type": "integer",
+                        "default": 2,
+                        "minimum": 1
+                    },
+                    "min_size": {
+                        "title": "Min SV size (bp)",
+                        "type": "integer",
+                        "default": 50
+                    },
+                    "tolerance": {
+                        "title": "Breakpoint tolerance (bp)",
+                        "type": "integer",
+                        "default": 100
+                    }
+                }
+            },
+            "optional_references": {
+                "title": "Optional reference files (s3:// or https:// URLs)",
+                "type": "object",
+                "properties": {
+                    "vntr_bed": {
+                        "title": "VNTR/tandem-repeat BED (required for Severus)",
+                        "type": "string",
+                        "default": "https://raw.githubusercontent.com/apsteinberg/test-datasets/nanogenome/reference/human_GRCh38_no_alt_analysis_set.trf.bed"
+                    },
+                    "oncokb": {
+                        "title": "OncoKB cancer gene list (downloaded if blank)",
+                        "type": "string"
+                    },
+                    "gene_annotations": {
+                        "title": "Gene annotation table (built via BioMart if blank)",
+                        "type": "string"
+                    },
+                    "annotsv_dir": {
+                        "title": "AnnotSV annotations directory (installed if blank)",
+                        "type": "string"
+                    },
+                    "vep_cache": {
+                        "title": "VEP cache directory",
+                        "type": "string"
+                    },
+                    "longcalld_te_fasta": {
+                        "title": "TE FASTA for longcallD (TE calling)",
+                        "type": "string"
+                    },
+                    "tldr_te_fasta": {
+                        "title": "TE FASTA for tldr (TE calling)",
+                        "type": "string"
+                    },
+                    "ref_gtf": {
+                        "title": "Gene GTF (insert classification)",
+                        "type": "string"
+                    },
+                    "line1_db": {
+                        "title": "LINE1 database BED.gz, .tbi alongside (insert classification)",
+                        "type": "string"
+                    },
+                    "bwa_index": {
+                        "title": "BWA index directory (insert classification)",
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}
