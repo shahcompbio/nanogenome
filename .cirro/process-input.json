@@ -31,5 +31,6 @@
     "ref_gtf": "$.params.dataset.paramJson.optional_references.ref_gtf",
     "line1_db": "$.params.dataset.paramJson.optional_references.line1_db",
     "bwa_index": "$.params.dataset.paramJson.optional_references.bwa_index",
-    "inhibit_vep": "$.params.dataset.paramJson.analysis.inhibit_vep"
+    "inhibit_vep": "$.params.dataset.paramJson.analysis.inhibit_vep",
+    "cna_tools": "$.params.dataset.paramJson.analysis.cna_tools"
 }

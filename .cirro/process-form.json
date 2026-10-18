@@ -100,6 +100,22 @@
                         "type": "boolean",
                         "default": false
                     },
+                    "cna_tools": {
+                        "title": "CNA tools",
+                        "type": "string",
+                        "default": "wakhan,savana",
+                        "enum": [
+                            "wakhan,savana",
+                            "wakhan",
+                            "savana"
+                        ],
+                        "enumNames": [
+                            "Wakhan + SAVANA",
+                            "Wakhan only",
+                            "SAVANA only"
+                        ],
+                        "description": "SAVANA CNA ignores the contigs setting and expects whole-genome references; use Wakhan only for single-chromosome test references."
+                    },
                     "te_calling": {
                         "title": "Transposable element calling",
                         "type": "boolean",
